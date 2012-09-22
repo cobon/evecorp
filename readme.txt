@@ -45,6 +45,9 @@ More ideas:
   - Planned skills (Evemon upload/import)
  * bbPress Forum intergration
  * ICS calendar export from Eve Online
+ * Alliances?
+ 
+Feel free to suggest more. The universe is the limit.
 
 == Installation ==
 
@@ -56,10 +59,14 @@ This section describes how to install the plugin and get it working.
 == Changelog ==
 
 = 0.1 =
-* In development. Not for public consuption.
+* In development. Not for public consumption.
 
 == Upgrade Notice ==
 
 = 0.1 =
-In development. Not for public consuption.
+In development. Not for public consumption.
 
+
+= Acknowledgment =
+This software uses Pheal <http://github.com/ppetermann/pheal/> a PHP library for 
+accessing the EVE API by Peter Petermann (eve: Peter Powers).
