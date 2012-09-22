@@ -8,23 +8,36 @@
   Author URI: https://gate.eveonline.com/Profile/Mitome%20Cobon-Han
   License: GPL3
 
-  Copyright © 2012 Mitome Cobon-Han  (mitome.ch@gmail.com)
-
-    This file is part of evecorp.
-
-    evecorp is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    evecorp is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with evecorp.  If not, see <http://www.gnu.org/licenses/>.
-
+ * Copyright (c) 2012 Mitome Cobon-Han  (mitome.ch@gmail.com)
+ *
+ * This file is part of evecorp.
+ *
+ *  evecorp is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  evecorp is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+ * Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * evecorp.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * This program incorporates work covered by the following copyright and
+ * permission notices:
+ *
+ * Pheal class library Copyright (c) 2010-2012, Peter Petermann, Daniel Hoffend
+ * licensed under the MIT License.
+ *
+ * EveApiRoles class Copyright (c) 2008, Michael Cummings licensed under the
+ * Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.
+ *
+ * Eve Online Copyright (c) 1997-2012, CCP hf, Reykjavík, Iceland
+ *
+ * EVE Online and the EVE logo are the registered trademarks of CCP hf. All
+ * rights are reserved worldwide.
+ *
  */
 
 /**
