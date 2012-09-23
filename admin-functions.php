@@ -50,7 +50,7 @@ function evecorp_activate() {
 	$options['char_url']       = 'https://gate.eveonline.com/Corporation/';
 	$options['char_url_label'] = 'EVE Gate';
 
-	add_option( 'evecorp_options', $options, 'Eve Online Corporation Options' );
+	add_option( 'evecorp_options', $options);
 
 }
 
