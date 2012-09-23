@@ -1,29 +1,14 @@
 <?php
+
 /*
  * Eve Online Plugin for WordPress
  *
- * Copyright © 2012 Mitome Cobon-Han  (mitome.ch@gmail.com)
- *
- *	This file is part of evecorp.
- *
- *	evecorp is free software: you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation, either version 3 of the License, or
- *	(at your option) any later version.
- *
- *	evecorp is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
- *	You should have received a copy of the GNU General Public License
- *	along with evecorp.  If not, see <http://www.gnu.org/licenses/>.
+ * Admin functions library
  *
  * @package evecorp
- *
- * Helper functions for the plugin Options Settings in wp-admin
  */
 
- /**
+/**
  * Plugin activation function.
  * Adds the options settings used by this plugin.
  *
@@ -35,23 +20,53 @@
  * @todo Add ovverides for some config settings via constants defined in wp-config.php
  *
  */
-function evecorp_activate() {
+function evecorp_activate()
+{
 
-	// Current options format
-	$options = array();
+	// Set defaults options
+	$options = evecorp_init_options();
+	add_option( 'evecorp_options', $options );
+}
 
-	// Set some sane defaults
-	$options['corpkey_ID']     = '';
-	$options['corpkey_vcode']  = '';
-	$options['API_base_url']   = 'https://api.eveonline.com/';
-	$options['cache_API']      = false;
-	$options['char_url']       = 'https://gate.eveonline.com/Profile/';
-	$options['char_url_label'] = 'EVE Gate';
-	$options['char_url']       = 'https://gate.eveonline.com/Corporation/';
-	$options['char_url_label'] = 'EVE Gate';
+/**
+ * Initialiaize configuration options array
+ *
+ * @global array $evecorp_options
+ * @return array
+ */
+function evecorp_init_options()
+{
+	global $evecorp_options;
 
-	add_option( 'evecorp_options', $options);
+	// Newly introduced options should be added here
+	$default_options = array(
+		'plugin_version' => EVECORP_VERSION,
+		'corpkey_ID' => '',
+		'corpkey_vcode' => '',
+		'API_base_url' => 'https://api.eveonline.com/',
+		'cache_API' => false,
+		'char_url' => 'https://gate.eveonline.com/Profile/',
+		'char_url_label' => 'EVE Gate',
+		'corp_url' => 'https://gate.eveonline.com/Corporation/',
+		'corp_url_label' => 'EVE Gate',
+	);
 
+	// Get options from WP options API, if any. Use defaults if none.
+	$saved_options = get_option( 'evecorp_options', $default_options );
+
+	// If options are there but one or more are missing
+	$evecorp_options = array_merge( $default_options, $saved_options );
+
+	// Save the options in WP
+	update_option( 'evecorp_options', $evecorp_options );
+
+	// You can override any option with a constant defined in wp-config.php
+	foreach ( $evecorp_options as $key => &$value ) {
+		if ( defined( strtoupper( $key ) ) )
+			$value = constant( strtoupper( $key ) );
+	}
+	unset( $value ); // break the reference with the last element;
+	return $evecorp_options;
 }
 
 /**
@@ -62,9 +77,10 @@ function evecorp_activate() {
  * @param str $context - destination folder
  * @param array $fields - fileds of $_POST array that should be preserved between screens
  * @return bool/str - false on failure, stored text on success
- **/
-function filesystem_init( $form_url, $method = false, $context = WP_CONTENT_DIR, $fields = null ) {
-	global $wp_filesystem;
+ * */
+function filesystem_init( $form_url, $method = false, $context = WP_CONTENT_DIR, $fields = null )
+{
+//	global $wp_filesystem;
 
 	if ( false === ( $fs_credentials = request_filesystem_credentials( $form_url, $method, $context, false, $fields ) ) ) {
 
@@ -72,7 +88,7 @@ function filesystem_init( $form_url, $method = false, $context = WP_CONTENT_DIR,
 		 * if we comes here - we don't have credentials
 		 * so the request for them is displaying
 		 * no need for further processing
-		 **/
+		 * */
 		return false;
 	}
 
@@ -97,7 +113,8 @@ function filesystem_init( $form_url, $method = false, $context = WP_CONTENT_DIR,
  * @param $dirname. Directory name for the cache
  * @return mixed. WP_Error on failure, True on success
  */
-function evecorp_init_cache( $form_url, $dirname = 'eve_api' ) {
+function evecorp_init_cache( $form_url, $dirname = 'eve_api' )
+{
 	global $wp_filesystem;
 
 	/**
@@ -107,7 +124,7 @@ function evecorp_init_cache( $form_url, $dirname = 'eve_api' ) {
 	 * @return bool/str - false on failure, stored text on success
 	 */
 	filesystem_init( $form_url );
-	if ( ! is_object( $wp_filesystem ) )
+	if ( !is_object( $wp_filesystem ) )
 		return new WP_Error( 'fs_unavailable', __( 'Could not access filesystem.' ) );
 
 	if ( is_wp_error( $wp_filesystem->errors ) && $wp_filesystem->errors->get_error_code() )
@@ -116,15 +133,15 @@ function evecorp_init_cache( $form_url, $dirname = 'eve_api' ) {
 	//Get the base wp_content folder
 	$content_dir = $wp_filesystem->wp_content_dir();
 	if ( empty( $content_dir ) )
-		return new WP_Error('fs_no_content_dir', __('Unable to locate WordPress contents directory.'));
+		return new WP_Error( 'fs_no_content_dir', __( 'Unable to locate WordPress contents directory.' ) );
 
-	$cache_dir = trailingslashit( $content_dir ).'cache/'.$dirname;
-	$errors = array();
+	$cache_dir = trailingslashit( $content_dir ) . 'cache/' . $dirname;
+	$errors = array( );
 	$created = $wp_filesystem->mkdir( $cache_dir );
-	if ( ! $created )
+	if ( !$created )
 		$errors[] = $cache_dir;
 
-	if ( ! empty( $errors ) )
+	if ( !empty( $errors ) )
 		return new WP_Error( 'could_not_create_cachedir', sprintf( __( 'Could not create the cache directory %s.' ), implode( ', ', $errors ) ) );
 	return true;
 }
@@ -138,14 +155,15 @@ function evecorp_init_cache( $form_url, $dirname = 'eve_api' ) {
  * @param array $dirname Name of the cache directory
  * @return mixed. WP_Error on failure, True on success
  */
-function evecorp_clear_cache( $form_url, $dirname = 'eve_api' ) {
+function evecorp_clear_cache( $form_url, $dirname = 'eve_api' )
+{
 	global $wp_filesystem;
 	filesystem_init( $form_url );
-	if ( ! is_object( $wp_filesystem ) )
+	if ( !is_object( $wp_filesystem ) )
 		return new WP_Error( 'fs_unavailable', __( 'Could not access filesystem.' ) );
 
 	if ( is_wp_error( $wp_filesystem->errors ) && $wp_filesystem->errors->get_error_code() )
-		return new WP_Error( 'fs_error', __('Filesystem error.'), $wp_filesystem->errors );
+		return new WP_Error( 'fs_error', __( 'Filesystem error.' ), $wp_filesystem->errors );
 
 	//Get the base wp_content folder
 	$cache_dir = $wp_filesystem->wp_content_dir();
@@ -153,12 +171,12 @@ function evecorp_clear_cache( $form_url, $dirname = 'eve_api' ) {
 		return new WP_Error( 'fs_no_content_dir', __( 'Unable to locate WordPress contents directory.' ) );
 
 	$cache_dir = trailingslashit( $content_dir ) . 'cache/' . $dirname;
-	$errors = array();
+	$errors = array( );
 	$deleted = $wp_filesystem->rmdir( $cache_dir, true );
-	if ( ! $deleted )
+	if ( !$deleted )
 		$errors[] = $cache_dir;
 
-	if ( ! empty( $errors ) )
-		return new WP_Error( 'could_not_remove_cachedir', sprintf( __( 'Could not fully remove the cache directory %s.' ), implode( ', ' , $errors ) ) );
+	if ( !empty( $errors ) )
+		return new WP_Error( 'could_not_remove_cachedir', sprintf( __( 'Could not fully remove the cache directory %s.' ), implode( ', ', $errors ) ) );
 	return true;
 }

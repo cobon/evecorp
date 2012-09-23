@@ -2,7 +2,7 @@
 /*
  * Eve Online Plugin for WordPress
  *
- * Plugin options settings page
+ * Plugin settings page in wp-admin
  *
  * @package evecorp
  */
@@ -82,8 +82,8 @@ function corpkey_section_html()
 
 function corpkey_ID_formfield()
 {
-	$options = get_option( 'evecorp_options' );
-	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$options['corpkey_ID']}' />";
+	$options = evecorp_get_option( 'corpkey_ID' );
+	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$corpkey_ID}' />";
 	echo '<p class="description">The ID number of your corporate API key.</p>';
 }
 

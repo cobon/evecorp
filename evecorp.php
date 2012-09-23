@@ -47,7 +47,9 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GENERAL PUBLIC LICENSE Version 3
  * @version 0.1
  */
-define( "EVECORP", "Eve Corporation Wordpress Plugin" );
+
+// Identity
+define( "EVECORP", "Eve Online Player Corporation Plugin for WordPress" );
 define( "EVECORP_VERSION", 0.1 );
 
 require_once dirname( __FILE__ ) . "/functions.php";
@@ -74,10 +76,56 @@ if ( is_admin() ) {
 	// non-admin enqueues, actions, and filters
 }
 
-
 // Shortcodes
 add_shortcode( 'eve-char', 'evecorp_char' );
 add_shortcode( 'eve-corp', 'evecorp_corp' );
+
+/**
+ * Shortcode handler
+ *
+ * Converts a Eve Online identifier into links either for Eve Online clients or
+ * normal browsers.
+ *
+ * Usage examples: <br>
+ *	[eve name="Mitome Cobon-Han"] <br>
+ *	[eve corp="Federation Interstellar Resources"] <br>
+ *  [eve id=123456789]
+ *
+ */
+function evecorp_eve( $atts )
+{
+	extract( shortcode_atts( array(
+				'name' => '',
+				'corp' => '',
+				'id' => '',
+					), $atts ) );
+
+	switch ( $atts ) {
+		case $value:
+
+
+			break;
+
+		default:
+			break;
+	}
+
+	if ( evecorp_is_eve() ) {
+
+		// Access from Eve IGB
+		// Lookup character ID
+		$id = evecorp_get_id( $name );
+		$html = '<a onmouseover="this.style.cursor = \'pointer\'"
+			onclick="CCPEVE.showInfo(1377, ' . $id . ')"
+			title="Show Character Info">' . $name . '</a>';
+	} else {
+
+		// Access from external browser
+		$html = '<a href="' . evecorp_get_option( 'char_url' ) . $name . '"
+			title="Show ' . $name . ' on ' . evecorp_get_option( 'char_url_label' ) . '">' . $name . '</a>';
+	}
+	return $html;
+}
 
 //[eve-char name="Mitome Cobon-Han"]
 function evecorp_char( $atts )
@@ -98,8 +146,8 @@ function evecorp_char( $atts )
 	} else {
 
 		// Access from external browser
-		$html = '<a href="' . get_option( 'wp_evecorp_char_url' ) . $name . '"
-			title="Show ' . $name . ' on ' . get_option( 'wp_evecorp_char_url_label' ) . '">' . $name . '</a>';
+		$html = '<a href="' . evecorp_get_option( 'char_url' ) . $name . '"
+			title="Show ' . $name . ' on ' . evecorp_get_option( 'char_url_label' ) . '">' . $name . '</a>';
 	}
 	return $html;
 }
@@ -123,8 +171,8 @@ function evecorp_corp( $atts )
 	} else {
 
 		// Access from external browser
-		$html = '<a href="' . get_option( 'wp_evecorp_corp_url' ) . $name . '"
-			title="Show ' . $name . ' on ' . get_option( 'wp_evecorp_corp_url_label' ) . '">' . $name . '</a>';
+		$html = '<a href="' . evecorp_get_option( 'corp_url' ) . $name . '"
+			title="Show ' . $name . ' on ' . evecorp_get_option( 'corp_url_label' ) . '">' . $name . '</a>';
 	}
 	return $html;
 }

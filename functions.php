@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Eve Online Plugin for WordPress
  *
@@ -8,20 +9,37 @@
  */
 
 /**
+ * Returns the configuration option value of $key from WP options API.
+ *
+ * May be overriden by constants defined in wp-config.php
+ *
+ * @param string $key The name of the option requested.
+ * @return string
+ */
+function evecorp_get_option( $key )
+{
+	$evecorp_options = get_option( 'evecorp_options' );
+	if ( defined( strtoupper( $key ) ) )
+		$evecorp_options[$key] = constant( strtoupper( $key ) );
+	return $evecorp_options[$key];
+}
+
+/**
  * Tests if the current browser is a Eve Online in-game browser
  *
  * @uses evecorp_IGB_data()
  * @return boolean true if client is Eve Online in-game browser
  * @todo Detection doesn't work logically
  */
-function evecorp_is_eve() {
+function evecorp_is_eve()
+{
 
-    global $evecorp_igb_data;
+	global $evecorp_igb_data;
 
-    if ( ! isset( $evecorp_igb_data ) )
-        $evecorp_igb_data = evecorp_IGB_data();
+	if ( !isset( $evecorp_igb_data ) )
+		$evecorp_igb_data = evecorp_IGB_data();
 
-    return $evecorp_igb_data['is_igb'];
+	return $evecorp_igb_data['is_igb'];
 }
 
 /**
@@ -30,14 +48,15 @@ function evecorp_is_eve() {
  * @uses evecorp_igb_data()
  * @return TRUE|FALSE
  */
-function evecorp_is_trusted() {
+function evecorp_is_trusted()
+{
 
-    global $evecorp_igb_data;
+	global $evecorp_igb_data;
 
-    if ( ! isset( $evecorp_igb_data ) )
-        $evecorp_igb_data = evecorp_IGB_data();
+	if ( !isset( $evecorp_igb_data ) )
+		$evecorp_igb_data = evecorp_IGB_data();
 
-    return $evecorp_igb_data['trusted'];
+	return $evecorp_igb_data['trusted'];
 }
 
 /**
@@ -47,40 +66,41 @@ function evecorp_is_trusted() {
  * @return array
  * @todo fix detection logic
  */
-function evecorp_IGB_data() {
+function evecorp_IGB_data()
+{
 
-    global $evecorp_igb_data;
+	global $evecorp_igb_data;
 
-    $evecorp_igb_data = array(
-        'is_igb' => true,
-        'trusted' => false,
-        'values' => array()
-    );
+	$evecorp_igb_data = array(
+		'is_igb' => true,
+		'trusted' => false,
+		'values' => array( )
+	);
 
-    foreach ($_SERVER as $key => $value) {
+	foreach ( $_SERVER as $key => $value ) {
 
-        // Skip on non-Eve headers
-        if (strpos('HTTP_EVE', $key) === false)
-            continue;
+		// Skip on non-Eve headers
+		if ( strpos( 'HTTP_EVE', $key ) === false )
+			continue;
 
-        // IGB browser detected
-        $evecorp_igb_data['is_igb'] = true;
+		// IGB browser detected
+		$evecorp_igb_data['is_igb'] = true;
 
-        // Remove the HTTP_EVE_ prefix
-        $key = str_replace('HTTP_EVE_', '', $key);
+		// Remove the HTTP_EVE_ prefix
+		$key = str_replace( 'HTTP_EVE_', '', $key );
 
-        // Make it lower case
-        $key = strtolower($key);
+		// Make it lower case
+		$key = strtolower( $key );
 
-        // Set the trusted value to true if the header has been sent.
-        if ($key === 'trusted')
-            $evecorp_igb_data['trusted'] = true;
+		// Set the trusted value to true if the header has been sent.
+		if ( $key === 'trusted' )
+			$evecorp_igb_data['trusted'] = true;
 
-        // Store key and value in array
-        $evecorp_igb_data['values'][$key] = $value;
-    }
+		// Store key and value in array
+		$evecorp_igb_data['values'][$key] = $value;
+	}
 
-    return($evecorp_igb_data);
+	return($evecorp_igb_data);
 }
 
 /**
@@ -89,25 +109,26 @@ function evecorp_IGB_data() {
  * @uses Pheal object class
  * @return Pheal
  */
-function load_pheal() {
-    // Do this only once
-    if ( ! class_exists( 'Pheal', FALSE ) ) {
+function load_pheal()
+{
+	// Do this only once
+	if ( !class_exists( 'Pheal', FALSE ) ) {
 
-        // Load the stuff
-        require_once dirname( __FILE__ ) . "/pheal/Pheal.php";
+		// Load the stuff
+		require_once dirname( __FILE__ ) . "/pheal/Pheal.php";
 
-        // register the class loader
-        spl_autoload_register( "Pheal::classload" );
+		// register the class loader
+		spl_autoload_register( "Pheal::classload" );
 
-        // Set the cache and tell it were to save its contents
-        PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );
+		// Set the cache and tell it were to save its contents
+		PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );
 
-        // Enable access detection
-        PhealConfig::getInstance()->access = new PhealCheckAccess();
+		// Enable access detection
+		PhealConfig::getInstance()->access = new PhealCheckAccess();
 
-        // Identify ourself
-        PhealConfig::getInstance()->http_user_agent = WP_EVECORP . ' ' . WP_EVECORP_VERSION;
-    }
+		// Identify ourself
+		PhealConfig::getInstance()->http_user_agent = WP_EVECORP . ' ' . WP_EVECORP_VERSION;
+	}
 }
 
 /**
@@ -123,45 +144,46 @@ function load_pheal() {
  * @param string $accessMask. Optional. The bitwise number of the calls the API
  *   key can query
  */
-function evecorp_is_valid_key( $key, $keyType = '', $accessMask = '' ) {
+function evecorp_is_valid_key( $key, $keyType = '', $accessMask = '' )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Create the Pheal object
-    $request = new Pheal( $key['keyID'], $key['vCode'], 'account' );
+	// Create the Pheal object
+	$request = new Pheal( $key['keyID'], $key['vCode'], 'account' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the APIKeyInfo function
-        $result = $request->APIKeyInfo( $key );
-    } catch (PhealAccessException $e) {
+		// Call the APIKeyInfo function
+		$result = $request->APIKeyInfo( $key );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch (PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    if ( ! $keyType == '' ) {
-        if ( ! $keyType == $result->key->type )
-            return false;
-    }
+	if ( !$keyType == '' ) {
+		if ( !$keyType == $result->key->type )
+			return false;
+	}
 
-    if ( ! $accessMask == '' ) {
-        if ( ! $accessMask == $result->key->accessMask )
-            return false;
-    }
-    return true;
+	if ( !$accessMask == '' ) {
+		if ( !$accessMask == $result->key->accessMask )
+			return false;
+	}
+	return true;
 }
 
 /**
@@ -172,37 +194,38 @@ function evecorp_is_valid_key( $key, $keyType = '', $accessMask = '' ) {
  * @return string. Name of the character
  * @param string $characterID. ID number of the character to lookup.
  */
-function evecorp_get_char_name( $character_ID ) {
+function evecorp_get_char_name( $character_ID )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'eve' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'eve' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CharacterInfo function
-        $result = $request->CharacterInfo( $character_ID );
-    } catch ( PhealAccessException $e ) {
+		// Call the CharacterInfo function
+		$result = $request->CharacterInfo( $character_ID );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Get the result as string in a PHP variable
-    return $result->CharacterInfo->characterName;
+	// Get the result as string in a PHP variable
+	return $result->CharacterInfo->characterName;
 }
 
 /**
@@ -213,37 +236,38 @@ function evecorp_get_char_name( $character_ID ) {
  * @return string. Name of the corporation
  * @param string $corporationID. ID number of the corporation to lookup.
  */
-function evecorp_get_corp_name( $corporation_ID ) {
+function evecorp_get_corp_name( $corporation_ID )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'corp' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'corp' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CorporationSheet function
-        $result = $request->CorporationSheet( $corporation_ID );
-    } catch ( PhealAccessException $e ) {
+		// Call the CorporationSheet function
+		$result = $request->CorporationSheet( $corporation_ID );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Get the result as string in a PHP variable
-    return $result->corporationName;
+	// Get the result as string in a PHP variable
+	return $result->corporationName;
 }
 
 /**
@@ -255,42 +279,43 @@ function evecorp_get_corp_name( $corporation_ID ) {
  * @return string. ID number of the character or corporation.
  * @param string $name. Name of the character or coporation to lookup.
  */
-function evecorp_get_ID( $name ) {
+function evecorp_get_ID( $name )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Prepare the arguments
-    $arguments = array(
-        'names' => $name
-    );
+	// Prepare the arguments
+	$arguments = array(
+		'names' => $name
+	);
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'eve' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'eve' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CharacterID function
-        $result = $request->CharacterID($arguments);
-    } catch ( PhealAccessException $e ) {
+		// Call the CharacterID function
+		$result = $request->CharacterID( $arguments );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Get the result as string in a PHP variable
-    return $result->characters[0]->characterID;
+	// Get the result as string in a PHP variable
+	return $result->characters[0]->characterID;
 }
 
 /**
@@ -302,13 +327,14 @@ function evecorp_get_ID( $name ) {
  * @return TRUE|FALSE.
  * @param string $characterName. Name of the character or coporation to lookup.
  */
-function evecorp_is_name( $name ) {
+function evecorp_is_name( $name )
+{
 
-    if ( eve_corp_get_ID( $name ) ) {
-        return true;
-    } else {
-        return false;
-    }
+	if ( eve_corp_get_ID( $name ) ) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 /**
@@ -320,42 +346,43 @@ function evecorp_is_name( $name ) {
  * @return array.
  * @param string $corporationID. ID number of the coporation.
  */
-function evecorp_corpsheet( $corporation_ID ) {
+function evecorp_corpsheet( $corporation_ID )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Prepare the arguments
-    $arguments = array(
-        'corporationID' => $corporation_ID
-    );
+	// Prepare the arguments
+	$arguments = array(
+		'corporationID' => $corporation_ID
+	);
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'corp' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'corp' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CorporationSheet function
-        $result = $request->CorporationSheet( $arguments );
-    } catch ( PhealAccessException $e ) {
+		// Call the CorporationSheet function
+		$result = $request->CorporationSheet( $arguments );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Convert API result object to a PHP array variable
-    return $result->toArray();
+	// Convert API result object to a PHP array variable
+	return $result->toArray();
 }
 
 /**
@@ -367,46 +394,47 @@ function evecorp_corpsheet( $corporation_ID ) {
  * @param string $characterID. ID number of the character.
  * @param string $corporationID. ID number of the coporation.
  */
-function evecorp_is_member( $character_ID, $corporation_ID ) {
+function evecorp_is_member( $character_ID, $corporation_ID )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Prepare the arguments
-    $arguments = array(
-        'characterID' => $character_ID
-    );
+	// Prepare the arguments
+	$arguments = array(
+		'characterID' => $character_ID
+	);
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'eve' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'eve' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CharacterInfo function
-        $result = $request->CharacterInfo( $arguments );
-    } catch ( PhealAccessException $e ) {
+		// Call the CharacterInfo function
+		$result = $request->CharacterInfo( $arguments );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Compare the result with the supplied corpID
-    if ( $result->corporationID == $corporation_ID ) {
-        return TRUE;
-    } else {
-        return FALSE;
-    }
+	// Compare the result with the supplied corpID
+	if ( $result->corporationID == $corporation_ID ) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 /**
@@ -418,46 +446,47 @@ function evecorp_is_member( $character_ID, $corporation_ID ) {
  * @param string $characterID. ID number of the character.
  * @param string $corporationID. ID number of the coporation.
  */
-function evecorp_is_CEO($character_ID, $corporation_ID) {
+function evecorp_is_CEO( $character_ID, $corporation_ID )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Prepare the arguments
-    $arguments = array(
-        'corporationID' => $corporation_ID
-    );
+	// Prepare the arguments
+	$arguments = array(
+		'corporationID' => $corporation_ID
+	);
 
-    // Create the Pheal object
-    $request = new Pheal( null, null, 'corp' );
+	// Create the Pheal object
+	$request = new Pheal( null, null, 'corp' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the CorporationSheet function
-        $result = $request->CorporationSheet( $arguments );
-    } catch ( PhealAccessException $e ) {
+		// Call the CorporationSheet function
+		$result = $request->CorporationSheet( $arguments );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch (PhealAPIException $e) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Compare the result with the supplied characterID
-    if ( $result->ceoID == $character_ID ) {
-        return TRUE;
-    } else {
-        return FALSE;
-    }
+	// Compare the result with the supplied characterID
+	if ( $result->ceoID == $character_ID ) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 /**
@@ -471,46 +500,47 @@ function evecorp_is_CEO($character_ID, $corporation_ID) {
  * @param string $characterID. ID number of the character.
  * @param array $corpKey. Corporation API key authorization credentials.
  */
-function evecorp_is_director($character_ID, $corporation_key) {
+function evecorp_is_director( $character_ID, $corporation_key )
+{
 
-    // Load pheal
-    load_pheal();
+	// Load pheal
+	load_pheal();
 
-    // Prepare the arguments
-    $arguments = array(
-        'characterID' => $character_ID
-    );
+	// Prepare the arguments
+	$arguments = array(
+		'characterID' => $character_ID
+	);
 
-    // Create the Pheal object
-    $request = new Pheal( $corporation_key['keyID'], $corporation_key['vCode'], 'corp' );
+	// Create the Pheal object
+	$request = new Pheal( $corporation_key['keyID'], $corporation_key['vCode'], 'corp' );
 
-    // Detect access
-    $request->detectAccess();
+	// Detect access
+	$request->detectAccess();
 
-    try {
+	try {
 
-        // Call the MemberSecurity function
-        $result = $request->MemberSecurity( $arguments );
-    } catch ( PhealAccessException $e ) {
+		// Call the MemberSecurity function
+		$result = $request->MemberSecurity( $arguments );
+	} catch ( PhealAccessException $e ) {
 
-        // API Access Error
-        echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealAPIException $e ) {
+		// API Access Error
+		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealAPIException $e ) {
 
-        // API Error
-        echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-    } catch ( PhealException $e ) {
+		// API Error
+		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+	} catch ( PhealException $e ) {
 
-        // Some other kind of error
-        echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-    }
+		// Some other kind of error
+		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
+	}
 
-    // Compare the result with the RoleID for directors
-    if ( $result->CharacterID->RoleID == 1 ) {
-        return TRUE;
-    } else {
-        return FALSE;
-    }
+	// Compare the result with the RoleID for directors
+	if ( $result->CharacterID->RoleID == 1 ) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 // Check if character is communication officer of corp
@@ -518,23 +548,25 @@ function evecorp_is_director($character_ID, $corporation_key) {
 // Check if character is security officer of corp
 // Check if character has any role in corp
 // Request Trust
-function evecorp_trust_button() {
-    $html = '<button type="button" onclick="CCPEVE.requestTrust(\'' . home_url() . '\');">Set ' . home_url() . ' as trusted</button>';
-    return $html;
+function evecorp_trust_button()
+{
+	$html = '<button type="button" onclick="CCPEVE.requestTrust(\'' . home_url() . '\');">Set ' . home_url() . ' as trusted</button>';
+	return $html;
 }
 
 // Icons
-function evecorp_icon( $icon ) {
-    switch ( $icon ) {
-        case "yes":
-            $html = '<img src="' . admin_url() . 'images/yes.png" width="16" height="16" alt="Yes">';
-            break;
-        case "no":
-            $html = '<img src="' . admin_url() . 'images/no.png" width="16" height="16" alt="No">';
-            break;
-        case "maybe":
-            $html = '<p><img src="' . includes_url() . 'images/smilies/icon_question.gif" width="16" height="16" alt="Maybe">';
-            break;
-    }
-    return $html;
+function evecorp_icon( $icon )
+{
+	switch ( $icon ) {
+		case "yes":
+			$html = '<img src="' . admin_url() . 'images/yes.png" width="16" height="16" alt="Yes">';
+			break;
+		case "no":
+			$html = '<img src="' . admin_url() . 'images/no.png" width="16" height="16" alt="No">';
+			break;
+		case "maybe":
+			$html = '<p><img src="' . includes_url() . 'images/smilies/icon_question.gif" width="16" height="16" alt="Maybe">';
+			break;
+	}
+	return $html;
 }
