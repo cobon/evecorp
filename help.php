@@ -1,5 +1,11 @@
 <?php
-
+/*
+ * Eve Online Plugin for WordPress
+ *
+ * Contextual help for Eve Online settings
+ *
+ * @package evecorp
+ */
 $evecorp_options_help_overview = <<< END
 <p>
 	<strong>Protected Site</strong>

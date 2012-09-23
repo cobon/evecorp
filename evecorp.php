@@ -1,4 +1,5 @@
 <?php
+
 /*
   Plugin Name: Eve Online Plugin for WordPress
   Plugin URI: http://fisr.dnsd.info/
@@ -45,9 +46,7 @@
  * @author Mitome Cobon-Han <mitome.ch@gmail.com>
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GENERAL PUBLIC LICENSE Version 3
  * @version 0.1
-  */
-
-
+ */
 define( "EVECORP", "Eve Corporation Wordpress Plugin" );
 define( "EVECORP_VERSION", 0.1 );
 
@@ -55,16 +54,16 @@ require_once dirname( __FILE__ ) . "/functions.php";
 
 // admin actions
 if ( is_admin() ) {
-	require_once dirname( __FILE__ ) . "/options.php";
+	require_once dirname( __FILE__ ) . "/evecorp-settings.php";
 
 	register_activation_hook( __FILE__, 'evecorp_activate' );
 	register_deactivation_hook( __FILE__, 'evecorp_deactivate' );
 
-	// Add entry to administration menu
-	add_action( 'admin_menu', 'evecorp_options' );
+	// Add a menu entry to administration menu
+	add_action( 'admin_menu', 'evecorp_add_settings_menu' );
 
-	// Define sections and allowed options for admin pages
-	add_action( ' admin_init', 'evecorp_admin_init' );
+	// Define options page sections and allowed options for admin pages
+	add_action( 'admin_init', 'evecorp_admin_init' );
 
 	/* 	// Notify administrator if active but unconfigured.
 	  $options = get_option( 'evecorp_options' );

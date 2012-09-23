@@ -2,21 +2,7 @@
 /*
  * Eve Online Plugin for WordPress
  *
- * Copyright © 2012 Mitome Cobon-Han  (mitome.ch@gmail.com)
- *
- *	This file is part of evecorp.
- *
- *	evecorp is free software: you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation, either version 3 of the License, or
- *	(at your option) any later version.
- *
- *	evecorp is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
- *	You should have received a copy of the GNU General Public License
- *	along with evecorp.  If not, see <http://www.gnu.org/licenses/>.
+ * Plugin options settings page
  *
  * @package evecorp
  */
@@ -38,33 +24,46 @@ function evecorp_config_notifiy()
  * Defines sections for breaking settings in to thematic groups on page and a
  *  function which will generate the ouptupt.
  * Defines each individual setting, along with name, description and a function for output
- *
  */
 function evecorp_admin_init()
 {
-	$option_group = 'evecorp';
-	$option_name = 'evecorp_options';
-	$sanitize_callback = 'evecorp_options_validate';
-	$settings_page = 'evecorp_adminpage';
+	global $wp_settings_sections, $wp_settings_fields;
+	// Add our settings to the settings whitelist
+	register_setting( 'evecorp', 'evecorp_options', 'evecorp_validate_settings' );
 
 	// Eve Online Corporate API Key Section
-	add_settings_section( 'section_corpkey', 'Corporation API Key', 'corp_section_html', $settings_page );
-	add_settings_field( 'corpkey_ID', 'Corporation Key ID', 'corpkey_ID_formfield', $settings_page, 'section_corpkey' );
-	add_settings_field( 'corpkey_vcode', 'Corporation Key Verification Code', 'corpkey_vcode_formfield', $settings_page, 'section_corpkey' );
+	$section_id = 'section_corpkey';
+	$section_title = 'Corporation API Key';
+	$section_callback = 'corpkey_section_html';
+	add_settings_section( $section_id, $section_title, $section_callback, 'evecorp_settings' );
+
+	$field_id = 'corpkey_ID';
+	$field_title = 'Corporation Key ID';
+	$field_callback = 'corpkey_ID_formfield';
+	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
+
+	$field_id = 'corpkey_vcode';
+	$field_title = 'Corporation Key Verification Code';
+	$field_callback = 'corpkey_vcode_formfield';
+	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
 
 	// Eve Online API Server and Cache Section
-	add_settings_section( 'section_API', 'Eve Online API Settings', 'eveapi_section_html', $settings_page );
-	add_settings_field( 'cache_API', 'Cache API query results', 'cache_API_formfield', $settings_page, 'section_API' );
+	$section_id = 'section_API';
+	$section_title = 'Eve Online API Settings';
+	$section_callback = 'eveapi_section_html';
+	add_settings_section( $section_id, $section_title, $section_callback, 'evecorp_settings' );
 
-	// Out-of-game browser section
-	add_settings_section( 'section_OGB', 'Out-of-Game Browser Settings', 'OGB_section_html', $settings_page );
-	add_settings_field( 'char_URL', 'Character Profiles URL', 'char_URL_formfield', $settings_page, 'section_OGB' );
-	add_settings_field( 'char_label', 'Character Profiles Label', 'char_label_formfield', $settings_page, 'section_OGB' );
-	add_settings_field( 'corp_URL', 'Corporation Profiles URL', 'corp_url_formfield', $settings_page, 'section_OGB' );
-	add_settings_field( 'corp_label', 'Corporation Profiles Label', 'corp_label_formfield', $settings_page, 'section_OGB' );
+	$field_id = 'cache_API';
+	$field_title = 'Cache data from Eve Online';
+	$field_callback = 'cache_API_formfield';
+	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
 
-	// Add our settings to the settings whitelist
-	register_setting( $option_group, $option_name, $sanitize_callback );
+//	// Out-of-game browser section
+//	add_settings_section( 'section_OGB', 'Out-of-Game Browser Settings', 'OGB_section_html', 'evecorp_settings' );
+//	add_settings_field( 'char_URL', 'Character Profiles URL', 'char_URL_formfield', 'evecorp_settings', 'section_OGB' );
+//	add_settings_field( 'char_label', 'Character Profiles Label', 'char_label_formfield', 'evecorp_settings', 'section_OGB' );
+//	add_settings_field( 'corp_URL', 'Corporation Profiles URL', 'corp_url_formfield', 'evecorp_settings', 'section_OGB' );
+//	add_settings_field( 'corp_label', 'Corporation Profiles Label', 'corp_label_formfield', 'evecorp_settings', 'section_OGB' );
 }
 
 /**
@@ -74,7 +73,6 @@ function evecorp_admin_init()
  */
 function corpkey_section_html()
 {
-	die('killer feature!');
 	echo '<p>Provide Key ID and verification code of your Eve Online corporate API key</p>';
 	echo '<p>You can create your corporate key';
 	echo '<a href="http://support.eveonline.com/api/Key/CreatePredefined/2048/' . $_SERVER["HTTP_EVE_CHARID"] . '/true" target="_BLANK">here</a>.';
@@ -84,22 +82,16 @@ function corpkey_section_html()
 
 function corpkey_ID_formfield()
 {
-	?>
-	<input name="corpkey_ID"
-		   type="text" id="corpkey_ID"
-		   value="<?php echo $input['corpkey_ID']; ?>" />
-	<p class="description">The ID number of your corporate API key.</p>
-	<?php
+	$options = get_option( 'evecorp_options' );
+	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$options['corpkey_ID']}' />";
+	echo '<p class="description">The ID number of your corporate API key.</p>';
 }
 
 function corpkey_vcode_formfield()
 {
-	?>
-	<textarea name="corpkey_vcode" cols=32 rows=2
-			  id="corpkey_vcode"
-			  value="<?php echo $input['corpkey_vcode']; ?>"></textarea>
-	<p class="description">The verification code for your corporate API key (usually 64 characters long).</p>
-	<?php
+	$options = get_option( 'evecorp_options' );
+	echo "<textarea id='corpkey_vcode' name='evecorp_options[corpkey_vcode]' cols=32 rows=2 value='{$options['corpkey_vcode']}'></textarea>";
+	echo '<p class="description">The verification code for your corporate API key (usually 64 characters long).</p>';
 }
 
 /**
@@ -113,8 +105,10 @@ function eveapi_section_html()
 
 function cache_API_formfield()
 {
- 	echo '<input name="cache_API" id="cache_API" type="checkbox" value="'.$input['cache_API'].'" class="code" ' . checked( 1, get_option('eg_setting_name'), false ) . ' /> Explanation text';
- }
+	$options = get_option( 'evecorp_options' );
+	echo "<input id='cache_API' name='evecorp_options[cache_API]' type='checkbox' checked='{$options[cache_API]}' class='code' /> ";
+	echo '<p class="description">Cache Eve Online API response (recommended).</p>';
+}
 
 /**
  * Output description for the out-of-game browser section
@@ -122,41 +116,48 @@ function cache_API_formfield()
  */
 function ogb_section_html()
 {
-	echo '<p>Eve Online API Section Description.</p>';
+	echo '<p>Eve Online Out-of-Game Browser Section Description.</p>';
 }
 
 /**
  * Validates the input fields of the settings form
  *
  * @param array $input The values from the input form fields
- * @return type array Sanitized values from the input form fields
+ * @return array Sanitized values from the input form fields
  */
-function evecorp_validate( $input )
+function evecorp_validate_settings( $input )
 {
 	$output = $input;
-	return $input;
+	return $output;
 }
 
 // Add config menu entry for Eve Online
-function evecorp_options()
+function evecorp_add_settings_menu()
 {
 
 	// Hook to screen for this page, used for contextual help.
-	global $evecorp_adminpage;
-	$evecorp_adminpage = add_options_page( 'Eve Online Settings', 'Eve Online', 'read', 'evecorp_options', 'evecorp_adminpage' );
+	global $evecorp_settings_page_hook;
+
+	$page_title = 'Eve Online Settings';
+	$menu_title = 'Eve Online';
+	$capability = 'read';
+
+	// Save the page hook for use by contextual help later
+	$evecorp_settings_page_hook = add_options_page( $page_title, $menu_title, $capability, 'evecorp_settings', 'evecorp_settings_page' );
 
 	// Add a contextual help tab to the admin page
-	add_action( 'load-' . $evecorp_adminpage, 'evecorp_help_tab' );
+	add_action( 'load-' . $evecorp_settings_page_hook, 'evecorp_settings_help' );
 }
 
 // Create the admin page for Eve Online settings
-function evecorp_adminpage()
+function evecorp_settings_page()
 {
+	global $wp_settings_sections, $wp_settings_fields;
 	?>
 	<div class="wrap">
 		<div class="icon32" id="icon-options-general"><br /></div>
 		<h2>Eve Online Settings</h2>
-		<form action="options.php" method="post">
+		<form method="post" action="options.php">
 
 			<!-- Output nonce, action, and option_page fields for a settings page. -->
 
@@ -164,7 +165,7 @@ function evecorp_adminpage()
 
 			<!-- Print out all settings sections added to a particular settings page.  -->
 
-			<?php do_settings_sections( 'evecorp_adminpage' ); ?>
+			<?php do_settings_sections( 'evecorp_settings' ); ?>
 
 			<p class="submit">
 				<input type="submit" name="Submit" value="Save changes" />
@@ -175,21 +176,21 @@ function evecorp_adminpage()
 }
 
 // Contextual Help for Eve Online settings
-function evecorp_help_tab()
+function evecorp_settings_help()
 {
 
 	// Help text
 	include_once(dirname( __FILE__ ) . '/help.php');
 
 	// Hook to screen from add_options_page()
-	global $evecorp_adminpage;
+	global $evecorp_settings_page_hook;
 	$screen = get_current_screen();
 
 	/*
 	 * Check if current screen is My Admin Page
 	 * Don't add help tab if it's not
 	 */
-	if ( $screen->id != $evecorp_adminpage )
+	if ( $screen->id != $evecorp_settings_page_hook )
 		return;
 
 	// Remove the admin notice about visting this page.
