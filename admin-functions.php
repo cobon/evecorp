@@ -18,55 +18,12 @@
  * @todo Security - Make sure cached Eve Online XML files can't be accessed directly by browser
  * @todo Check if required/recommendet plugins are installed.
  * @todo Add ovverides for some config settings via constants defined in wp-config.php
- *
  */
 function evecorp_activate()
 {
-
-	// Set defaults options
-	$options = evecorp_init_options();
-	add_option( 'evecorp_options', $options );
-}
-
-/**
- * Initialiaize configuration options array
- *
- * @global array $evecorp_options
- * @return array
- */
-function evecorp_init_options()
-{
 	global $evecorp_options;
-
-	// Newly introduced options should be added here
-	$default_options = array(
-		'plugin_version' => EVECORP_VERSION,
-		'corpkey_ID' => '',
-		'corpkey_vcode' => '',
-		'API_base_url' => 'https://api.eveonline.com/',
-		'cache_API' => false,
-		'char_url' => 'https://gate.eveonline.com/Profile/',
-		'char_url_label' => 'EVE Gate',
-		'corp_url' => 'https://gate.eveonline.com/Corporation/',
-		'corp_url_label' => 'EVE Gate',
-	);
-
-	// Get options from WP options API, if any. Use defaults if none.
-	$saved_options = get_option( 'evecorp_options', $default_options );
-
-	// If options are there but one or more are missing
-	$evecorp_options = array_merge( $default_options, $saved_options );
-
-	// Save the options in WP
-	update_option( 'evecorp_options', $evecorp_options );
-
-	// You can override any option with a constant defined in wp-config.php
-	foreach ( $evecorp_options as $key => &$value ) {
-		if ( defined( strtoupper( $key ) ) )
-			$value = constant( strtoupper( $key ) );
-	}
-	unset( $value ); // break the reference with the last element;
-	return $evecorp_options;
+	evecorp_init_options();
+	add_option( 'evecorp_options', $evecorp_options );
 }
 
 /**

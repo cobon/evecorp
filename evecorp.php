@@ -47,12 +47,21 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GENERAL PUBLIC LICENSE Version 3
  * @version 0.1
  */
-
-// Identity
+// Who am I?
 define( "EVECORP", "Eve Online Player Corporation Plugin for WordPress" );
 define( "EVECORP_VERSION", 0.1 );
 
+// Make sure we don't expose any info if called directly
+if ( !function_exists( 'add_action' ) ) {
+	echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
+	exit;
+}
+
+// Load common functions library
 require_once dirname( __FILE__ ) . "/functions.php";
+
+// Initialize plugin options
+add_action('init','evecorp_init_options');
 
 // admin actions
 if ( is_admin() ) {
@@ -87,8 +96,8 @@ add_shortcode( 'eve-corp', 'evecorp_corp' );
  * normal browsers.
  *
  * Usage examples: <br>
- *	[eve name="Mitome Cobon-Han"] <br>
- *	[eve corp="Federation Interstellar Resources"] <br>
+ * 	[eve name="Mitome Cobon-Han"] <br>
+ * 	[eve corp="Federation Interstellar Resources"] <br>
  *  [eve id=123456789]
  *
  */

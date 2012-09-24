@@ -9,6 +9,54 @@
  */
 
 /**
+ * Initialiaize configuration options array
+ * Define sane defaults
+ * Load from WP options API / WP DB if exist
+ * Add missing from defined defaults
+ *
+ * @global array $evecorp_options
+ */
+function evecorp_init_options()
+{
+	/* @var $evecorp_options array */
+	global $evecorp_options;
+
+	// Newly introduced options should be added here
+	$default_options = array(
+		'plugin_version' => EVECORP_VERSION,
+		'corpkey_ID' => '',
+		'corpkey_vcode' => '',
+		'API_base_url' => 'https://api.eveonline.com/',
+		'cache_API' => false,
+		'char_url' => 'https://gate.eveonline.com/Profile/',
+		'char_url_label' => 'EVE Gate',
+		'corp_url' => 'https://gate.eveonline.com/Corporation/',
+		'corp_url_label' => 'EVE Gate',
+	);
+
+	// Get options from WP options API, if any. Use defaults if none.
+	/* @var $saved_options array */
+	$saved_options = get_option( 'evecorp_options', $default_options );
+
+	// If options are there but one or more are missing
+	$evecorp_options = array_merge( $default_options, $saved_options );
+
+	// Save the options in WP optins DB
+	update_option( 'evecorp_options', $evecorp_options );
+
+	/**
+	 * You can override any option with a constant defined in wp-config.php
+	 * Will not be saved to options DB
+	 *
+	 */
+	foreach ( $evecorp_options as $key => &$value ) {
+		if ( defined( 'EVECORP_'.strtoupper( $key ) ) )
+			$value = constant( 'EVECORP_'.strtoupper( $key ) );
+	}
+	unset( $value ); // break the reference with the last element;
+}
+
+/**
  * Returns the configuration option value of $key from WP options API.
  *
  * May be overriden by constants defined in wp-config.php
@@ -19,8 +67,8 @@
 function evecorp_get_option( $key )
 {
 	$evecorp_options = get_option( 'evecorp_options' );
-	if ( defined( strtoupper( $key ) ) )
-		$evecorp_options[$key] = constant( strtoupper( $key ) );
+	if ( defined( 'EVECORP_'.strtoupper( $key ) ) )
+		$evecorp_options[$key] = constant( 'EVECORP_'.strtoupper( $key ) );
 	return $evecorp_options[$key];
 }
 
@@ -34,12 +82,12 @@ function evecorp_get_option( $key )
 function evecorp_is_eve()
 {
 
-	global $evecorp_igb_data;
+	global $evecorp_IGB_data;
 
-	if ( !isset( $evecorp_igb_data ) )
-		$evecorp_igb_data = evecorp_IGB_data();
+	if ( !isset( $evecorp_IGB_data ) )
+		$evecorp_IGB_data = evecorp_IGB_data();
 
-	return $evecorp_igb_data['is_igb'];
+	return $evecorp_IGB_data['is_igb'];
 }
 
 /**
@@ -51,12 +99,12 @@ function evecorp_is_eve()
 function evecorp_is_trusted()
 {
 
-	global $evecorp_igb_data;
+	global $evecorp_IGB_data;
 
-	if ( !isset( $evecorp_igb_data ) )
-		$evecorp_igb_data = evecorp_IGB_data();
+	if ( !isset( $evecorp_IGB_data ) )
+		$evecorp_IGB_data = evecorp_IGB_data();
 
-	return $evecorp_igb_data['trusted'];
+	return $evecorp_IGB_data['trusted'];
 }
 
 /**
@@ -69,9 +117,9 @@ function evecorp_is_trusted()
 function evecorp_IGB_data()
 {
 
-	global $evecorp_igb_data;
+	global $evecorp_IGB_data;
 
-	$evecorp_igb_data = array(
+	$evecorp_IGB_data = array(
 		'is_igb' => true,
 		'trusted' => false,
 		'values' => array( )
@@ -84,23 +132,20 @@ function evecorp_IGB_data()
 			continue;
 
 		// IGB browser detected
-		$evecorp_igb_data['is_igb'] = true;
+		$evecorp_IGB_data['is_igb'] = true;
 
-		// Remove the HTTP_EVE_ prefix
-		$key = str_replace( 'HTTP_EVE_', '', $key );
-
-		// Make it lower case
-		$key = strtolower( $key );
+		// Remove the HTTP_EVE_ prefix and make it lowercase
+		$key = strtolower( str_replace( 'HTTP_EVE_', '', $key ) );
 
 		// Set the trusted value to true if the header has been sent.
 		if ( $key === 'trusted' )
-			$evecorp_igb_data['trusted'] = true;
+			$evecorp_IGB_data['trusted'] = true;
 
 		// Store key and value in array
-		$evecorp_igb_data['values'][$key] = $value;
+		$evecorp_IGB_data['values'][$key] = $value;
 	}
 
-	return($evecorp_igb_data);
+	return($evecorp_IGB_data);
 }
 
 /**
@@ -137,12 +182,10 @@ function load_pheal()
  * Needs key for API obviously
  *
  * @uses loadPheal()
- * @return TRUE|FALSE.
  * @param array $key. Eve Online API key authorization credentials. (ID, vCode).
- * @param string $type. Optional.The access level of the API key (Account,
- *   Character, Corporation)
- * @param string $accessMask. Optional. The bitwise number of the calls the API
- *   key can query
+ * @param string $type. Optional.The access level of the API key (Account, Character, Corporation)
+ * @param string $accessMask. Optional. The bitwise number of the calls the API key can query
+ * @return boolean. True if $key is valid, false if not
  */
 function evecorp_is_valid_key( $key, $keyType = '', $accessMask = '' )
 {

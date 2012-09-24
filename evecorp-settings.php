@@ -73,24 +73,43 @@ function evecorp_admin_init()
  */
 function corpkey_section_html()
 {
-	echo '<p>Provide Key ID and verification code of your Eve Online corporate API key</p>';
-	echo '<p>You can create your corporate key';
-	echo '<a href="http://support.eveonline.com/api/Key/CreatePredefined/2048/' . $_SERVER["HTTP_EVE_CHARID"] . '/true" target="_BLANK">here</a>.';
-	echo '<strong>Note</strong>: Only the CEO and directors can create corporation keys.';
-	echo '</p>';
+	global $evecorp_IGB_data;
+
+	echo '<p>Provide Key ID and verification code of your Eve Online corporate API key. ';
+	echo 'You can create your corporate key at the ';
+	if ( evecorp_is_trusted() ) {
+		echo '<a href="https://support.eveonline.com/api/Key/CreatePredefined/5244936/' . $evecorp_IGB_data['charid'] . '/true" target="_BLANK">Eve Online Support website</a>.</p>';
+	} else {
+		echo '<a href="https://support.eveonline.com/api/" target="_BLANK">Eve Online Support website</a>.</p>';
+	}
+	echo '<p><strong>Note</strong>: Only the CEO and directors can create corporation keys.</p>';
+	?>
+	<h4>Customizable access rights</h4>
+	<p>
+		WalletJournal, Titles, MemberTrackingLimited, CorporationSheet
+	</p>
+	<p>Access Mask: <i>5244936</i></p>
+	<p>Click <strong>Help</strong> on the top right of this page, for more information on this  is and why it is needed.</p>
+	<?php
 }
 
 function corpkey_ID_formfield()
 {
-	$options = evecorp_get_option( 'corpkey_ID' );
-	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$corpkey_ID}' />";
+	$corpkey_ID = evecorp_get_option( 'corpkey_ID' );
+	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$corpkey_ID}'";
+	if ( defined( 'EVECORP_CORPKEY_ID' ) )
+		echo ' disabled="disabled" class="regular-text code disabled"';
+	echo ' >';
 	echo '<p class="description">The ID number of your corporate API key.</p>';
 }
 
 function corpkey_vcode_formfield()
 {
-	$options = get_option( 'evecorp_options' );
-	echo "<textarea id='corpkey_vcode' name='evecorp_options[corpkey_vcode]' cols=32 rows=2 value='{$options['corpkey_vcode']}'></textarea>";
+	$corpkey_vcode = evecorp_get_option( 'corpkey_vcode' );
+	echo "<textarea id='corpkey_vcode' name='evecorp_options[corpkey_vcode]' cols='32' rows='2'";
+	if ( defined( 'EVECORP_CORPKEY_VCODE' ) )
+		echo ' disabled="disabled" class="regular-text readonly"';
+	echo " >{$corpkey_vcode}</textarea>";
 	echo '<p class="description">The verification code for your corporate API key (usually 64 characters long).</p>';
 }
 
@@ -105,9 +124,12 @@ function eveapi_section_html()
 
 function cache_API_formfield()
 {
-	$options = get_option( 'evecorp_options' );
-	echo "<input id='cache_API' name='evecorp_options[cache_API]' type='checkbox' checked='{$options[cache_API]}' class='code' /> ";
-	echo '<p class="description">Cache Eve Online API response (recommended).</p>';
+	$cache_API = evecorp_get_option( 'cache_API' );
+	echo "<input id='cache_API' name='evecorp_options[cache_API]' type='checkbox' ";
+	if ( $cache_API )
+		echo "checked='checked'";
+	echo "class='code' /> ";
+	echo '<p class="description">Store API data for repeated requests (recommended).</p>';
 }
 
 /**
@@ -128,7 +150,26 @@ function ogb_section_html()
 function evecorp_validate_settings( $input )
 {
 	$output = $input;
-	return $output;
+	$options = get_option('evecorp_options');
+	// Sanitize User input fields
+	//$input['corpkey_ID'] = sanitize_text_field($input['corpkey_ID']);
+	//$input['corpkey_vcode'] = sanitize_text_field($input['corpkey_vcode']);
+
+	// Do we have key ID and vcode?
+	if ( $input['corpkey_ID'] <> '' &&  $input['corpkey_vcode'] <> '' ) {
+
+		// Check if they are accepted
+		$key = array('key_ID' => $input['corpkey_ID'], 'vcode' => $input['corpkey_vcode']);
+		if ( evecorp_is_valid_key( $key, 'Corporation', '5244936' )) {
+			$options['corpkey_ID'] = $input['corpkey_ID'];
+			$options['corpkey_vcode'] = $input['corpkey_vcode'];
+			add_settings_error('evecorp_settings', 'section_corpkey', 'Your API key has been verified. Happy blogging!', 'updated');
+		} else {
+			add_settings_error('evecorp_settings', 'section_corpkey', 'Your key has not been verified.', 'error');
+		}
+	}
+	add_settings_error('evecorp_settings', 'section_corpkey', 'No valid API key.', 'error');
+	return $options;
 }
 
 // Add config menu entry for Eve Online
