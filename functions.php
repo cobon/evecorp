@@ -26,6 +26,7 @@ function evecorp_init_options()
 		'plugin_version' => EVECORP_VERSION,
 		'corpkey_ID' => '',
 		'corpkey_vcode' => '',
+		'corpkey_verified' => false,
 		'API_base_url' => 'https://api.eveonline.com/',
 		'cache_API' => false,
 		'char_url' => 'https://gate.eveonline.com/Profile/',
@@ -50,8 +51,8 @@ function evecorp_init_options()
 	 *
 	 */
 	foreach ( $evecorp_options as $key => &$value ) {
-		if ( defined( 'EVECORP_'.strtoupper( $key ) ) )
-			$value = constant( 'EVECORP_'.strtoupper( $key ) );
+		if ( defined( 'EVECORP_' . strtoupper( $key ) ) )
+			$value = constant( 'EVECORP_' . strtoupper( $key ) );
 	}
 	unset( $value ); // break the reference with the last element;
 }
@@ -67,8 +68,8 @@ function evecorp_init_options()
 function evecorp_get_option( $key )
 {
 	$evecorp_options = get_option( 'evecorp_options' );
-	if ( defined( 'EVECORP_'.strtoupper( $key ) ) )
-		$evecorp_options[$key] = constant( 'EVECORP_'.strtoupper( $key ) );
+	if ( defined( 'EVECORP_' . strtoupper( $key ) ) )
+		$evecorp_options[$key] = constant( 'EVECORP_' . strtoupper( $key ) );
 	return $evecorp_options[$key];
 }
 
@@ -166,65 +167,89 @@ function load_pheal()
 		spl_autoload_register( "Pheal::classload" );
 
 		// Set the cache and tell it were to save its contents
-		PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );
+		if ( true === evecorp_get_option( 'cache_API' ) )
+			PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );
 
 		// Enable access detection
 		PhealConfig::getInstance()->access = new PhealCheckAccess();
 
 		// Identify ourself
-		PhealConfig::getInstance()->http_user_agent = WP_EVECORP . ' ' . WP_EVECORP_VERSION;
+		PhealConfig::getInstance()->http_user_agent = EVECORP . ' ' . EVECORP_VERSION;
 	}
 }
 
 /**
- * Tests if Eve Online API key is valid and has the proper access rights.
+ * Tests if Eve Online API key is valid and has the proper access rights to perform a certain request
+ *
+ * If $access_mask is not provided, it will be requested from API servers.
  *
  * Needs key for API obviously
  *
- * @uses loadPheal()
- * @param array $key. Eve Online API key authorization credentials. (ID, vCode).
- * @param string $type. Optional.The access level of the API key (Account, Character, Corporation)
- * @param string $accessMask. Optional. The bitwise number of the calls the API key can query
- * @return boolean. True if $key is valid, false if not
+ * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
+ * @param string $key_type. The access level of the API key (Account, Character, Corporation).
+ * @param string $scope. The scope of the request to test.
+ * @param string $api_name Name of API request to check.
+ * @param string $access_mask. Optional. The bitwise number of the calls the API key can query.
+ *
+ * @return mixed. true if $key is valid, WP_Error object on failure.
  */
-function evecorp_is_valid_key( $key, $keyType = '', $accessMask = '' )
+function evecorp_is_valid_key( $key, $key_type, $scope, $api_name, $access_mask = '' )
 {
 
 	// Load pheal
 	load_pheal();
 
 	// Create the Pheal object
-	$request = new Pheal( $key['keyID'], $key['vCode'], 'account' );
+	$request = new Pheal( $key['key_ID'], $key['vcode'], $scope );
 
-	// Detect access
-	$request->detectAccess();
+	if ( $access_mask === '' ) {
+
+		try {
+
+			// Request acccess mask from API servers.
+			$request->detectAccess();
+		} catch ( PhealAccessException $e ) {
+
+			// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
+			return new WP_Error( 'PhealAccessException', $e->getMessage() );
+		} catch ( PhealAPIException $e ) {
+
+			// API Error (Eve Online servers with API error)
+			return new WP_Error( 'PhealAPIException', $e->getMessage() );
+		} catch ( PhealHTTPException $e ) {
+
+			// Eve Online API servers answer with HTTP Error (503, 404, etc.)
+			return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
+		} catch ( PhealException $e ) {
+
+			// Other Error (network/server connection, etc.)
+			return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
+		}
+	} else {
+		$request->setAccess( $key_type, $access_mask );
+	}
 
 	try {
 
-		// Call the APIKeyInfo function
-		$result = $request->APIKeyInfo( $key );
+		// Call the approbiate API function
+		$request->$api_name( $key );
+//		$result = $request->APIKeyInfo( $key );
 	} catch ( PhealAccessException $e ) {
 
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
+		// Access Error (Pheal refused to exec, cause accessMask not valid for this key)
+		return new WP_Error( 'PhealAccessException', $e->getMessage() );
 	} catch ( PhealAPIException $e ) {
 
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
+		// API Error (Eve Online servers sent back a error)
+		return new WP_Error( 'PhealAPIException', $e->getMessage() );
+	} catch ( PhealHTTPException $e ) {
+
+		// Eve Online API servers answer with HTTP Error (503, 404, etc.)
+		return new WP_Error( 'PhealHTTPException', $e->getMessage() );
 	} catch ( PhealException $e ) {
 
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	if ( !$keyType == '' ) {
-		if ( !$keyType == $result->key->type )
-			return false;
-	}
-
-	if ( !$accessMask == '' ) {
-		if ( !$accessMask == $result->key->accessMask )
-			return false;
+		// Other Error (network/server connection, etc.)
+		return new WP_Error( 'PhealException', $e->getMessage() );
 	}
 	return true;
 }
@@ -273,10 +298,11 @@ function evecorp_get_char_name( $character_ID )
 
 /**
  * Returns a corporation name looked up by its ID from Eve Online API
+ *
  * Doesn't need API key authorization
  *
- * @uses loadPheal()
  * @return string. Name of the corporation
+ *
  * @param string $corporationID. ID number of the corporation to lookup.
  */
 function evecorp_get_corp_name( $corporation_ID )

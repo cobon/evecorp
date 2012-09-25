@@ -6,6 +6,11 @@
  *
  * @package evecorp
  */
+// Contextual Help for Eve Online settings
+function evecorp_settings_help()
+{
+
+
 $evecorp_options_help_overview = <<< END
 <p>
 	<strong>Protected Site</strong>
@@ -44,20 +49,6 @@ $evecorp_options_help_overview = <<< END
 
 	See the help tabs on the left for information on how this works in detail
 	and what risks are involved.
-
-</p>
-END;
-
-$evecorp_options_help_settings = <<< END
-<p>
-
-	The name of the corporation you supply, will be verified with Eve Online by API.
-
-</p><p>
-
-	Eve Online servers will be contacted and information for the corporation
-	name requested. If the name is recognized as a valid and existing Eve Online
-	corporation, your configuration will be accepted.
 
 </p>
 END;
@@ -177,11 +168,66 @@ $evecorp_options_help_risks = <<< END
 END;
 
 $evecorp_options_help_corpkey = <<< END
+
+<h4>Why is this needed?</h4>
+
 <p>
 
-	Corporate API Key information.
+	The corporation API key allows this website to retrieve information about
+	your corporation from Eve Online servers.
+
+</p><p>
+
+	It is used to automatically manage user profiles and access rights on this
+	website, according to actual status, role and title of your
+	corporation-members.
 
 </p>
+
+<h4>Where do I get the API key?</h4>
+
+<p>
+
+	The CEO and the directors of a coporation can create corporation keys
+	at the <a href="https://support.eveonline.com/api/"
+		title="Eve Online Support website" target="_BLANK">
+		Eve Online Support website</a>.
+
+</p>
+
+<h4>Which permissions are needed?</h4>
+
+<p>
+
+	The corporation keys must be able to retrieve the following information from
+	the Eve Online Servers:
+
+</p>
+<ul>
+	<li>Account and Market
+		<ul>
+			<li>WalletJournal</li>
+		</ul>
+	</li>
+	<li>Corporation Members
+		<ul>
+			<li>Titles</li>
+			<li>MemberTrackingLimited</li>
+			<li>MemberSecurity</li>
+		</ul>
+	</li>
+	<li>Corporation Members
+		<ul>
+			<li>CorporationSheet</li>
+		</ul>
+	</li>
+</ul>
+<p>
+
+	The Access Mask field should display the number <strong>524448</strong>.
+
+</p>
+
 END;
 
 $evecorp_options_help_igb = <<< END
@@ -346,3 +392,73 @@ $evecorp_options_help_igb = <<< END
 
 </p>
 END;
+
+	// Hook to screen from add_options_page()
+	global $evecorp_settings_page_hook;
+	$screen = get_current_screen();
+
+	/*
+	 * Check if current screen is My Admin Page
+	 * Don't add help tab if it's not
+	 */
+	if ( $screen->id != $evecorp_settings_page_hook )
+		return;
+
+	// Remove the admin notice about visting this page.
+	remove_action( 'admin_notices', 'evecorp_config_notifiy' );
+
+	// Add my_help_tab if current screen is My Admin Page
+//	$screen->add_help_tab( array(
+//		'id' => 'evecorp_help_overview',
+//		'title' => __( 'Overview' ),
+//		'content' => $evecorp_options_help_overview
+//			)
+//	);
+	$screen->add_help_tab( array(
+		'id' => 'evecorp_help_corpkey',
+		'title' => __( 'Corporate API Key' ),
+		'content' => $evecorp_options_help_corpkey
+			)
+	);
+	$screen->add_help_tab( array(
+		'id' => 'evecorp_help_auth',
+		'title' => __( 'User Authentication' ),
+		'content' => $evecorp_options_help_authentication
+			)
+	);
+	$screen->add_help_tab( array(
+		'id' => 'evecorp_help_userkey',
+		'title' => __( 'User API Key' ),
+		'content' => $evecorp_options_help_userkey
+			)
+	);
+	$screen->add_help_tab( array(
+		'id' => 'evecorp_help_risk',
+		'title' => __( 'Risks' ),
+		'content' => $evecorp_options_help_risks
+			)
+	);
+	$screen->add_help_tab( array(
+		'id' => 'evecorp_help_igb',
+		'title' => __( 'In-Game Browser' ),
+		'content' => $evecorp_options_help_igb
+			)
+	);
+
+	$screen->set_help_sidebar( '
+
+		<p><strong>For more information:</strong></p>
+
+		<p><a href="http://wiki.eveonline.com/en/wiki/In_game_browser"
+			title="Evelopedia on the In-Game Browser"
+			target="_blank">In-Game Browser (IGB)</a></p>
+
+		<p><a href="http://community.eveonline.com/devblog.asp?a=blog&nbid=1920"
+			title="Eve DevBLog on API Keys"
+			target="_blank">Eve Online API Keys</a></p>
+
+		<p><a href="https://forums.eveonline.com/default.aspx?g=topics&f=263"
+			title="Eve 3rd-Party Developer Forum"
+			target="_blank">Eve Technology Lab</a></p>
+			' );
+}

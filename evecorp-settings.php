@@ -9,6 +9,9 @@
 
 require_once dirname( __FILE__ ) . '/admin-functions.php';
 
+// Help text
+include_once(dirname( __FILE__ ) . '/settings-help.php');
+
 /** Adds a notification message  to the top of admin pages.
  *
  */
@@ -27,36 +30,18 @@ function evecorp_config_notifiy()
  */
 function evecorp_admin_init()
 {
-	global $wp_settings_sections, $wp_settings_fields;
 	// Add our settings to the settings whitelist
 	register_setting( 'evecorp', 'evecorp_options', 'evecorp_validate_settings' );
 
 	// Eve Online Corporate API Key Section
-	$section_id = 'section_corpkey';
-	$section_title = 'Corporation API Key';
-	$section_callback = 'corpkey_section_html';
-	add_settings_section( $section_id, $section_title, $section_callback, 'evecorp_settings' );
-
-	$field_id = 'corpkey_ID';
-	$field_title = 'Corporation Key ID';
-	$field_callback = 'corpkey_ID_formfield';
-	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
-
-	$field_id = 'corpkey_vcode';
-	$field_title = 'Corporation Key Verification Code';
-	$field_callback = 'corpkey_vcode_formfield';
-	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
+	add_settings_section( 'section_corpkey', 'Corporation API Key', 'corpkey_section_html', 'evecorp_settings' );
+	add_settings_field( 'corpkey_ID', 'Key ID', 'corpkey_ID_formfield', 'evecorp_settings', 'section_corpkey' );
+	add_settings_field( 'corpkey_vcode', 'Verification Code', 'corpkey_vcode_formfield', 'evecorp_settings', 'section_corpkey' );
+	add_settings_field( 'cache_API', 'Enable API Cache', 'cache_API_formfield', 'evecorp_settings', 'section_corpkey' );
 
 	// Eve Online API Server and Cache Section
-	$section_id = 'section_API';
-	$section_title = 'Eve Online API Settings';
-	$section_callback = 'eveapi_section_html';
-	add_settings_section( $section_id, $section_title, $section_callback, 'evecorp_settings' );
+	add_settings_section( 'section_API', 'Eve Online API Settings', 'eveapi_section_html', 'evecorp_settings' );
 
-	$field_id = 'cache_API';
-	$field_title = 'Cache data from Eve Online';
-	$field_callback = 'cache_API_formfield';
-	add_settings_field( $field_id, $field_title, $field_callback, 'evecorp_settings', $section_id );
 
 //	// Out-of-game browser section
 //	add_settings_section( 'section_OGB', 'Out-of-Game Browser Settings', 'OGB_section_html', 'evecorp_settings' );
@@ -74,23 +59,12 @@ function evecorp_admin_init()
 function corpkey_section_html()
 {
 	global $evecorp_IGB_data;
-
-	echo '<p>Provide Key ID and verification code of your Eve Online corporate API key. ';
-	echo 'You can create your corporate key at the ';
+	echo 'CEOs or a director can create corporation keys at the ';
 	if ( evecorp_is_trusted() ) {
 		echo '<a href="https://support.eveonline.com/api/Key/CreatePredefined/5244936/' . $evecorp_IGB_data['charid'] . '/true" target="_BLANK">Eve Online Support website</a>.</p>';
 	} else {
 		echo '<a href="https://support.eveonline.com/api/" target="_BLANK">Eve Online Support website</a>.</p>';
 	}
-	echo '<p><strong>Note</strong>: Only the CEO and directors can create corporation keys.</p>';
-	?>
-	<h4>Customizable access rights</h4>
-	<p>
-		WalletJournal, Titles, MemberTrackingLimited, CorporationSheet
-	</p>
-	<p>Access Mask: <i>5244936</i></p>
-	<p>Click <strong>Help</strong> on the top right of this page, for more information on this  is and why it is needed.</p>
-	<?php
 }
 
 function corpkey_ID_formfield()
@@ -129,7 +103,7 @@ function cache_API_formfield()
 	if ( $cache_API )
 		echo "checked='checked'";
 	echo "class='code' /> ";
-	echo '<p class="description">Store API data for repeated requests (recommended).</p>';
+	echo '<span class="description">Store API data for repeated requests (recommended).</span>';
 }
 
 /**
@@ -145,30 +119,48 @@ function ogb_section_html()
  * Validates the input fields of the settings form
  *
  * @param array $input The values from the input form fields
- * @return array Sanitized values from the input form fields
+
+ *  * @return array Sanitized values from the input form fields
  */
 function evecorp_validate_settings( $input )
 {
-	$output = $input;
 	$options = get_option('evecorp_options');
+
 	// Sanitize User input fields
-	//$input['corpkey_ID'] = sanitize_text_field($input['corpkey_ID']);
-	//$input['corpkey_vcode'] = sanitize_text_field($input['corpkey_vcode']);
+	$input['corpkey_ID'] = sanitize_text_field($input['corpkey_ID']);
+	$input['corpkey_vcode'] = sanitize_text_field($input['corpkey_vcode']);
 
 	// Do we have key ID and vcode?
 	if ( $input['corpkey_ID'] <> '' &&  $input['corpkey_vcode'] <> '' ) {
 
-		// Check if they are accepted
-		$key = array('key_ID' => $input['corpkey_ID'], 'vcode' => $input['corpkey_vcode']);
-		if ( evecorp_is_valid_key( $key, 'Corporation', '5244936' )) {
-			$options['corpkey_ID'] = $input['corpkey_ID'];
-			$options['corpkey_vcode'] = $input['corpkey_vcode'];
-			add_settings_error('evecorp_settings', 'section_corpkey', 'Your API key has been verified. Happy blogging!', 'updated');
-		} else {
-			add_settings_error('evecorp_settings', 'section_corpkey', 'Your key has not been verified.', 'error');
+		$key = array(
+			'key_ID' => $input['corpkey_ID'],
+			'vcode' => $input['corpkey_vcode']
+			);
+
+		// Check if key and vcode are usable for our requests
+		$test_cases = array(
+			'WalletJournal',
+			'Titles',
+			'MemberTracking',
+			'CorporationSheet'
+				);
+		foreach ( $test_cases as $api_name ) {
+			$result = evecorp_is_valid_key( $key, 'Corporation', 'corp', $api_name );
+			if (is_wp_error($result)) {
+				add_settings_error('evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error');
+				return $options;
+			}
 		}
+
+		// If we reach here, out API key has passed all the API query tests.
+		$options['corpkey_ID'] = $input['corpkey_ID'];
+		$options['corpkey_vcode'] = $input['corpkey_vcode'];
+		$options['corpkey_verified'] = true;
+		add_settings_error('evecorp_settings', 'section_corpkey', 'Your API key has been verified. Happy blogging!', 'updated');
+		return $options;
 	}
-	add_settings_error('evecorp_settings', 'section_corpkey', 'No valid API key.', 'error');
+	add_settings_error('evecorp_settings', 'section_corpkey', 'Please supply a valid API key and verification code.', 'error');
 	return $options;
 }
 
@@ -193,7 +185,6 @@ function evecorp_add_settings_menu()
 // Create the admin page for Eve Online settings
 function evecorp_settings_page()
 {
-	global $wp_settings_sections, $wp_settings_fields;
 	?>
 	<div class="wrap">
 		<div class="icon32" id="icon-options-general"><br /></div>
@@ -209,88 +200,11 @@ function evecorp_settings_page()
 			<?php do_settings_sections( 'evecorp_settings' ); ?>
 
 			<p class="submit">
-				<input type="submit" name="Submit" value="Save changes" />
+				<input type="submit" name="Submit" class="button-primary" value="Verify Key" />
 			</p>
 		</form>
 	</div>
 	<?php
-}
-
-// Contextual Help for Eve Online settings
-function evecorp_settings_help()
-{
-
-	// Help text
-	include_once(dirname( __FILE__ ) . '/help.php');
-
-	// Hook to screen from add_options_page()
-	global $evecorp_settings_page_hook;
-	$screen = get_current_screen();
-
-	/*
-	 * Check if current screen is My Admin Page
-	 * Don't add help tab if it's not
-	 */
-	if ( $screen->id != $evecorp_settings_page_hook )
-		return;
-
-	// Remove the admin notice about visting this page.
-	remove_action( 'admin_notices', 'evecorp_config_notifiy' );
-
-	// Add my_help_tab if current screen is My Admin Page
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_overview',
-		'title' => __( 'Overview' ),
-		'content' => $evecorp_options_help_overview
-			)
-	);
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_corpkey',
-		'title' => __( 'Corporate API Key' ),
-		'content' => $evecorp_options_help_corpkey
-			)
-	);
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_auth',
-		'title' => __( 'User Authentication' ),
-		'content' => $evecorp_options_help_authentication
-			)
-	);
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_userkey',
-		'title' => __( 'User API Key' ),
-		'content' => $evecorp_options_help_userkey
-			)
-	);
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_risk',
-		'title' => __( 'Risks' ),
-		'content' => $evecorp_options_help_risks
-			)
-	);
-	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_igb',
-		'title' => __( 'In-Game Browser' ),
-		'content' => $evecorp_options_help_igb
-			)
-	);
-
-	$screen->set_help_sidebar( '
-
-		<p><strong>For more information:</strong></p>
-
-		<p><a href="http://wiki.eveonline.com/en/wiki/In_game_browser"
-			title="Evelopedia on the In-Game Browser"
-			target="_blank">In-Game Browser (IGB)</a></p>
-
-		<p><a href="http://community.eveonline.com/devblog.asp?a=blog&nbid=1920"
-			title="Eve DevBLog on API Keys"
-			target="_blank">Eve Online API Keys</a></p>
-
-		<p><a href="https://forums.eveonline.com/default.aspx?g=topics&f=263"
-			title="Eve 3rd-Party Developer Forum"
-			target="_blank">Eve Technology Lab</a></p>
-			' );
 }
 
 // Configuration admin interface
