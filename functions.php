@@ -179,6 +179,52 @@ function load_pheal()
 }
 
 /**
+ *
+ * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
+ *
+ * @return mixed. Array on success, WP_Error object on failure.
+ */
+function evecorp_get_keyinfo( $key )
+{
+	// Load pheal
+	load_pheal();
+
+	// Create the Pheal object
+	$request = new Pheal( $key['key_ID'], $key['vcode'], 'account' );
+
+		try {
+
+			// Request acccess mask from API servers.
+			$result=$request->detectAccess();
+		} catch ( PhealAccessException $e ) {
+
+			// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
+			return new WP_Error( 'PhealAccessException', $e->getMessage() );
+		} catch ( PhealAPIException $e ) {
+
+			// API Error (Eve Online servers with API error)
+			return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
+		} catch ( PhealHTTPException $e ) {
+
+			// Eve Online API servers answer with HTTP Error (503, 404, etc.)
+			return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
+		} catch ( PhealException $e ) {
+
+			// Other Error (network/server connection, etc.)
+			return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
+		}
+
+	// Convert API result object to a PHP array variable
+	return $result->key->toArray();
+
+}
+
+function evecorp_apikey_has_access( $accessmask, $api_name )
+{
+
+}
+
+/**
  * Tests if Eve Online API key is valid and has the proper access rights to perform a certain request
  *
  * If $access_mask is not provided, it will be requested from API servers.

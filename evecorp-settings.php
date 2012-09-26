@@ -34,13 +34,24 @@ function evecorp_admin_init()
 	register_setting( 'evecorp', 'evecorp_options', 'evecorp_validate_settings' );
 
 	// Eve Online Corporate API Key Section
-	add_settings_section( 'section_corpkey', 'Corporation API Key', 'corpkey_section_html', 'evecorp_settings' );
-	add_settings_field( 'corpkey_ID', 'Key ID', 'corpkey_ID_formfield', 'evecorp_settings', 'section_corpkey' );
-	add_settings_field( 'corpkey_vcode', 'Verification Code', 'corpkey_vcode_formfield', 'evecorp_settings', 'section_corpkey' );
-	add_settings_field( 'cache_API', 'Enable API Cache', 'cache_API_formfield', 'evecorp_settings', 'section_corpkey' );
+	if ( array_key_exists( 'corpkey_keyinfo', get_option( 'evecorp_options' ) ) ) {
+		$keyinfo = evecorp_get_option( 'corpkey_keyinfo' );
+		add_settings_section( 'section_corpkey', 'API Key Information', 'corpkey_section_html', 'evecorp_settings' );
+		add_settings_field( 'corpkey_ID', 'Key ID', 'corpkey_ID_formfield', 'evecorp_settings', 'section_corpkey' );
+		add_settings_field( 'corpkey_type', 'Key type', 'evecorp_apikey_type', 'evecorp_settings', 'section_corpkey' );
+		add_settings_field( 'corpkey_corpname', 'Created for', 'evecorp_print', 'evecorp_settings', 'section_corpkey', $keyinfo['characters'][0]['corporationName'] );
+		add_settings_field( 'corpkey_issuer', 'Created by', 'evecorp_print', 'evecorp_settings', 'section_corpkey', $keyinfo['characters'][0]['characterName'] );
+		add_settings_field( 'corpkey_expires', 'Valid until', 'evecorp_apikey_expiry', 'evecorp_settings', 'section_corpkey', $keyinfo['expires'] );
+		add_settings_field( 'corpkey_access', 'Access Permissions', 'evecorp_corpkey_access', 'evecorp_settings', 'section_corpkey' );
+	} else {
+		add_settings_section( 'section_corpkey', 'API Key Registration', 'corpkey_section_html', 'evecorp_settings' );
+		add_settings_field( 'corpkey_ID', 'Key ID', 'corpkey_ID_formfield', 'evecorp_settings', 'section_corpkey' );
+		add_settings_field( 'corpkey_vcode', 'Verification Code', 'corpkey_vcode_formfield', 'evecorp_settings', 'section_corpkey' );
+	}
 
 	// Eve Online API Server and Cache Section
 	add_settings_section( 'section_API', 'Eve Online API Settings', 'eveapi_section_html', 'evecorp_settings' );
+	add_settings_field( 'cache_API', 'Enable API Cache', 'cache_API_formfield', 'evecorp_settings', 'section_API' );
 
 
 //	// Out-of-game browser section
@@ -59,7 +70,7 @@ function evecorp_admin_init()
 function corpkey_section_html()
 {
 	global $evecorp_IGB_data;
-	echo 'CEOs or a director can create corporation keys at the ';
+	echo 'CEOs or directors can create corporation keys at the ';
 	if ( evecorp_is_trusted() ) {
 		echo '<a href="https://support.eveonline.com/api/Key/CreatePredefined/5244936/' . $evecorp_IGB_data['charid'] . '/true" target="_BLANK">Eve Online Support website</a>.</p>';
 	} else {
@@ -70,11 +81,15 @@ function corpkey_section_html()
 function corpkey_ID_formfield()
 {
 	$corpkey_ID = evecorp_get_option( 'corpkey_ID' );
-	echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$corpkey_ID}'";
-	if ( defined( 'EVECORP_CORPKEY_ID' ) )
-		echo ' disabled="disabled" class="regular-text code disabled"';
-	echo ' >';
-	echo '<p class="description">The ID number of your corporate API key.</p>';
+	if ( array_key_exists( 'corpkey_keyinfo', get_option( 'evecorp_options' ) ) ) {
+		echo '<a href="https://support.eveonline.com/api/Key/Update/' . $corpkey_ID . '" title="Update this API Key at Eve Online Support" target="_BLANK">' . $corpkey_ID . '</a> ' . evecorp_icon( 'yes' );
+	} else {
+		echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$corpkey_ID}'";
+		if ( defined( 'EVECORP_CORPKEY_ID' ) )
+			echo ' disabled="disabled" class="regular-text code disabled"';
+		echo ' >';
+		echo '<p class="description">The ID number of your corporate API key.</p>';
+	}
 }
 
 function corpkey_vcode_formfield()
@@ -85,6 +100,61 @@ function corpkey_vcode_formfield()
 		echo ' disabled="disabled" class="regular-text readonly"';
 	echo " >{$corpkey_vcode}</textarea>";
 	echo '<p class="description">The verification code for your corporate API key (usually 64 characters long).</p>';
+}
+
+function evecorp_print( $str )
+{
+	echo ($str);
+}
+
+function evecorp_corpkey_access()
+{
+	$key = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode' => evecorp_get_option( 'corpkey_vcode' )
+	);
+	$keyinfo = evecorp_get_option( 'corpkey_keyinfo' );
+	extract( $keyinfo );
+
+	$test_cases = array(
+		'WalletJournal',
+		'Titles',
+		'MemberTracking',
+		'CorporationSheet'
+	);
+	foreach ( $test_cases as $api_name ) {
+		echo $api_name . ' ';
+		$result = evecorp_is_valid_key( $key, $type, 'corp', $api_name, $accessMask );
+		if ( is_wp_error( $result ) ) {
+			echo evecorp_icon( 'no' );
+		} else {
+			echo evecorp_icon( 'no' );
+		}
+		echo '<br />';
+	}
+}
+
+function evecorp_apikey_type()
+{
+	$keyinfo = evecorp_get_option( 'corpkey_keyinfo' );
+	$key_type = $keyinfo['type'];
+	echo ($key_type) . ' ';
+	if ( 'Corporation' === $key_type ) {
+		echo evecorp_icon( 'yes' );
+	} else {
+		echo evecorp_icon( 'no' );
+	}
+}
+
+function evecorp_apikey_expiry( $timestr )
+{
+	$unixtime = strtotime( $timestr );
+	echo date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $unixtime );
+	if ( $unixtime > time() ) {
+		echo ' (' . human_time_diff( time(), $unixtime ) . ' from now). ' . evecorp_icon( 'yes' );
+	} else {
+		echo ' (expired ' . human_time_diff( $unixtime, time() ) . ' ago). ' . evecorp_icon( 'no' );
+	}
 }
 
 /**
@@ -119,48 +189,107 @@ function ogb_section_html()
  * Validates the input fields of the settings form
  *
  * @param array $input The values from the input form fields
-
- *  * @return array Sanitized values from the input form fields
+ *
+ * @return array Sanitized values from the input form fields
  */
 function evecorp_validate_settings( $input )
 {
-	$options = get_option('evecorp_options');
 
-	// Sanitize User input fields
-	$input['corpkey_ID'] = sanitize_text_field($input['corpkey_ID']);
-	$input['corpkey_vcode'] = sanitize_text_field($input['corpkey_vcode']);
+	// Debugging helper code: Emergency remove of keyinfo from options.
+//	unset( $options['corpkey_keyinfo'] );
+//	$options['corpkey_verified'] = false;
+//	return $options;
 
-	// Do we have key ID and vcode?
-	if ( $input['corpkey_ID'] <> '' &&  $input['corpkey_vcode'] <> '' ) {
 
-		$key = array(
-			'key_ID' => $input['corpkey_ID'],
-			'vcode' => $input['corpkey_vcode']
+	// Note that in this special case, we don't use evecorp_get_options() or
+	// evecorp_init_options().
+	$options = get_option( 'evecorp_options' );
+
+	// Get API key information from options if there are any.
+	if ( !array_key_exists( 'corpkey_keyinfo', $options ) ) {
+
+		// Sanitize User input fields
+		$input['corpkey_ID'] = sanitize_text_field( $input['corpkey_ID'] );
+		$input['corpkey_vcode'] = sanitize_text_field( $input['corpkey_vcode'] );
+
+		if ( $input['corpkey_ID'] <> '' && $input['corpkey_vcode'] <> '' ) {
+
+			// We have key ID and vcode from form submission.
+			$key = array(
+				'key_ID' => $input['corpkey_ID'],
+				'vcode' => $input['corpkey_vcode']
 			);
+			$options['corpkey_ID'] = $input['corpkey_ID'];
+			$options['corpkey_vcode'] = $input['corpkey_vcode'];
 
-		// Check if key and vcode are usable for our requests
-		$test_cases = array(
-			'WalletJournal',
-			'Titles',
-			'MemberTracking',
-			'CorporationSheet'
-				);
-		foreach ( $test_cases as $api_name ) {
-			$result = evecorp_is_valid_key( $key, 'Corporation', 'corp', $api_name );
-			if (is_wp_error($result)) {
-				add_settings_error('evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error');
-				return $options;
-			}
+			} elseif ( ( evecorp_get_option( 'corpkey_ID' ) <> '' && evecorp_get_option( 'corpkey_vcode' ) <> '' ) ) {
+
+			// We have key ID and vcode from previously saved options or constant.
+			$key = array(
+				'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+				'vcode' => evecorp_get_option( 'corpkey_vcode' )
+			);
+		} else {
+
+			// We don't have key ID and vcode.
+			add_settings_error( 'evecorp_settings', 'section_corpkey', 'Please supply API key and verification code.', 'error' );
+			unset( $options['corpkey_keyinfo'] );
+			$options['corpkey_verified'] = false;
+			return $options;
 		}
+	}
+
+	// Get (or refresh) API key information
+	$key = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode' => evecorp_get_option( 'corpkey_vcode' )
+	);
+	$keyinfo = evecorp_get_keyinfo( $key );
+	if ( is_wp_error( $keyinfo ) ) {
+
+		// Failed to fetch keyinfo
+		add_settings_error( 'evecorp_settings', 'section_corpkey', $keyinfo->get_error_message(), 'error' );
+
+		// Key fails, remove keyinfo from options
+		unset( $options['corpkey_keyinfo'] );
+		$options['corpkey_verified'] = false;
+		return $options;
+	} else {
+
+		// Store keyinfo in options
+		$options['corpkey_keyinfo'] = $keyinfo;
+	}
+
+	// Check if key and vcode are usable for our requests
+	$access_mask = $options['corpkey_keyinfo']['accessMask'];
+	$test_cases = array(
+		'WalletJournal',
+		'Titles',
+		'MemberTracking',
+		'CorporationSheet'
+	);
+	foreach ( $test_cases as $api_name ) {
+		$result = evecorp_is_valid_key( $key, 'Corporation', 'corp', $api_name, $access_mask );
+		if ( is_wp_error( $result ) ) {
+			//add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
+			$options['corpkey_verified'] = false;
+		}
+	}
+
+	if ( ! true === $options['corpkey_verified'] ) {
+
+		$options['corpkey_verified'] = true;
+		add_settings_error( 'evecorp_settings', 'section_corpkey', 'There are problems with your API key.', 'error' );
+
+	} else {
 
 		// If we reach here, out API key has passed all the API query tests.
 		$options['corpkey_ID'] = $input['corpkey_ID'];
 		$options['corpkey_vcode'] = $input['corpkey_vcode'];
+		$options['corpkey_keyinfo'] = $keyinfo;
 		$options['corpkey_verified'] = true;
-		add_settings_error('evecorp_settings', 'section_corpkey', 'Your API key has been verified. Happy blogging!', 'updated');
-		return $options;
+		add_settings_error( 'evecorp_settings', 'section_corpkey', 'Your API key has been verified. Happy blogging!', 'updated' );
 	}
-	add_settings_error('evecorp_settings', 'section_corpkey', 'Please supply a valid API key and verification code.', 'error');
 	return $options;
 }
 
@@ -193,11 +322,11 @@ function evecorp_settings_page()
 
 			<!-- Output nonce, action, and option_page fields for a settings page. -->
 
-			<?php settings_fields( 'evecorp' ); ?>
+	<?php settings_fields( 'evecorp' ); ?>
 
 			<!-- Print out all settings sections added to a particular settings page.  -->
 
-			<?php do_settings_sections( 'evecorp_settings' ); ?>
+	<?php do_settings_sections( 'evecorp_settings' ); ?>
 
 			<p class="submit">
 				<input type="submit" name="Submit" class="button-primary" value="Verify Key" />
@@ -216,16 +345,16 @@ function OLDwp_evecorp_adminpage()
 		<h2>Eve Online Settings</h2>
 		<p>
 
-			<?php
+	<?php
 // TODO: Needs work
-			if ( !evecorp_igb_access() )
-				echo "It is strongly recommended to access the configuration settings with the In-Game browser and have this server set as trusted.";
-			elseif ( !wp_evecorp_igb_trusted() )
-				echo "It is strongly recommended to set this server as trusted before accessing the configuration settings.";
-			else {
-				echo "Welcome " . $_SERVER["HTTP_EVE_CHARNAME"] . ". ";
-			}
-			?>
+	if ( !evecorp_igb_access() )
+		echo "It is strongly recommended to access the configuration settings with the In-Game browser and have this server set as trusted.";
+	elseif ( !wp_evecorp_igb_trusted() )
+		echo "It is strongly recommended to set this server as trusted before accessing the configuration settings.";
+	else {
+		echo "Welcome " . $_SERVER["HTTP_EVE_CHARNAME"] . ". ";
+	}
+	?>
 		</p>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'wp_evecorp' ); ?>
@@ -247,7 +376,7 @@ function OLDwp_evecorp_adminpage()
 				</tr>
 			</table>
 
-			<?php do_settings_sections( 'wp_evecorp_corpkey_section' ); ?>
+	<?php do_settings_sections( 'wp_evecorp_corpkey_section' ); ?>
 			<h3>Corporate API Key</h3>
 			<p>Optional. If you supply a corporate API key, additional features and
 				information can be provided to your corporation members.</p>
