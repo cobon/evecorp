@@ -24,15 +24,20 @@ function evecorp_init_options()
 	// Newly introduced options should be added here
 	$default_options = array(
 		'plugin_version' => EVECORP_VERSION,
-		'corpkey_ID' => '',
-		'corpkey_vcode' => '',
-		'corpkey_verified' => false,
-		'API_base_url' => 'https://api.eveonline.com/',
-		'cache_API' => false,
-		'char_url' => 'https://gate.eveonline.com/Profile/',
-		'char_url_label' => 'EVE Gate',
-		'corp_url' => 'https://gate.eveonline.com/Corporation/',
-		'corp_url_label' => 'EVE Gate',
+		'corpkey_ID'				 => '',
+		'corpkey_vcode'				 => '',
+		'corpkey_type'				 => '',
+		'corpkey_access_mask'		 => '',
+		'corpkey_expires'			 => '',
+		'corpkey_character_name'	 => '',
+		'corpkey_corporation_name'	 => '',
+		'corpkey_verified'			 => false,
+		'API_base_url'		 => 'https://api.eveonline.com/',
+		'cache_API'			 => false,
+		'char_url'			 => 'https://gate.eveonline.com/Profile/',
+		'char_url_label'	 => 'EVE Gate',
+		'corp_url'			 => 'https://gate.eveonline.com/Corporation/',
+		'corp_url_label'	 => 'EVE Gate',
 	);
 
 	// Get options from WP options API, if any. Use defaults if none.
@@ -67,9 +72,9 @@ function evecorp_init_options()
  */
 function evecorp_get_option( $key )
 {
-	$evecorp_options = get_option( 'evecorp_options' );
+	$evecorp_options		 = get_option( 'evecorp_options' );
 	if ( defined( 'EVECORP_' . strtoupper( $key ) ) )
-		$evecorp_options[$key] = constant( 'EVECORP_' . strtoupper( $key ) );
+		$evecorp_options[$key]	 = constant( 'EVECORP_' . strtoupper( $key ) );
 	return $evecorp_options[$key];
 }
 
@@ -121,9 +126,9 @@ function evecorp_IGB_data()
 	global $evecorp_IGB_data;
 
 	$evecorp_IGB_data = array(
-		'is_igb' => true,
-		'trusted' => false,
-		'values' => array( )
+		'is_igb'	 => true,
+		'trusted'	 => false,
+		'values'	 => array( )
 	);
 
 	foreach ( $_SERVER as $key => $value ) {
@@ -192,36 +197,30 @@ function evecorp_get_keyinfo( $key )
 	// Create the Pheal object
 	$request = new Pheal( $key['key_ID'], $key['vcode'], 'account' );
 
-		try {
+	try {
 
-			// Request acccess mask from API servers.
-			$result=$request->detectAccess();
-		} catch ( PhealAccessException $e ) {
+		// Request acccess mask from API servers.
+		$result = $request->detectAccess();
+	} catch ( PhealAccessException $e ) {
 
-			// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
-			return new WP_Error( 'PhealAccessException', $e->getMessage() );
-		} catch ( PhealAPIException $e ) {
+		// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
+		return new WP_Error( 'PhealAccessException', $e->getMessage() );
+	} catch ( PhealAPIException $e ) {
 
-			// API Error (Eve Online servers with API error)
-			return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
-		} catch ( PhealHTTPException $e ) {
+		// API Error (Eve Online servers with API error)
+		return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
+	} catch ( PhealHTTPException $e ) {
 
-			// Eve Online API servers answer with HTTP Error (503, 404, etc.)
-			return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
-		} catch ( PhealException $e ) {
+		// Eve Online API servers answer with HTTP Error (503, 404, etc.)
+		return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
+	} catch ( PhealException $e ) {
 
-			// Other Error (network/server connection, etc.)
-			return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
-		}
+		// Other Error (network/server connection, etc.)
+		return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
+	}
 
 	// Convert API result object to a PHP array variable
 	return $result->key->toArray();
-
-}
-
-function evecorp_apikey_has_access( $accessmask, $api_name )
-{
-
 }
 
 /**
@@ -674,13 +673,13 @@ function evecorp_icon( $icon )
 {
 	switch ( $icon ) {
 		case "yes":
-			$html = '<img src="' . admin_url() . 'images/yes.png" width="16" height="16" alt="Yes">';
+			$html	 = '<img src="' . admin_url() . 'images/yes.png" width="16" height="16" alt="Yes">';
 			break;
 		case "no":
-			$html = '<img src="' . admin_url() . 'images/no.png" width="16" height="16" alt="No">';
+			$html	 = '<img src="' . admin_url() . 'images/no.png" width="16" height="16" alt="No">';
 			break;
 		case "maybe":
-			$html = '<p><img src="' . includes_url() . 'images/smilies/icon_question.gif" width="16" height="16" alt="Maybe">';
+			$html	 = '<p><img src="' . includes_url() . 'images/smilies/icon_question.gif" width="16" height="16" alt="Maybe">';
 			break;
 	}
 	return $html;
