@@ -9,9 +9,8 @@
  */
 
 /**
- * Description of class-wp-pheal
+ * WordPress implememntation of Pheal
  *
- * @author wolf
  */
 class WP_Pheal extends Pheal {
 

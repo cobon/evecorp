@@ -160,26 +160,32 @@ function evecorp_IGB_data()
  * @uses Pheal object class
  * @return Pheal
  */
-function load_pheal()
+function load_wp_pheal()
 {
 	// Do this only once
-	if ( !class_exists( 'Pheal', FALSE ) ) {
+	if ( !class_exists( 'WP_Pheal', FALSE ) ) {
 
 		// Load the stuff
 		require_once dirname( __FILE__ ) . "/pheal/Pheal.php";
+		require_once dirname( __FILE__ ) . "/class-wp-pheal.php";
 
 		// register the class loader
 		spl_autoload_register( "Pheal::classload" );
 
-		// Set the cache and tell it were to save its contents
-		if ( true === evecorp_get_option( 'cache_API' ) )
-			PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );
+		// HTTP request method
+		PhealConfig::getInstance()->http_method = 'curl';
+
+// Set the cache and tell it were to save its contents
+		/*if ( true === evecorp_get_option( 'cache_API' ) )
+			PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );*/
+		PhealConfig::getInstance()->cache = new WP_Transients_Pheal();
 
 		// Enable access detection
 		PhealConfig::getInstance()->access = new PhealCheckAccess();
 
 		// Identify ourself
 		PhealConfig::getInstance()->http_user_agent = EVECORP . ' ' . EVECORP_VERSION;
+
 	}
 }
 
@@ -192,10 +198,10 @@ function load_pheal()
 function evecorp_get_keyinfo( $key )
 {
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Create the Pheal object
-	$request = new Pheal( $key['key_ID'], $key['vcode'], 'account' );
+	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], 'account' );
 
 	try {
 
@@ -242,10 +248,10 @@ function evecorp_is_valid_key( $key, $key_type, $scope, $api_name, $access_mask 
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Create the Pheal object
-	$request = new Pheal( $key['key_ID'], $key['vcode'], $scope );
+	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], $scope );
 
 	if ( $access_mask === '' ) {
 
@@ -311,10 +317,10 @@ function evecorp_get_char_name( $character_ID )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'eve' );
+	$request = new WP_Pheal( null, null, 'eve' );
 
 	// Detect access
 	$request->detectAccess();
@@ -354,10 +360,10 @@ function evecorp_get_corp_name( $corporation_ID )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'corp' );
+	$request = new WP_Pheal( null, null, 'corp' );
 
 	// Detect access
 	$request->detectAccess();
@@ -397,7 +403,7 @@ function evecorp_get_ID( $name )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Prepare the arguments
 	$arguments = array(
@@ -405,7 +411,7 @@ function evecorp_get_ID( $name )
 	);
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'eve' );
+	$request = new WP_Pheal( null, null, 'eve' );
 
 	// Detect access
 	$request->detectAccess();
@@ -464,7 +470,7 @@ function evecorp_corpsheet( $corporation_ID )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Prepare the arguments
 	$arguments = array(
@@ -472,7 +478,7 @@ function evecorp_corpsheet( $corporation_ID )
 	);
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'corp' );
+	$request = new WP_Pheal( null, null, 'corp' );
 
 	// Detect access
 	$request->detectAccess();
@@ -512,7 +518,7 @@ function evecorp_is_member( $character_ID, $corporation_ID )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Prepare the arguments
 	$arguments = array(
@@ -520,7 +526,7 @@ function evecorp_is_member( $character_ID, $corporation_ID )
 	);
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'eve' );
+	$request = new WP_Pheal( null, null, 'eve' );
 
 	// Detect access
 	$request->detectAccess();
@@ -564,7 +570,7 @@ function evecorp_is_CEO( $character_ID, $corporation_ID )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Prepare the arguments
 	$arguments = array(
@@ -572,7 +578,7 @@ function evecorp_is_CEO( $character_ID, $corporation_ID )
 	);
 
 	// Create the Pheal object
-	$request = new Pheal( null, null, 'corp' );
+	$request = new WP_Pheal( null, null, 'corp' );
 
 	// Detect access
 	$request->detectAccess();
@@ -618,7 +624,7 @@ function evecorp_is_director( $character_ID, $corporation_key )
 {
 
 	// Load pheal
-	load_pheal();
+	load_wp_pheal();
 
 	// Prepare the arguments
 	$arguments = array(
@@ -626,7 +632,7 @@ function evecorp_is_director( $character_ID, $corporation_key )
 	);
 
 	// Create the Pheal object
-	$request = new Pheal( $corporation_key['keyID'], $corporation_key['vCode'], 'corp' );
+	$request = new WP_Pheal( $corporation_key['keyID'], $corporation_key['vCode'], 'corp' );
 
 	// Detect access
 	$request->detectAccess();
