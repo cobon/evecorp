@@ -9,21 +9,18 @@
   Author URI: https://gate.eveonline.com/Profile/Mitome%20Cobon-Han
   License: GPL3
 
- * Copyright (c) 2012 Mitome Cobon-Han  (mitome.ch@gmail.com)
+ * Copyright (c) 2012 Mitome Cobon-Han (mitome.ch@gmail.com)
  *
  * This file is part of evecorp.
  *
- *  evecorp is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *  evecorp is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
- * Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * evecorp.  If not, see <http://www.gnu.org/licenses/>.
+ * evecorp is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version. evecorp is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details. You should have received a copy of the GNU General Public License
+ * along with evecorp. If not, see <http://www.gnu.org/licenses/>.
  *
  * This program incorporates work covered by the following copyright and
  * permission notices:
@@ -31,10 +28,17 @@
  * Pheal class library Copyright (c) 2010-2012, Peter Petermann, Daniel Hoffend
  * licensed under the MIT License.
  *
+ * jQuery contextMenu by Rodney Rehm, Addy Osmani licensed under MIT License and
+ * GPL v3
+ *
  * EveApiRoles class Copyright (c) 2008, Michael Cummings licensed under the
  * Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.
  *
- * Eve Online Copyright (c) 1997-2012, CCP hf, Reykjavík, Iceland
+ * This program connects to and exchanges data with API servers of Eve Online.
+ * by using this program you agree with the website terms of service of Eve
+ * Online published under <http://community.eveonline.com/pnp/termsofuse.asp>.
+ *
+ * Eve Online is copyright (c) 1997-2012, CCP hf, Reykjavík, Iceland
  *
  * EVE Online and the EVE logo are the registered trademarks of CCP hf. All
  * rights are reserved worldwide.
@@ -85,12 +89,22 @@ if ( is_admin() ) {
 	// non-admin enqueues, actions, and filters
 }
 
-// Shortcodes
-add_shortcode( 'eve-char', 'evecorp_char' );
-add_shortcode( 'eve-corp', 'evecorp_corp' );
+// Register shortcode handler
+add_shortcode( 'eve', 'evecorp_shortcode' );
+add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
+
+function evecorp_menu_scripts()
+{
+	wp_register_style( 'evecorp-contextMenu', plugin_dir_url( __FILE__ ) . 'js/jquery.contextMenu.css' );
+	wp_register_script( 'jquery.ui.position', plugin_dir_url( __FILE__ ) . 'js/jquery.ui.position.js', array( 'jquery' ) );
+	wp_register_script( 'jquery.contextMenu', plugin_dir_url( __FILE__ ) . 'js/jquery.contextMenu.js', array( 'jquery', 'jquery.ui.position' ) );
+	wp_register_script( 'evecorp.contextMenu', plugin_dir_url( __FILE__ ) . 'js/evecorp.contextMenu.js', array( 'jquery.contextMenu' ) );
+	wp_enqueue_script( 'evecorp.contextMenu' );
+	wp_enqueue_style( 'evecorp-contextMenu' );
+}
 
 /**
- * Shortcode handler
+ * Eve Online Shortcode handler
  *
  * Converts a Eve Online identifier into links either for Eve Online clients or
  * normal browsers.
@@ -98,105 +112,98 @@ add_shortcode( 'eve-corp', 'evecorp_corp' );
  * Usage examples: <br>
  * 	[eve name="Mitome Cobon-Han"] <br>
  * 	[eve corp="Federation Interstellar Resources"] <br>
+ * 	[eve system="Misneden"] <br>
+ * 	[eve item="Tritanium"] <br>
  *  [eve id=123456789]
  *
+ * @param type $shortcode
+ * @return string html code for output.
  */
-function evecorp_eve( $atts )
+function evecorp_shortcode( $shortcode )
 {
-	extract( shortcode_atts( array(
-				'name'	 => '',
-				'corp'	 => '',
-				'id'	 => '',
-					), $atts ) );
+	$sc = shortcode_atts( array(
+		'name'	 => '',
+		'corp'	 => '',
+			), $shortcode );
 
-	switch ( $atts ) {
-		case $value:
-
-
-			break;
-
-		default:
-			break;
-	}
-
-	if ( evecorp_is_eve() ) {
-
-		// Access from Eve IGB
-		// Lookup character ID
-		$id		 = evecorp_get_id( $name );
-		$html	 = '<a onmouseover="this.style.cursor = \'pointer\'"
-			onclick="CCPEVE.showInfo(1377, ' . $id . ')"
-			title="Show Character Info">' . $name . '</a>';
-	} else {
-
-		// Access from external browser
-		$html = '<a href="' . evecorp_get_option( 'char_url' ) . $name . '"
-			title="Show ' . $name . ' on ' . evecorp_get_option( 'char_url_label' ) . '">' . $name . '</a>';
+	foreach ( $sc as $key => $value ) {
+		if ( '' <> $value ) {
+			switch ( $key ) {
+				case 'name':
+					$html	 = evecorp_char( $value );
+					break;
+				case 'corp':
+					$html	 = evecorp_corp( $value );
+					break;
+				default:
+					break;
+			}
+		}
 	}
 	return $html;
 }
 
-//[eve-char name="Mitome Cobon-Han"]
-function evecorp_char( $atts )
+/**
+ * Returns HTML code with the linked Eve Online character name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $name The name of the character to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_char( $name )
 {
-	extract( shortcode_atts( array(
-				'name'	 => '',
-				'id'	 => '',
-					), $atts ) );
+	$classes = 'evecorp-char';
 
+	// Access from Eve Online in-game browser?
 	if ( evecorp_is_eve() ) {
 
-		// Access from Eve IGB
-		// Lookup character ID
-		$id		 = evecorp_get_id( $name );
-		$html	 = '<a onmouseover="this.style.cursor = \'pointer\'"
-			onclick="CCPEVE.showInfo(1377, ' . $id . ')"
-			title="Show Character Info">' . $name . '</a>';
-	} else {
+		$classes .= ' igb';
 
-		// Access from external browser
-		$html = '<a href="' . evecorp_get_option( 'char_url' ) . $name . '"
-			title="Show ' . $name . ' on ' . evecorp_get_option( 'char_url_label' ) . '">' . $name . '</a>';
+		// Are in the browsers list of trusted sites?
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
 	}
+	$id = evecorp_get_id( $name );
+	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$name.'" title="Click for menu">'.$name.'</a>';
 	return $html;
 }
 
-//[eve-corp name="Federation Interstellar Resources"]
-function evecorp_corp( $atts )
+/**
+ * Returns HTML code with the linked Eve Online corporation name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $corp_name The name of the corporation to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_corp( $corp_name )
 {
-	extract( shortcode_atts( array(
-				'name'	 => '',
-				'id'	 => '',
-					), $atts ) );
+	$classes = 'evecorp-corp';
 
+	// Access from Eve Online in-game browser?
 	if ( evecorp_is_eve() ) {
 
-		// Access from Eve IGB
-		// Lookup corporation ID
-		$id		 = evecorp_get_id( $name );
-		$html	 = '<a onmouseover="this.style.cursor = \'pointer\'"
-			onclick="CCPEVE.showInfo(2, ' . $id . ')"
-			title="Show Corporation Info">' . $name . '</a>';
-	} else {
+		$classes .= ' igb';
 
-		// Access from external browser
-		$html = '<a href="' . evecorp_get_option( 'corp_url' ) . $name . '"
-			title="Show ' . $name . ' on ' . evecorp_get_option( 'corp_url_label' ) . '">' . $name . '</a>';
+		// Are in the browsers list of trusted sites?
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
 	}
+	$id = evecorp_get_id( $corp_name );
+	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$corp_name.'" title="Click for menu">'.$corp_name.'</a>';
 	return $html;
 }
 
 /**
  * Hook evecorp into the WordPress authentication flow.
  *
- * Allow Site administrators can still login with user name/password,
+ * Ensure Site administrators can still login with user name/password,
  * all others need either a valid WP session cookies or supply Eve Online API
  * key information.
  */
-remove_all_filters( 'authenticate' );
-add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
+//remove_all_filters( 'authenticate' );
+//add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
 add_filter( 'authenticate', 'evecorp_authenticate_user', 20, 3 );
-add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
+//add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
 
 /**
  * Tests if the supplied credentials could belong to the WP admin account.
@@ -206,7 +213,9 @@ add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
  */
 function evecorp_auth_admin( $user, $login, $password )
 {
-	unset( $user );
+	if ( is_wp_error( $user ) )
+		return $user;
+
 	if ( !empty( $login ) && !empty( $password ) ) {
 		$super_admins = get_super_admins();
 
@@ -235,6 +244,10 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	if ( is_a( $user, 'WP_User' ) ) {
 		return $user;
 	}
+
+	// If the form has not been submitted yet.
+	if ( !isset( $_POST['wp-submit'] ) )
+		return $user;
 
 	// Do we have a user submitted API key?
 	if ( empty( $key_ID ) || empty( $vcode ) ) {

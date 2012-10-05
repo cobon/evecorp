@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Eve Online Plugin for WordPress
  *
@@ -23,7 +22,7 @@ function evecorp_init_options()
 
 	// Newly introduced options should be added here
 	$default_options = array(
-		'plugin_version' => EVECORP_VERSION,
+		'plugin_version'			 => EVECORP_VERSION,
 		'corpkey_ID'				 => '',
 		'corpkey_vcode'				 => '',
 		'corpkey_type'				 => '',
@@ -32,12 +31,12 @@ function evecorp_init_options()
 		'corpkey_character_name'	 => '',
 		'corpkey_corporation_name'	 => '',
 		'corpkey_verified'			 => false,
-		'API_base_url'		 => 'https://api.eveonline.com/',
-		'cache_API'			 => false,
-		'char_url'			 => 'https://gate.eveonline.com/Profile/',
-		'char_url_label'	 => 'EVE Gate',
-		'corp_url'			 => 'https://gate.eveonline.com/Corporation/',
-		'corp_url_label'	 => 'EVE Gate',
+		'API_base_url'				 => 'https://api.eveonline.com/',
+		'cache_API'					 => false,
+		'char_url'					 => 'https://gate.eveonline.com/Profile/',
+		'char_url_label'			 => 'EVE Gate',
+		'corp_url'					 => 'https://gate.eveonline.com/Corporation/',
+		'corp_url_label'			 => 'EVE Gate',
 	);
 
 	// Get options from WP options API, if any. Use defaults if none.
@@ -126,7 +125,7 @@ function evecorp_IGB_data()
 	global $evecorp_IGB_data;
 
 	$evecorp_IGB_data = array(
-		'is_igb'	 => true,
+		'is_igb'	 => false,
 		'trusted'	 => false,
 		'values'	 => array( )
 	);
@@ -134,23 +133,22 @@ function evecorp_IGB_data()
 	foreach ( $_SERVER as $key => $value ) {
 
 		// Skip on non-Eve headers
-		if ( strpos( 'HTTP_EVE', $key ) === false )
-			continue;
+		if ( strpos( $key, 'HTTP_EVE_' ) === 0 ) {
 
-		// IGB browser detected
-		$evecorp_IGB_data['is_igb'] = true;
+			// IGB browser detected
+			$evecorp_IGB_data['is_igb'] = true;
 
-		// Remove the HTTP_EVE_ prefix and make it lowercase
-		$key = strtolower( str_replace( 'HTTP_EVE_', '', $key ) );
+			// Remove the HTTP_EVE_ prefix and make it lowercase
+			$key = strtolower( str_replace( 'HTTP_EVE_', '', $key ) );
 
-		// Set the trusted value to true if the header has been sent.
-		if ( $key === 'trusted' )
-			$evecorp_IGB_data['trusted'] = true;
+			// Set the trusted value to true if the header has been sent.
+			if ( $key === 'trusted' && 'Yes' === $value)
+				$evecorp_IGB_data['trusted'] = true;
 
-		// Store key and value in array
-		$evecorp_IGB_data['values'][$key] = $value;
+			// Store key and value in array
+			$evecorp_IGB_data['values'][$key] = $value;
+		}
 	}
-
 	return($evecorp_IGB_data);
 }
 
@@ -176,8 +174,8 @@ function load_wp_pheal()
 		PhealConfig::getInstance()->http_method = 'curl';
 
 // Set the cache and tell it were to save its contents
-		/*if ( true === evecorp_get_option( 'cache_API' ) )
-			PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' );*/
+		/* if ( true === evecorp_get_option( 'cache_API' ) )
+		  PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' ); */
 		PhealConfig::getInstance()->cache = new WP_Transients_Pheal();
 
 		// Enable access detection
@@ -185,7 +183,6 @@ function load_wp_pheal()
 
 		// Identify ourself
 		PhealConfig::getInstance()->http_user_agent = EVECORP . ' ' . EVECORP_VERSION;
-
 	}
 }
 
