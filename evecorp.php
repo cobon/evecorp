@@ -157,14 +157,14 @@ function evecorp_char( $name )
 	// Access from Eve Online in-game browser?
 	if ( evecorp_is_eve() ) {
 
-		$classes .= ' igb';
+		$classes .= '-igb';
 
 		// Are in the browsers list of trusted sites?
 		if ( evecorp_is_trusted() )
 			$classes .=' trusted';
 	}
 	$id = evecorp_get_id( $name );
-	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$name.'" title="Click for menu">'.$name.'</a>';
+	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$name.'" title="Pilot Information">'.$name.'</a>';
 	return $html;
 }
 
@@ -182,14 +182,14 @@ function evecorp_corp( $corp_name )
 	// Access from Eve Online in-game browser?
 	if ( evecorp_is_eve() ) {
 
-		$classes .= ' igb';
+		$classes .= '-igb';
 
 		// Are in the browsers list of trusted sites?
 		if ( evecorp_is_trusted() )
 			$classes .=' trusted';
 	}
 	$id = evecorp_get_id( $corp_name );
-	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$corp_name.'" title="Click for menu">'.$corp_name.'</a>';
+	$html = '<a class="'. $classes .'" id="'.$id.'" name="'.$corp_name.'" title="Corporation Information">'.$corp_name.'</a>';
 	return $html;
 }
 

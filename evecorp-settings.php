@@ -49,17 +49,6 @@ function evecorp_admin_init()
 		add_settings_field( 'corpkey_expires', 'Valid until', 'evecorp_apikey_expiry', 'evecorp_settings', 'section_corpkey' );
 		add_settings_field( 'corpkey_access', 'Permissions', 'evecorp_corpkey_access', 'evecorp_settings', 'section_corpkey' );
 	}
-
-	// Eve Online API Server and Cache Section
-	add_settings_section( 'section_API', 'Eve Online API Settings', 'eveapi_section_html', 'evecorp_settings' );
-	add_settings_field( 'cache_API', 'Enable API Cache', 'cache_API_formfield', 'evecorp_settings', 'section_API' );
-
-	// Out-of-game browser section
-//	add_settings_section( 'section_OGB', 'Out-of-Game Browser Settings', 'OGB_section_html', 'evecorp_settings' );
-//	add_settings_field( 'char_URL', 'Character Profiles URL', 'char_URL_formfield', 'evecorp_settings', 'section_OGB' );
-//	add_settings_field( 'char_label', 'Character Profiles Label', 'char_label_formfield', 'evecorp_settings', 'section_OGB' );
-//	add_settings_field( 'corp_URL', 'Corporation Profiles URL', 'corp_url_formfield', 'evecorp_settings', 'section_OGB' );
-//	add_settings_field( 'corp_label', 'Corporation Profiles Label', 'corp_label_formfield', 'evecorp_settings', 'section_OGB' );
 }
 
 /**
@@ -209,30 +198,6 @@ function eveapi_section_html()
 }
 
 /**
- * Output form field for the cache API setting
- *
- * @global array $evecorp_options
- */
-function cache_API_formfield()
-{
-	global $evecorp_options;
-	echo "<input id='cache_API' name='evecorp_options[cache_API]' type='checkbox' ";
-	if ( $evecorp_options['cache_API'] )
-		echo "checked='checked'";
-	echo "class='code' /> ";
-	echo '<span class="description">Store API data for repeated requests (recommended).</span>';
-}
-
-/**
- * Output description for the out-of-game browser section
- *
- */
-function ogb_section_html()
-{
-	echo '<p>Eve Online Out-of-Game Browser Section Description.</p>';
-}
-
-/**
  * Validates the input fields of the settings form
  *
  * @global array $evecorp_options
@@ -338,7 +303,7 @@ function evecorp_add_settings_menu()
 
 	$page_title	 = 'Eve Online Settings';
 	$menu_title	 = 'Eve Online';
-	$capability	 = 'read';
+	$capability	 = 'manage_options';
 
 	// Save the page hook for use by contextual help later
 	$evecorp_settings_page_hook = add_options_page( $page_title, $menu_title, $capability, 'evecorp_settings', 'evecorp_settings_page' );

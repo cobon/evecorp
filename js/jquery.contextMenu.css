@@ -25,7 +25,8 @@
     border-right: 1px solid #666;
 	border-bottom: 1px solid #666;
     background: #000;
-	color: #CCCCCC;
+	/*color: #CCCCCC;*/
+	color: lightgray;
 
     -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
        -moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
@@ -33,13 +34,14 @@
          -o-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 
-    font-family: "EveSans Neue", "Eve Sans Neue", EveSans, Fragma, Arial, Verdana, Helvetica, sans-serif;
+    font-family: "EveSans Neue", "Arial", "Liberation Sans", Helvetica, sans-serif;
     font-size: 11px;
 }
 
 .context-menu-item {
     padding: 2px 2px 2px 4px;
     background-color: #000;
+	color: inherit;
     position: relative;
     -webkit-user-select: none;
        -moz-user-select: -moz-none;
@@ -63,10 +65,11 @@
 .context-menu-item.hover {
     cursor: pointer;
     background-color: #404040;
+	color: inherit;
 }
 
 .context-menu-item.disabled {
-    color: #666;
+    color: #666666;
 }
 
 .context-menu-input.hover,
