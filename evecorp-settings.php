@@ -9,7 +9,7 @@
 
 require_once dirname( __FILE__ ) . '/admin-functions.php';
 
-// Contextual Help text for settings page
+/* Contextual Help text for settings page */
 include_once(dirname( __FILE__ ) . '/settings-help.php');
 
 /**
@@ -30,14 +30,14 @@ function evecorp_admin_init()
 {
 	global $evecorp_options;
 
-	// Add our settings to the settings whitelist
+	/* Add our settings to the settings whitelist */
 	register_setting( 'evecorp', 'evecorp_options', 'evecorp_validate_settings' );
 
-	// Eve Online Corporate API Key Section
+	/* Eve Online Corporate API Key Section */
 	add_settings_section( 'section_corpkey', 'API Key Information', 'corpkey_section_html', 'evecorp_settings' );
 	add_settings_field( 'corpkey_ID', 'Key ID', 'corpkey_ID_formfield', 'evecorp_settings', 'section_corpkey' );
 
-	// Do we have a API key?
+	/* Do we have a API key? */
 	if ( empty( $evecorp_options['corpkey_ID'] ) ) {
 
 		add_settings_field( 'corpkey_vcode', 'Verification Code', 'corpkey_vcode_formfield', 'evecorp_settings', 'section_corpkey' );
@@ -48,11 +48,13 @@ function evecorp_admin_init()
 		add_settings_field( 'corpkey_issuer', 'Created by', 'evecorp_print', 'evecorp_settings', 'section_corpkey', $evecorp_options['corpkey_character_name'] );
 		add_settings_field( 'corpkey_expires', 'Valid until', 'evecorp_apikey_expiry', 'evecorp_settings', 'section_corpkey' );
 		add_settings_field( 'corpkey_access', 'Permissions', 'evecorp_corpkey_access', 'evecorp_settings', 'section_corpkey' );
+		add_settings_field( 'corpkey_url', 'Site Address (URL)', 'evecorp_apikey_url', 'evecorp_settings', 'section_corpkey' );
 	}
 }
 
 /**
  * Output description for the Eve Online Corporate API Key Section
+ *
  * @todo Provide more information about API keys and access rights, provide
  *  link to create key
  */
@@ -77,11 +79,12 @@ function corpkey_ID_formfield()
 {
 	global $evecorp_options;
 
-	// Do we have a API key?
+	/* Do we have a API key? */
+	$field_value = form_option( $evecorp_options['corpkey_ID'] );
 	if ( empty( $evecorp_options['corpkey_ID'] ) ) {
-		echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$evecorp_options['corpkey_ID']}'";
+		echo "<input id='corpkey_ID' name='evecorp_options[corpkey_ID]' type='text' value='{$field_value}'";
 
-		// Make it read-only if defined as constant in wp-config.php
+		/* Make it read-only if defined as constant in wp-config.php */
 		if ( defined( 'EVECORP_CORPKEY_ID' ) )
 			echo ' disabled="disabled" class="regular-text code disabled"';
 		echo " >\r\n";
@@ -91,7 +94,7 @@ function corpkey_ID_formfield()
 		   title='Update this API Key at Eve Online Support' target='_BLANK'>
 			<?php echo $evecorp_options['corpkey_ID']; ?></a>
 		<?php
-		echo evecorp_icon( 'yes' );
+		echo evecorp_icon( 'yes' ) . PHP_EOL;
 	}
 }
 
@@ -104,13 +107,14 @@ function corpkey_vcode_formfield()
 {
 	global $evecorp_options;
 
+	$field_value = form_option( $evecorp_options['corpkey_vcode'] );
 	echo "<textarea id='corpkey_vcode' name='evecorp_options[corpkey_vcode]' cols='32' rows='2'";
 
-	// Make it read-only if defined as constant in wp-config.php
+	/* Make it read-only if defined as constant in wp-config.php */
 	if ( defined( 'EVECORP_CORPKEY_VCODE' ) )
 		echo ' disabled="disabled" class="regular-text readonly"';
-	echo " >{$evecorp_options['corpkey_vcode']}</textarea>";
-	echo '<p class="description">Verification codes usually have 64 characters.</p>';
+	echo " >{$field_value}</textarea>" . PHP_EOL;
+	echo '<p class="description">Verification codes usually have 64 characters.</p>' . PHP_EOL;
 }
 
 /**
@@ -123,7 +127,7 @@ function corpkey_vcode_formfield()
  */
 function evecorp_print( $str )
 {
-	echo ($str);
+	echo ($str) . PHP_EOL;
 }
 
 function evecorp_corpkey_access()
@@ -145,12 +149,12 @@ function evecorp_corpkey_access()
 		$result = evecorp_is_valid_key( $key, $evecorp_options['corpkey_type'], 'corp', $api_name, $evecorp_options['corpkey_access_mask'] );
 		if ( is_wp_error( $result ) ) {
 			echo evecorp_icon( 'no' );
-			//add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
+//			add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
 			var_dump( $result );
 		} else {
 			echo evecorp_icon( 'yes' );
 		}
-		echo '<br />';
+		echo '<br />' . PHP_EOL;
 	}
 }
 
@@ -169,6 +173,7 @@ function evecorp_apikey_type()
 	} else {
 		echo evecorp_icon( 'no' );
 	}
+	echo PHP_EOL;
 }
 
 /**
@@ -186,15 +191,27 @@ function evecorp_apikey_expiry()
 	} else {
 		echo ' (expired ' . human_time_diff( $unixtime, time() ) . ' ago). ' . evecorp_icon( 'no' );
 	}
+	echo PHP_EOL;
 }
 
-/**
- * Output description for the Eve Online API section
- *
- */
-function eveapi_section_html()
+function evecorp_apikey_url()
 {
-	echo '<p>Eve Online API Section Description.</p>';
+	global $evecorp_options;
+	$corp_url = evecorp_get_corp_url( $evecorp_options['corpkey_corporation_id'] );
+	if ( site_url() == untrailingslashit($corp_url) ) {
+		echo 'This website address (' . site_url() . ') matches the coporation URL (' . $corp_url . ').' . evecorp_icon( 'yes' );
+	} else {
+		echo 'This website address (' . site_url() . ') does not match the coporation URL (' . $corp_url . ').' . evecorp_icon( 'no' );
+	}
+}
+
+function evecorp_apikey_clear_button()
+{
+	$other_attributes = array(
+		'onclick' => "return confirm('Are you sure?')"
+	);
+	submit_button( 'Remove API Key', 'delete', 'evecorp_options[corpkey_remove]', false, $other_attributes );
+	echo PHP_EOL;
 }
 
 /**
@@ -209,17 +226,17 @@ function evecorp_validate_settings( $input )
 
 	global $evecorp_options;
 
-	// Do we have a API key in options?
+	/* Do we have a API key in options? */
 	if ( empty( $evecorp_options['corpkey_ID'] ) ) {
 
-		// Sanitize User input fields
+		/* Sanitize User input fields */
 		$input['corpkey_ID']	 = sanitize_text_field( $input['corpkey_ID'] );
 		$input['corpkey_vcode']	 = sanitize_text_field( $input['corpkey_vcode'] );
 
-		// Do we have a user submitted API key?
+		/* Do we have a user submitted API key? */
 		if ( !empty( $input['corpkey_ID'] ) && !empty( $input['corpkey_vcode'] ) ) {
 
-			// We have key ID and vcode from form submission.
+			/* We have key ID and vcode from form submission. */
 			$key = array(
 				'key_ID' => $input['corpkey_ID'],
 				'vcode'	 => $input['corpkey_vcode']
@@ -229,12 +246,20 @@ function evecorp_validate_settings( $input )
 			$evecorp_options['corpkey_vcode']	 = $input['corpkey_vcode'];
 		} else {
 
-			// We don't have key ID and vcode.
+			/* We don't have key ID and vcode. */
 			add_settings_error( 'evecorp_settings', 'section_corpkey', 'Please supply API key and verification code.', 'error' );
 			return $evecorp_options;
 		}
 	} else {
 
+		/* Was the Clear-Key button clicked? */
+		if ( $input['corpkey_remove'] == "Remove API Key" ) {
+			/* Remove it */
+			unset( $evecorp_options['corpkey_ID'] );
+			unset( $evecorp_options['corpkey_vcode'] );
+			add_settings_error( 'evecorp_settings', 'section_corpkey', 'API key information cleared.', 'updated' );
+			return $evecorp_options;
+		}
 		$key = array(
 			'key_ID' => $evecorp_options['corpkey_ID'],
 			'vcode'	 => $evecorp_options['corpkey_vcode']
@@ -244,27 +269,29 @@ function evecorp_validate_settings( $input )
 	$keyinfo = evecorp_get_keyinfo( $key );
 	if ( is_wp_error( $keyinfo ) ) {
 
-		// Failed to fetch keyinfo
 		/**
+		 * Failed to fetch keyinfo
+		 *
 		 * @todo Add handling for different kind of failures (e.g connection problems).
 		 */
 		add_settings_error( 'evecorp_settings', 'section_corpkey', $keyinfo->get_error_message(), 'error' );
 
-		// Key fails, remove it
+		/* Key fails, remove it */
 		unset( $evecorp_options['corpkey_ID'] );
 		unset( $evecorp_options['corpkey_vcode'] );
 		return $evecorp_options;
 	} else {
 
-		// Store key information in options
+		/* Store key information in options */
 		$evecorp_options['corpkey_type']			 = $keyinfo['type'];
 		$evecorp_options['corpkey_access_mask']		 = $keyinfo['accessMask'];
 		$evecorp_options['corpkey_expires']			 = $keyinfo['expires'];
 		$evecorp_options['corpkey_character_name']	 = $keyinfo['characters'][0]['characterName'];
 		$evecorp_options['corpkey_corporation_name'] = $keyinfo['characters'][0]['corporationName'];
+		$evecorp_options['corpkey_corporation_id']	 = $keyinfo['characters'][0]['corporationID'];
 	}
 
-	// Check if key and vcode are usable for our requests
+	/* Check if key and vcode are usable for our requests */
 	$access_tests = array(
 		'WalletJournal',
 		'Titles',
@@ -276,7 +303,7 @@ function evecorp_validate_settings( $input )
 		$result = evecorp_is_valid_key( $key, $evecorp_options['corpkey_type'], 'corp', $api_name, $evecorp_options['corpkey_access_mask'] );
 		if ( is_wp_error( $result ) ) {
 			$access_errors++;
-			//add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
+//			add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
 		}
 	}
 
@@ -284,7 +311,7 @@ function evecorp_validate_settings( $input )
 		add_settings_error( 'evecorp_settings', 'section_corpkey', 'There are problems with this API key.', 'error' );
 	} else {
 
-		// If we reach here, out API key has passed all the API query tests.
+		/* If we reach here, out API key has passed all the API query tests. */
 		add_settings_error( 'evecorp_settings', 'section_corpkey', 'Your API key has been verified.', 'updated' );
 	}
 	return $evecorp_options;
@@ -298,17 +325,17 @@ function evecorp_validate_settings( $input )
 function evecorp_add_settings_menu()
 {
 
-	// Hook to screen for this page, used for contextual help.
+	/* Hook to screen for this page, used for contextual help. */
 	global $evecorp_settings_page_hook;
 
 	$page_title	 = 'Eve Online Settings';
 	$menu_title	 = 'Eve Online';
 	$capability	 = 'manage_options';
 
-	// Save the page hook for use by contextual help later
+	/* Save the page hook for use by contextual help later */
 	$evecorp_settings_page_hook = add_options_page( $page_title, $menu_title, $capability, 'evecorp_settings', 'evecorp_settings_page' );
 
-	// Add a contextual help tab to the admin page
+	/* Add a contextual help tab to the admin page */
 	add_action( 'load-' . $evecorp_settings_page_hook, 'evecorp_settings_help' );
 }
 
@@ -317,6 +344,7 @@ function evecorp_add_settings_menu()
  */
 function evecorp_settings_page()
 {
+	global $evecorp_options;
 	?>
 	<div class="wrap">
 		<div class="icon32" id="icon-options-general"><br /></div>
@@ -332,9 +360,20 @@ function evecorp_settings_page()
 			<?php do_settings_sections( 'evecorp_settings' ); ?>
 
 			<!-- Settings Sections End  -->
-
 			<p class="submit">
-				<input type="submit" name="Submit" class="button-primary" value="Verify Key" />
+				<?php
+				if ( empty( $evecorp_options['corpkey_ID'] ) ) {
+					submit_button( 'Verify Key', 'primary', 'submit', false );
+//					echo '<input type="submit" name="Submit" class="button-primary" value="Verify Key" />';
+				} else {
+					submit_button( 'Verify API Key', 'primary', 'submit', false );
+					echo '&nbsp;' . PHP_EOL;
+					evecorp_apikey_clear_button();
+					echo PHP_EOL;
+//					echo '<input type="submit" name="Submit" class="button-primary" value="-Re-Verify Key" />';
+//					echo '<input type="submit" name="Delete" class="button-secondary" value="Remove Key" />';
+				}
+				?>
 			</p>
 		</form>
 	</div>

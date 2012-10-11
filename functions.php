@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Eve Online Plugin for WordPress
  *
@@ -142,7 +143,7 @@ function evecorp_IGB_data()
 			$key = strtolower( str_replace( 'HTTP_EVE_', '', $key ) );
 
 			// Set the trusted value to true if the header has been sent.
-			if ( $key === 'trusted' && 'Yes' === $value)
+			if ( $key === 'trusted' && 'Yes' === $value )
 				$evecorp_IGB_data['trusted'] = true;
 
 			// Store key and value in array
@@ -499,7 +500,16 @@ function evecorp_corpsheet( $corporation_ID )
 	}
 
 	// Convert API result object to a PHP array variable
-	return $result->toArray();
+	$array = $result->toArray();
+	return $array['result'];
+}
+
+function evecorp_get_corp_url( $corporation_ID )
+{
+//	$corporation_ID	 = '98039381';
+	$corpsheet		 = evecorp_corpsheet( $corporation_ID );
+//	var_dump( $corpsheet );
+	return$corpsheet ['url'];
 }
 
 /**
