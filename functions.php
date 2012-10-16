@@ -506,10 +506,8 @@ function evecorp_corpsheet( $corporation_ID )
 
 function evecorp_get_corp_url( $corporation_ID )
 {
-//	$corporation_ID	 = '98039381';
-	$corpsheet		 = evecorp_corpsheet( $corporation_ID );
-//	var_dump( $corpsheet );
-	return$corpsheet ['url'];
+	$corpsheet = evecorp_corpsheet( $corporation_ID );
+	return $corpsheet ['url'];
 }
 
 /**
@@ -674,14 +672,74 @@ function evecorp_is_director( $character_ID, $corporation_key )
 // Check if character is personnel manager of corp
 // Check if character is security officer of corp
 // Check if character has any role in corp
-// Request Trust
+
+function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count = '' )
+{
+	$key = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
+	);
+
+	/* Prepare the arguments */
+	$arguments = array(
+		'accountKey' => $account_key
+	);
+
+	if ( '' != $from_ID ) {
+		$arguments['fromID'] = $from_ID;
+	}
+
+	if ( '' != $row_count ) {
+		$arguments['rowCount'] = $row_count;
+	}
+
+	/* Load pheal */
+	load_wp_pheal();
+
+	/* Create the Pheal object */
+	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], 'corp' );
+
+	try {
+
+		/* Call the WalletJournal function */
+		$result = $request->WalletJournal( $arguments );
+	} catch ( PhealAccessException $e ) {
+
+		/* API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway) */
+		return new WP_Error( 'PhealAccessException', $e->getMessage() );
+	} catch ( PhealAPIException $e ) {
+
+		/* API Error (Eve Online servers with API error) */
+		return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
+	} catch ( PhealHTTPException $e ) {
+
+		/* Eve Online API servers answer with HTTP Error (503, 404, etc.) */
+		return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
+	} catch ( PhealException $e ) {
+
+		/* Other Error (network/server connection, etc.) */
+		return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
+	}
+
+	/* Convert API result object to a PHP array variable */
+	$journal = $result->entries->toArray();
+	return $journal;
+}
+
+/**
+ * Request Trust
+ * @return string
+ */
 function evecorp_trust_button()
 {
 	$html = '<button type="button" onclick="CCPEVE.requestTrust(\'' . home_url() . '\');">Set ' . home_url() . ' as trusted</button>';
 	return $html;
 }
 
-// Icons
+/**
+ * Icons
+ * @return string
+ */
 function evecorp_icon( $icon )
 {
 	switch ( $icon ) {
