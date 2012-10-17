@@ -55,10 +55,9 @@
 define( "EVECORP", "Eve Online Player Corporation Plugin for WordPress" );
 define( "EVECORP_VERSION", 0.1 );
 
-/* Make sure we don't expose any info if called directly */
+/* Make sure we don't expose anything if called directly */
 if ( !function_exists( 'add_action' ) ) {
-	echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
-	exit;
+	die(); /* Silence is golden. */
 }
 
 /* Load common functions library */
@@ -84,6 +83,10 @@ if ( is_admin() ) {
 //  $options = get_option( 'evecorp_options' );
 //  if ( empty( $options['corpkey_id']) || empty( $options['corpkey_vcode'] ) )
 //	add_action( 'admin_notices', 'evecorp_config_notifiy' );
+
+	/* Allow user profile updates without e-mail address */
+	add_action('user_profile_update_errors','no_user_mail');
+
 } else {
 	/* non-admin enqueues, actions, and filters */
 }

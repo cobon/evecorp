@@ -21,3 +21,21 @@ function evecorp_activate()
 	evecorp_init_options();
 	add_option( 'evecorp_options', $evecorp_options );
 }
+
+/**
+ * Remove error condition if its because missing users mail adddress.
+ *
+ * @param WP_Error $errors
+ */
+function no_user_mail( $errors )
+{
+	$error_codes = $errors->get_error_codes();
+	foreach ( $error_codes as $error_code ) {
+		if ( $error_code === 'empty_email' ) {
+			unset( $errors->errors['empty_email'] );
+		}
+	}
+	if ( empty( $errors->errors ) ) {
+		unset( $errors );
+	}
+}
