@@ -29,13 +29,5 @@ function evecorp_activate()
  */
 function no_user_mail( $errors )
 {
-	$error_codes = $errors->get_error_codes();
-	foreach ( $error_codes as $error_code ) {
-		if ( $error_code === 'empty_email' ) {
-			unset( $errors->errors['empty_email'] );
-		}
-	}
-	if ( empty( $errors->errors ) ) {
-		unset( $errors );
-	}
+	unset( $errors->errors['empty_email'] );
 }
