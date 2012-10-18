@@ -18,7 +18,6 @@
  */
 function evecorp_init_options()
 {
-	/* @var $evecorp_options array */
 	global $evecorp_options;
 
 	// Newly introduced options should be added here
@@ -161,548 +160,99 @@ function evecorp_IGB_data()
  */
 function load_wp_pheal()
 {
-	// Do this only once
+	/* Do this only once */
 	if ( !class_exists( 'WP_Pheal', FALSE ) ) {
 
-		// Load the stuff
+		/* Load the stuff */
 		require_once dirname( __FILE__ ) . "/pheal/Pheal.php";
 		require_once dirname( __FILE__ ) . "/class-wp-pheal.php";
 
-		// register the class loader
+		/* Register the class loader */
 		spl_autoload_register( "Pheal::classload" );
 
-		// HTTP request method
+		/* HTTP request method */
 		PhealConfig::getInstance()->http_method = 'curl';
 
-// Set the cache and tell it were to save its contents
-		/* if ( true === evecorp_get_option( 'cache_API' ) )
-		  PhealConfig::getInstance()->cache = new PhealFileCache( WP_CONTENT_DIR . '/cache/pheal/' ); */
+		/* Turn on cacheing of requests */
 		PhealConfig::getInstance()->cache = new WP_Transients_Pheal();
 
-		// Enable access detection
+		/* Enable access detection */
 		PhealConfig::getInstance()->access = new PhealCheckAccess();
 
-		// Identify ourself
+		/* Identify ourself */
 		PhealConfig::getInstance()->http_user_agent = EVECORP . ' ' . EVECORP_VERSION;
 	}
 }
 
 /**
+ * Generic API request function
  *
- * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
+ * @param string $scope
+ * @param string $API
+ * @param array $arguments
+ * @param array $key
  *
- * @return mixed. Array on success, WP_Error object on failure.
+ * @return mixed WP_Pheal object on success, WP_Error object on failure.
  */
-function evecorp_get_keyinfo( $key )
+function evecorp_api( $scope, $API, $arguments = '', $key = '', $key_type = '', $access_mask = '' )
 {
-	// Load pheal
-	load_wp_pheal();
-
-	// Create the Pheal object
-	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], 'account' );
-
-	try {
-
-		// Request acccess mask from API servers.
-		$result = $request->detectAccess();
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
-		return new WP_Error( 'PhealAccessException', $e->getMessage() );
-	} catch ( PhealAPIException $e ) {
-
-		// API Error (Eve Online servers with API error)
-		return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
-	} catch ( PhealHTTPException $e ) {
-
-		// Eve Online API servers answer with HTTP Error (503, 404, etc.)
-		return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
-	} catch ( PhealException $e ) {
-
-		// Other Error (network/server connection, etc.)
-		return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
-	}
-
-	// Convert API result object to a PHP array variable
-	return $result->key->toArray();
-}
-
-/**
- * Tests if Eve Online API key is valid and has the proper access rights to perform a certain request
- *
- * If $access_mask is not provided, it will be requested from API servers.
- *
- * Needs key for API obviously
- *
- * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
- * @param string $key_type. The access level of the API key (Account, Character, Corporation).
- * @param string $scope. The scope of the request to test.
- * @param string $api_name Name of API request to check.
- * @param string $access_mask. Optional. The bitwise number of the calls the API key can query.
- *
- * @return mixed. true if $key is valid, WP_Error object on failure.
- */
-function evecorp_is_valid_key( $key, $key_type, $scope, $api_name, $access_mask = '' )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Create the Pheal object
-	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], $scope );
-
-	if ( $access_mask === '' ) {
-
-		try {
-
-			// Request acccess mask from API servers.
-			$request->detectAccess();
-		} catch ( PhealAccessException $e ) {
-
-			// API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway)
-			return new WP_Error( 'PhealAccessException', $e->getMessage() );
-		} catch ( PhealAPIException $e ) {
-
-			// API Error (Eve Online servers with API error)
-			return new WP_Error( 'PhealAPIException', $e->getMessage() );
-		} catch ( PhealHTTPException $e ) {
-
-			// Eve Online API servers answer with HTTP Error (503, 404, etc.)
-			return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
-		} catch ( PhealException $e ) {
-
-			// Other Error (network/server connection, etc.)
-			return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
-		}
-	} else {
-		$request->setAccess( $key_type, $access_mask );
-	}
-
-	try {
-
-		// Call the approbiate API function
-		$request->$api_name( $key );
-//		$result = $request->APIKeyInfo( $key );
-	} catch ( PhealAccessException $e ) {
-
-		// Access Error (Pheal refused to exec, cause accessMask not valid for this key)
-		return new WP_Error( 'PhealAccessException', $e->getMessage() );
-	} catch ( PhealAPIException $e ) {
-
-		// API Error (Eve Online servers sent back a error)
-		return new WP_Error( 'PhealAPIException', $e->getMessage() );
-	} catch ( PhealHTTPException $e ) {
-
-		// Eve Online API servers answer with HTTP Error (503, 404, etc.)
-		return new WP_Error( 'PhealHTTPException', $e->getMessage() );
-	} catch ( PhealException $e ) {
-
-		// Other Error (network/server connection, etc.)
-		return new WP_Error( 'PhealException', $e->getMessage() );
-	}
-	return true;
-}
-
-/**
- * Returns a character name looked up by its ID from Eve Online API
- * Doesn't need API key authorization
- *
- * @uses loadPheal()
- * @return string. Name of the character
- * @param string $characterID. ID number of the character to lookup.
- */
-function evecorp_get_char_name( $character_ID )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'eve' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CharacterInfo function
-		$result = $request->CharacterInfo( $character_ID );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Get the result as string in a PHP variable
-	return $result->CharacterInfo->characterName;
-}
-
-/**
- * Returns a corporation name looked up by its ID from Eve Online API
- *
- * Doesn't need API key authorization
- *
- * @return string. Name of the corporation
- *
- * @param string $corporationID. ID number of the corporation to lookup.
- */
-function evecorp_get_corp_name( $corporation_ID )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'corp' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CorporationSheet function
-		$result = $request->CorporationSheet( $corporation_ID );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Get the result as string in a PHP variable
-	return $result->corporationName;
-}
-
-/**
- * Returns a character or corporation ID looked up by its name from Eve
- *  Online API
- * Doesn't need API key authorization
- *
- * @uses loadPheal()
- * @return string. ID number of the character or corporation.
- * @param string $name. Name of the character or coporation to lookup.
- */
-function evecorp_get_ID( $name )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Prepare the arguments
-	$arguments = array(
-		'names' => $name
-	);
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'eve' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CharacterID function
-		$result = $request->CharacterID( $arguments );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Get the result as string in a PHP variable
-	return $result->characters[0]->characterID;
-}
-
-/**
- * Tests if character or corporation name is valid/existing by looking it up
- *  with Eve Online API
- * Doesn't need API key authorization
- *
- * @uses evecorp_getID()
- * @return TRUE|FALSE.
- * @param string $characterName. Name of the character or coporation to lookup.
- */
-function evecorp_is_name( $name )
-{
-
-	if ( eve_corp_get_ID( $name ) ) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-/**
- * Returns the publicly available information about a corporation by looking it up
- *  with Eve Online API
- *
- * Doesn't need API key authorization
- * @uses loadPheal()
- * @return array.
- * @param string $corporationID. ID number of the coporation.
- */
-function evecorp_corpsheet( $corporation_ID )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Prepare the arguments
-	$arguments = array(
-		'corporationID' => $corporation_ID
-	);
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'corp' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CorporationSheet function
-		$result = $request->CorporationSheet( $arguments );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Convert API result object to a PHP array variable
-	$array = $result->toArray();
-	return $array['result'];
-}
-
-function evecorp_get_corp_url( $corporation_ID )
-{
-	$corpsheet = evecorp_corpsheet( $corporation_ID );
-	return $corpsheet ['url'];
-}
-
-/**
- * Tests if a character is a member of a specific corp.
- *
- * Doesn't need API key authorization
- * @uses loadPheal()
- * @return boolean
- * @param string $characterID. ID number of the character.
- * @param string $corporationID. ID number of the coporation.
- */
-function evecorp_is_member( $character_ID, $corporation_ID )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Prepare the arguments
-	$arguments = array(
-		'characterID' => $character_ID
-	);
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'eve' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CharacterInfo function
-		$result = $request->CharacterInfo( $arguments );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Compare the result with the supplied corpID
-	if ( $result->corporationID == $corporation_ID ) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
-
-/**
- * Tests if a character is the CEO of a specific corp.
- *
- * Doesn't need API key authorization
- * @uses loadPheal()
- * @return TRUE|FALSE.
- * @param string $characterID. ID number of the character.
- * @param string $corporationID. ID number of the coporation.
- */
-function evecorp_is_CEO( $character_ID, $corporation_ID )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Prepare the arguments
-	$arguments = array(
-		'corporationID' => $corporation_ID
-	);
-
-	// Create the Pheal object
-	$request = new WP_Pheal( null, null, 'corp' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the CorporationSheet function
-		$result = $request->CorporationSheet( $arguments );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Compare the result with the supplied characterID
-	if ( $result->ceoID == $character_ID ) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
-
-/**
- * Tests if a character is a director of a specific corp.
- *
- * Needs corporation key with access to "Corporation Members/Member Security"
- *  for API
- *
- * @uses loadPheal()
- * @return boolean true if character is director
- * @param string $characterID. ID number of the character.
- * @param array $corpKey. Corporation API key authorization credentials.
- */
-function evecorp_is_director( $character_ID, $corporation_key )
-{
-
-	// Load pheal
-	load_wp_pheal();
-
-	// Prepare the arguments
-	$arguments = array(
-		'characterID' => $character_ID
-	);
-
-	// Create the Pheal object
-	$request = new WP_Pheal( $corporation_key['keyID'], $corporation_key['vCode'], 'corp' );
-
-	// Detect access
-	$request->detectAccess();
-
-	try {
-
-		// Call the MemberSecurity function
-		$result = $request->MemberSecurity( $arguments );
-	} catch ( PhealAccessException $e ) {
-
-		// API Access Error
-		echo '<div id="error" class="error"><p>Eve API access error: ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealAPIException $e ) {
-
-		// API Error
-		echo '<div id="error" class="error"><p>Eve API error (' . $e->code . '): ', $e->getMessage() . '.</p></div>';
-	} catch ( PhealException $e ) {
-
-		// Some other kind of error
-		echo '<div id="error" class="error"><p>Eve API error: ', $e->getMessage() . '.</p></div>';
-	}
-
-	// Compare the result with the RoleID for directors
-	if ( $result->CharacterID->RoleID == 1 ) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
-
-// Check if character is communication officer of corp
-// Check if character is personnel manager of corp
-// Check if character is security officer of corp
-// Check if character has any role in corp
-
-function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count = '' )
-{
-	$key = array(
-		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
-	);
-
-	/* Prepare the arguments */
-	$arguments = array(
-		'accountKey' => $account_key
-	);
-
-	if ( '' != $from_ID ) {
-		$arguments['fromID'] = $from_ID;
-	}
-
-	if ( '' != $row_count ) {
-		$arguments['rowCount'] = $row_count;
-	}
-
 	/* Load pheal */
 	load_wp_pheal();
 
+	if ( empty( $key ) ) {
+		$key['key_ID']	 = null;
+		$key['vcode']	 = null;
+	}
+
 	/* Create the Pheal object */
-	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], 'corp' );
+	$request = new WP_Pheal( $key['key_ID'], $key['vcode'], $scope );
+
+	/* Detect access */
+	if ( !empty( $key_type ) && !empty( $access_mask ) ) {
+		$request->setAccess( $key_type, $access_mask );
+	} else {
+		$access = evecorp_test_access( $request );
+		if ( is_wp_error( $access ) )
+			return $access;
+	}
 
 	try {
 
-		/* Call the WalletJournal function */
-		$result = $request->WalletJournal( $arguments );
+		/* Call the requested API function */
+		$result = $request->$API( $arguments );
+	} catch ( PhealAccessException $e ) {
+
+		/* API Access Error (Pheal refused to exec, as API-key is not allowed */
+		return new WP_Error( 'PhealAccessException', $e->getMessage() );
+	} catch ( PhealAPIException $e ) {
+
+		/* API Error (Eve Online servers with API error) */
+		return new WP_Error( 'PhealAPIException', $e->getMessage(), $e->code );
+	} catch ( PhealHTTPException $e ) {
+
+		/* Eve Online API servers answer with HTTP Error (503, 404, etc.) */
+		return new WP_Error( 'PhealHTTPException', $e->getMessage(), $e->code );
+	} catch ( PhealException $e ) {
+
+		/* Other Error (network/server connection, etc.) */
+		return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
+	}
+
+	/* Return the result as object of class WP_Pheal */
+	return $result;
+}
+
+/**
+ * Tests if a API request is allowed with the supplied API key.
+ *
+ * @param type $request
+ * @return mixed true on success WP_Error obect on failure
+ */
+function evecorp_test_access( $request )
+{
+	try {
+
+		$request->detectAccess();
 	} catch ( PhealAccessException $e ) {
 
 		/* API Access Error (Pheal refused to exec, cause the API-key would not allow this request anyway) */
@@ -720,6 +270,268 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 		/* Other Error (network/server connection, etc.) */
 		return new WP_Error( 'PhealException', $e->getMessage(), $e->code );
 	}
+
+	return true;
+}
+
+/**
+ * Returns information about the supplied API key.
+ *
+ * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
+ *
+ * @return mixed. Array on success, WP_Error object on failure.
+ */
+function evecorp_get_keyinfo( $key )
+{
+	$result = evecorp_api( 'account', 'APIKeyInfo', '', $key );
+	if ( is_wp_error( $result ) )
+		return $result;
+
+	/* Convert API result object to a PHP array variable */
+	return $result->key->toArray();
+}
+
+/**
+ * Tests if Eve Online API key is valid and has the proper access rights to perform a certain request
+ * If $access_mask is not provided, it will be requested from API servers.
+ * Needs key for API obviously.
+ *
+ * @param array $key. Eve Online API key authorization credentials. (key_ID, vcode).
+ * @param string $key_type. The access level of the API key (Account, Character, Corporation).
+ * @param string $scope. The scope of the request to test.
+ * @param string $api_name Name of API request to check.
+ * @param string $access_mask. Optional. The bitwise number of the calls the API key can query.
+ *
+ * @return mixed. true if $key is valid, WP_Error object on failure.
+ */
+function evecorp_is_valid_key( $key, $key_type, $scope, $API, $access_mask = '' )
+{
+	$result = evecorp_api( $scope, $API, '', $key, $key_type, $access_mask );
+	if ( is_wp_error( $result ) )
+		return $result;
+	return true;
+}
+
+/**
+ * Returns a character name looked up by its ID from Eve Online API
+ * Doesn't need API key authorization.
+ *
+ * @param string $characterID. ID number of the character to lookup.
+ *
+ * @return string. Name of the character.
+ */
+function evecorp_get_char_name( $character_ID )
+{
+	$result = evecorp_api( 'eve', 'CharacterInfo', $character_ID );
+	if ( is_wp_error( $result ) )
+		return $result->get_error_message();
+
+	/* Get the result as string in a PHP variable */
+	return $result->CharacterInfo->characterName;
+}
+
+/**
+ * Returns a corporation name looked up by its ID from Eve Online API
+ * Doesn't need API key authorization
+ *
+ * @param string $corporationID. ID number of the corporation to lookup.
+ *
+ * @return string. Name of the corporation
+ */
+function evecorp_get_corp_name( $corporation_ID )
+{
+	$corpsheet = evecorp_get_corpsheet( $corporation_ID );
+	return $corpsheet ['corporationName'];
+}
+
+/**
+ * Returns a character or corporation ID by its name from Eve Online API
+ * Doesn't need API key authorization
+ *
+ * @param string $name. Name of the character or coporation to lookup.
+ *
+ * @return string. ID number of the character or corporation.
+ */
+function evecorp_get_ID( $name )
+{
+	// Prepare the arguments
+	$arguments = array(
+		'names' => $name
+	);
+
+	$result = evecorp_api( 'eve', 'CharacterID', $arguments );
+	if ( is_wp_error( $result ) )
+		return $result->get_error_message();
+
+	/* Get the result as string in a PHP variable */
+	return $result->characters[0]->characterID;
+}
+
+/**
+ * Tests if character or corporation name is valid/existing by looking it up
+ *  with Eve Online API
+ * Doesn't need API key authorization
+ *
+ * @param string $characterName. Name of the character or coporation to lookup.
+ *
+ * @return boolean true on success, false on failure.
+ */
+function evecorp_is_name( $name )
+{
+	$result = evecorp_api( 'eve', 'CharacterID', $name );
+	if ( is_wp_error( $result ) )
+		return false;
+	return true;
+}
+
+/**
+ * Returns the publicly available information about a corporation by looking it up
+ *  with Eve Online API
+ * Doesn't need API key authorization
+ *
+ * @param string $corporationID. ID number of the coporation.
+ *
+ * @return mixed array on success, WP_Error object on failure.
+ */
+function evecorp_get_corpsheet( $corporation_ID )
+{
+	/* Prepare the arguments */
+	$arguments = array(
+		'corporationID' => $corporation_ID
+	);
+
+	$result = evecorp_api( 'corp', 'CorporationSheet', $arguments );
+	if ( is_wp_error( $result ) )
+		return $result;
+
+	/* Convert API result object to a PHP array variable */
+	$array = $result->toArray();
+	return $array['result'];
+}
+
+function evecorp_get_corp_url( $corporation_ID )
+{
+	$corpsheet = evecorp_get_corpsheet( $corporation_ID );
+	return $corpsheet ['url'];
+}
+
+/**
+ * Tests if a character is a member of a specific corp.
+ * Doesn't need API key authorization.
+ *
+ * @param string $characterID. ID number of the character.
+ * @param string $corporationID. ID number of the coporation.
+ *
+ * @return boolean true on success, false on failure.
+ */
+function evecorp_is_member( $character_ID, $corporation_ID )
+{
+
+	$result = evecorp_api( 'eve', 'CharacterInfo', $character_ID );
+	if ( is_wp_error( $result ) )
+		return false;
+
+	/* Compare the result with the supplied corpID */
+	if ( $corporation_ID === $result->corporationID )
+		return true;
+	return false;
+}
+
+/**
+ * Tests if a character is the CEO of a specific corp.
+ * Doesn't need API key authorization.
+ *
+ * @param string $characterID. ID number of the character.
+ * @param string $corporationID. ID number of the coporation.
+ *
+ * @return boolean true on success, false on failure.
+ */
+function evecorp_is_CEO( $character_ID, $corporation_ID )
+{
+	$result = evecorp_get_corpsheet( $corporation_ID );
+	if ( is_wp_error( $result ) )
+		return false;
+
+	/* Compare the result with the supplied characterID */
+	if ( $character_ID === $result->ceoID )
+		return true;
+	return false;
+}
+
+/**
+ * Tests if a character is a director of a specific corp.
+ * Needs a corporation key with access granted to the
+ * "Corporation Members/Member Security" API.
+ *
+ * @param string $characterID. ID number of the character.
+ * @param array $corpKey. Corporation API key authorization credentials.
+ *
+ * @return boolean true if character is director
+ */
+function evecorp_is_director( $character_ID )
+{
+	$key = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
+	);
+	$key_type = evecorp_get_option( 'corpkey_key_type' );
+	$access_mask = evecorp_get_option('access_mask');
+
+	/* Prepare the arguments */
+	$arguments = array(
+		'characterID' => $character_ID
+	);
+
+	$result = evecorp_api( 'corp', 'MemberSecurity', $arguments, $key, $key_type, $access_mask );
+	if ( is_wp_error( $result ) )
+		return false;
+
+	/* Compare the result with the RoleID for directors */
+	if ( $result->CharacterID->RoleID == 1 )
+		return true;
+	return false;
+}
+
+// Check if character is communication officer of corp
+// Check if character is personnel manager of corp
+// Check if character is security officer of corp
+// Check if character has any role in corp
+
+/**
+ * Get the wallet journal entries as array.
+ * Needs a corporation key with access granted to the
+ * "Account and Market/Wallet Journal" API.
+ *
+ * @param string $account_key
+ * @param string $from_ID
+ * @param string $row_count
+ *
+ * @return mixed array on success WP_Error object on failure.
+ */
+function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count = '' )
+{
+	$key = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
+	);
+	$key_type = evecorp_get_option( 'corpkey_type' );
+	$access_mask = evecorp_get_option('corpkey_access_mask');
+
+	/* Prepare the arguments */
+	$arguments = array(
+		'accountKey' => $account_key
+	);
+
+	if ( '' != $from_ID ) {
+		$arguments['fromID'] = $from_ID;
+	}
+
+	if ( '' != $row_count ) {
+		$arguments['rowCount'] = $row_count;
+	}
+	$result = evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
+	if ( is_wp_error( $result ) )
+		return $result;
 
 	/* Convert API result object to a PHP array variable */
 	$journal = $result->entries->toArray();
