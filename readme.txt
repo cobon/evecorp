@@ -8,46 +8,38 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Adds some features available trough the eve online IGB client.
+WordPress plug-in for secure and easy Eve Online player corporation web sites.
 
 == Description ==
 
 This should help setting up a WordPress site for Eve Online player corporations.
 
-Primary goals are ease of installation, configuration, while maintaing a high 
-level of security and confidentiality.
-
-Planned features and ideas are derived from what's missing in day-to-day 
-management, operations and information flow in a Eve Online corporation. This 
-means, if a feature is available elsewhere in a acceptable quality, this plugin
-will not provide it. So no killboard, no maps, no market-data, no blueprint or 
-mining calculations etc.
+Primary goals are ease of installation and configuration, while maintaining a
+high level of security and confidentiality.
 
 Planned features:
  * Support for Eve Online in-game browser (IGB) functionality.
- * Members registration with Eve Online API keys and account validation by wallet transaction.
- * No passwords. email-address or other personal or real-life information required.
- * Wordpress site roles and capabilities derived from Eve Online corporation titles and roles.
+ * Registration an Login with Eve Online API keys
+ * Identity verification trough wallet transaction.
+ * No passwords. email-address or other personal information required.
+ * WordPress roles and capabilities derived from Eve Online corporation roles.
  * Uses Eve Online character portraits instead of Gravatar.
- * Timezone support for members.
+ * Time-zone support for members.
  * Defaults to members-only for new blog posts and pages.
- * Shortcodes for in-game market-items, characters, corporations, stations, solar systems, etc.
- * Auto-generated user-list and user-pages/character-sheet (incl. alts used, time-zone).
- * GeoLocation
- 
+ * Short-codes for in-game items, characters, corporations, solar systems, etc.
+ * Auto-generated user-list and user-pages/character-sheet.
+
 More ideas:
 
- * Wordpress theme with added functionality.
- * Support for alternate characters (alts).
- * Character sheet with optional additional user information:
+ * WordPress theme with added functionality.
+ * Support for alternate characters (alt's).
+ * Character sheet with available API information:
   - Skills
   - Current skill-queue
   - Planned skills (Evemon upload/import)
- * bbPress Forum intergration
+ * bbPress Forum integration
  * ICS calendar export from Eve Online
  * Alliances?
- 
-Feel free to suggest more. The universe is the limit.
 
 == Installation ==
 
@@ -68,5 +60,5 @@ In development. Not for public consumption.
 
 
 = Acknowledgment =
-This software uses Pheal <http://github.com/ppetermann/pheal/> a PHP library for 
+This software uses Pheal <http://github.com/ppetermann/pheal/> a PHP library for
 accessing the EVE API by Peter Petermann (eve: Peter Powers).

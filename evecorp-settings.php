@@ -55,8 +55,6 @@ function evecorp_admin_init()
 /**
  * Output description for the Eve Online Corporate API Key Section
  *
- * @todo Provide more information about API keys and access rights, provide
- *  link to create key
  */
 function corpkey_section_html()
 {
@@ -142,6 +140,7 @@ function evecorp_corpkey_access()
 		'WalletJournal',
 		'Titles',
 		'MemberTracking',
+		'MemberSecurity',
 		'CorporationSheet'
 	);
 	foreach ( $access_tests as $api_name ) {
@@ -150,7 +149,7 @@ function evecorp_corpkey_access()
 		if ( is_wp_error( $result ) ) {
 			echo evecorp_icon( 'no' );
 //			add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
-			var_dump( $result );
+//			var_dump( $result );
 		} else {
 			echo evecorp_icon( 'yes' );
 		}
@@ -296,6 +295,7 @@ function evecorp_validate_settings( $input )
 		'WalletJournal',
 		'Titles',
 		'MemberTracking',
+		'MemberSecurity',
 		'CorporationSheet'
 	);
 	$access_errors = 0;

@@ -19,14 +19,16 @@
  *	along with evecorp.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @package evecorp
+ *
+ * @todo: Remove e plugin related user options
+ * @todo: Remove e plugin related user meta data
+ *
  */
 
 //if uninstall not called from WordPress exit
 if( !defined( 'ABSPATH') && !defined('WP_UNINSTALL_PLUGIN') )
     exit();
 
-// Clear and delete Eve Online API cache directory
-// TODO:
 
 // Remove options
 delete_option('evecorp_options');

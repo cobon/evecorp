@@ -80,9 +80,7 @@ function evecorp_get_option( $key )
 /**
  * Tests if the current browser is a Eve Online in-game browser
  *
- * @uses evecorp_IGB_data()
  * @return boolean true if client is Eve Online in-game browser
- * @todo Detection doesn't work logically
  */
 function evecorp_is_eve()
 {
@@ -115,9 +113,7 @@ function evecorp_is_trusted()
 /**
  * Returns the Eve Online in game browser data, if any
  *
- * @uses $_SERVER superglobal array
- * @return array
- * @todo fix detection logic
+ * @return array Browser data.
  */
 function evecorp_IGB_data()
 {
@@ -312,6 +308,22 @@ function evecorp_is_valid_key( $key, $key_type, $scope, $API, $access_mask = '' 
 	return true;
 }
 
+function evecorp_char_sheet( $character_ID )
+{
+	/* Prepare the arguments */
+	$arguments = array(
+		'characterID' => $character_ID
+	);
+
+	$result = evecorp_api( 'eve', 'CharacterInfo', $character_ID );
+	if ( is_wp_error( $result ) )
+		return $result;
+
+	/* Convert API result object to a PHP array variable */
+	$array = $result->toArray();
+	return $array['result'];
+}
+
 /**
  * Returns a character name looked up by its ID from Eve Online API
  * Doesn't need API key authorization.
@@ -327,7 +339,7 @@ function evecorp_get_char_name( $character_ID )
 		return $result->get_error_message();
 
 	/* Get the result as string in a PHP variable */
-	return $result->CharacterInfo->characterName;
+	return $result['characterName'];
 }
 
 /**
@@ -426,7 +438,6 @@ function evecorp_get_corp_url( $corporation_ID )
  */
 function evecorp_is_member( $character_ID, $corporation_ID )
 {
-
 	$result = evecorp_api( 'eve', 'CharacterInfo', $character_ID );
 	if ( is_wp_error( $result ) )
 		return false;
@@ -435,6 +446,78 @@ function evecorp_is_member( $character_ID, $corporation_ID )
 	if ( $corporation_ID === $result->corporationID )
 		return true;
 	return false;
+}
+
+/**
+ * Returns an array with all members and there roles and titles.
+ * Needs a corporation key with access granted to the
+ * "Corporation Members/Member Security" API.
+ *
+ * @return mixed array on success, WP_Error object on failure.
+ */
+function evecorp_member_security()
+{
+
+	/* Get our corp API key from options */
+	$key = array(
+		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
+	);
+	$key_type	 = evecorp_get_option( 'corpkey_type' );
+	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
+
+	/* API Request */
+	$result = evecorp_api( 'corp', 'MemberSecurity', null, $key, $key_type, $access_mask );
+	if ( is_wp_error( $result ) )
+		return $result;
+
+	/* Convert API result object to a PHP array variable */
+	$members = $result->members->toArray();
+	return $members;
+}
+
+/**
+ * Returns an array with all roles of the specified character
+ * @param string $character_ID
+ *
+ * @return mixed array on success, WP_Error object on failure.
+ */
+function evecorp_get_roles( $character_ID )
+{
+	$roles = array( );
+	$members = evecorp_member_security();
+	if ( is_wp_error( $members ) )
+		return $members;
+	foreach ( $members as $member ) {
+		if ( $character_ID === $member['characterID'] ) {
+			foreach ( ($member['roles'] ) as $role ) {
+				$roles[] = $role['roleName'];
+			}
+		}
+	}
+	return $roles;
+}
+
+/**
+ * Returns an array with all titles of the specified character
+ * @param string $character_ID
+ *
+ * @return mixed array on success, WP_Error object on failure.
+ */
+function evecorp_get_titles( $character_ID )
+{
+	$titles = array( );
+	$members = evecorp_member_security();
+	if ( is_wp_error( $members ) )
+		return $members;
+	foreach ( $members as $members_key => $value ) {
+		if ( $character_ID === $value['characterID'] ) {
+			foreach ( ($value['titles'] ) as $title ) {
+				$titles[] = $title['titleName'];
+			}
+		}
+	}
+	return $titles;
 }
 
 /**
@@ -453,7 +536,7 @@ function evecorp_is_CEO( $character_ID, $corporation_ID )
 		return false;
 
 	/* Compare the result with the supplied characterID */
-	if ( $character_ID === $result->ceoID )
+	if ( $character_ID === $result['ceoID'] )
 		return true;
 	return false;
 }
@@ -471,11 +554,11 @@ function evecorp_is_CEO( $character_ID, $corporation_ID )
 function evecorp_is_director( $character_ID )
 {
 	$key = array(
-		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
+		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
 	);
-	$key_type = evecorp_get_option( 'corpkey_key_type' );
-	$access_mask = evecorp_get_option('access_mask');
+	$key_type	 = evecorp_get_option( 'corpkey_key_type' );
+	$access_mask = evecorp_get_option( 'access_mask' );
 
 	/* Prepare the arguments */
 	$arguments = array(
@@ -492,11 +575,6 @@ function evecorp_is_director( $character_ID )
 	return false;
 }
 
-// Check if character is communication officer of corp
-// Check if character is personnel manager of corp
-// Check if character is security officer of corp
-// Check if character has any role in corp
-
 /**
  * Get the wallet journal entries as array.
  * Needs a corporation key with access granted to the
@@ -511,11 +589,11 @@ function evecorp_is_director( $character_ID )
 function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count = '' )
 {
 	$key = array(
-		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
+		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
 	);
-	$key_type = evecorp_get_option( 'corpkey_type' );
-	$access_mask = evecorp_get_option('corpkey_access_mask');
+	$key_type	 = evecorp_get_option( 'corpkey_type' );
+	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
 
 	/* Prepare the arguments */
 	$arguments = array(
@@ -527,9 +605,9 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 	}
 
 	if ( '' != $row_count ) {
-		$arguments['rowCount'] = $row_count;
+		$arguments['rowCount']	 = $row_count;
 	}
-	$result = evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
+	$result	= evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
 	if ( is_wp_error( $result ) )
 		return $result;
 

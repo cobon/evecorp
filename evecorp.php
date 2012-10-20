@@ -85,8 +85,7 @@ if ( is_admin() ) {
 //	add_action( 'admin_notices', 'evecorp_config_notifiy' );
 
 	/* Allow user profile updates without e-mail address */
-	add_action('user_profile_update_errors','no_user_mail');
-
+	add_action( 'user_profile_update_errors', 'no_user_mail' );
 } else {
 	/* non-admin enqueues, actions, and filters */
 }
@@ -148,8 +147,10 @@ function evecorp_shortcode( $shortcode )
 /**
  * Returns HTML code with the linked Eve Online character name
  * inlcuding CSS selectors for the jQuery context menu.
+ * @todo Themes should be able to supply a custom context menu CSS.
  *
  * @param string $name The name of the character to be linked.
+ *
  * @return string HTML code to display on page.
  */
 function evecorp_char( $name )
@@ -339,17 +340,24 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 
 				/* Try to validate it */
 				if ( evecorp_userkey_validate( $user_login, $validation_hash ) ) {
+
+					/* We have a successful login */
 					$evecorp_userkeys[$key_ID]['validated'] = true;
 					update_user_meta( $user->ID, 'evecorp_userkeys', $evecorp_userkeys );
+
+					/* User is authenticated, now authorize. */
+					evecorp_authorize_user( $user, $keyinfo );
+
+					/* We return the successful login */
 					return $user;
 				}
 
 				/* Key does not validate (yet) */
 				return new WP_Error( 'awaiting_validation',
-								'Welcome ' . $user_login . '.<br />This API key
-								is awaiting validation.<br />Please allow up to
-								30 minutes for processing after payment has been
-								made.<br />Thank you.' );
+								'Welcome back ' . $user_login . '.<br />This API
+								key	is awaiting validation.<br />Please allow up
+								to 30 minutes for processing after payment has
+								been made.<br />Thank you.' );
 			}
 		}
 	}
@@ -360,11 +368,77 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 					'Welcome ' . $user_login . '.<br /> As you never used this
 						API key before, we need to confirm your identity. <br />
 						Please send 1.00 ISK to ' .
-					evecorp_get_option( 'corpkey_corporation_name' ) . ' and
-						write <strong>Validate:' . $validation_code . '</strong>
-							in the reason field.<br />Please allow up to 30
-							minutes for processing, after you made the payment.
-							<br />Thank you.' );
+					evecorp_corp( evecorp_get_option( 'corpkey_corporation_name' ) ) .
+					' and write the following in the reason field:<br />
+					<strong>Validate:' . $validation_code .'</strong><br />
+					Please allow up to 30 minutes for processing, after you made
+					the payment. Thank you.' );
+}
+
+/**
+ * Assign WP roles and capabilities from Eve Online roles and titles.
+ *
+ * @param WP_User object $user
+ */
+function evecorp_authorize_user( $user, $keyinfo )
+{
+	global $wp_roles;
+
+	$character_ID = $keyinfo['characters'][0]['characterID'];
+
+	/* Get roles and titles trough API */
+	$api_roles	 = evecorp_get_roles( $character_ID );
+	$api_titles	 = evecorp_get_titles( $character_ID );
+
+	/* Get roles and titles from WP user meta */
+	$meta_roles	 = get_user_meta( $user->ID, 'evecorp_roles' );
+	$meta_titles = get_user_meta( $user->ID, 'evecorp_titles' );
+
+	/* Have there been changes in the Eve Online roles? */
+	if ( $api_roles <> $meta_roles ) {
+
+		/* Remove all capabilites */
+		$user->remove_all_caps();
+
+		/**
+		 * Re-assign the "New User Default Role"
+		 * This removes all previous assigned roles
+		 */
+		$user->set_role( get_option( 'default_role' ) );
+
+		/* Re-assign WP roles by Eve Online Roles */
+		if ( in_array( 'rolePersonnelManager', $api_roles ) ) {
+			$user->add_cap( 'list_users' );
+			$user->add_cap( 'edit_users' );
+		}
+		if ( in_array( 'roleDiplomat', $api_roles ) )
+			$user->add_role( 'author' );
+		if ( in_array( 'roleChatManager', $api_roles ) )
+			$user->add_role( 'editor' );
+		if ( in_array( 'roleDirector', $api_roles ) )
+			$user->set_role( 'administrator' );
+
+		/* Update user profile metadata with the new Eve Online roles */
+		//if ( !empty( $api_roles ) )
+		update_user_meta( $user->ID, 'evecorp_roles', $api_roles );
+	}
+
+	/* Have there been changes in the Eve Online titles? */
+	if ( $api_titles <> $meta_titles ) {
+
+		/* Get all roles from WP options */
+		$wp_roles_list = $wp_roles->get_names();
+		foreach ( $wp_roles_list as $role => $role_desc ) {
+
+			/* Are there a Eve Online titles with names of WordPress roles? */
+			if ( in_array( $role_desc, $api_titles ) )
+				$user->add_cap( $role );
+		}
+
+		/* Update user profile metadata with the new Eve Online titles */
+		//if ( !empty( $api_titles ) )
+		update_user_meta( $user->ID, 'evecorp_titles', $api_titles );
+	}
 }
 
 /**
@@ -398,14 +472,20 @@ function evecorp_update_user( $user, $keyinfo )
 	$full_name	 = $keyinfo['characters'][0]['characterName'];
 	$split_name	 = evecorp_split_name( $full_name );
 
+	/* Make a user URL */
+	$user_url = trailingslashit( evecorp_get_option( 'char_url' ) ) .
+			urlencode( $full_name );
+
 	$userdata = array(
 		'ID'			 => $user->ID,
 		'user_nicename'	 => $full_name,
 		'first_name'	 => $split_name['first_name'],
 		'last_name'		 => $split_name['last_name'],
 		'display_name'	 => $full_name,
+		'user_url'		 => $user_url
 	);
 
+	/* Update the user profile */
 	wp_update_user( $userdata );
 }
 
@@ -463,9 +543,9 @@ function evecorp_userkey_add( $user_ID, $key_ID )
 /**
  * Test if there has been made a payment with a valid validation code from user.
  *
- * @param type $user_login
- * @param type $validation_hash
- * @return bool false if payment found
+ * @param string $user_login Eve Online character name.
+ * @param string $validation_hash Hash of the validation code.
+ * @return boolean True if payment found and validation code matches. False otherwise.
  */
 function evecorp_userkey_validate( $user_login, $validation_hash )
 {
