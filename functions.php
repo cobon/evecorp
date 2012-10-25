@@ -310,11 +310,6 @@ function evecorp_is_valid_key( $key, $key_type, $scope, $API, $access_mask = '' 
 
 function evecorp_char_sheet( $character_ID )
 {
-	/* Prepare the arguments */
-	$arguments = array(
-		'characterID' => $character_ID
-	);
-
 	$result = evecorp_api( 'eve', 'CharacterInfo', $character_ID );
 	if ( is_wp_error( $result ) )
 		return $result;
@@ -373,7 +368,7 @@ function evecorp_get_ID( $name )
 
 	$result = evecorp_api( 'eve', 'CharacterID', $arguments );
 	if ( is_wp_error( $result ) )
-		return $result->get_error_message();
+		return $result;
 
 	/* Get the result as string in a PHP variable */
 	return $result->characters[0]->characterID;
@@ -510,9 +505,9 @@ function evecorp_get_titles( $character_ID )
 	$members = evecorp_member_security();
 	if ( is_wp_error( $members ) )
 		return $members;
-	foreach ( $members as $members_key => $value ) {
-		if ( $character_ID === $value['characterID'] ) {
-			foreach ( ($value['titles'] ) as $title ) {
+	foreach ( $members as $member ) {
+		if ( $character_ID === $member['characterID'] ) {
+			foreach ( ($member['titles'] ) as $title ) {
 				$titles[] = $title['titleName'];
 			}
 		}
@@ -607,13 +602,105 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 	if ( '' != $row_count ) {
 		$arguments['rowCount']	 = $row_count;
 	}
-	$result	= evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
+	$result					 = evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
 	if ( is_wp_error( $result ) )
 		return $result;
 
 	/* Convert API result object to a PHP array variable */
 	$journal = $result->entries->toArray();
 	return $journal;
+}
+
+/**
+ * @fixme Still ugly, in dare need of refactoring.
+ * @global type $comment
+ * @param type $avatar
+ * @param type $id_or_email
+ * @param type $size
+ * @return type
+ */
+function evecorp_get_avatar( $avatar, $id_or_email, $size )
+{
+	global $comment;
+
+	/* Check if we are in a comment */
+	if ( !is_null( $comment ) && !empty( $comment->user_id ) ) {
+		$user_id = $comment->user_id;
+	}
+
+	if ( is_a( $id_or_email, 'WP_User' ) )
+		$user_id = $id_or_email->ID;
+
+	/* Pass it along if its a mail address */
+	if ( !is_object( $id_or_email ) ) {
+		if ( is_email( $id_or_email ) )
+			return $avatar;
+
+		/* Dunno how to handle non numeric id-numbers */
+		if ( is_numeric( $id_or_email ) )
+			$user_id = (int) $id_or_email;
+	}
+
+	/* The user who installed WP, is unlikely a Eve Online character */
+	if ( 1 === $user_id )
+		return $avatar;
+
+	/* Lets see if we got a working user-id at last */
+	$user = get_userdata( $user_id );
+	if ( !is_a( $user, 'WP_User' ) )
+		return $avatar;
+
+	$alt			 = $user->user_nicename;
+	$character_ID	 = get_user_meta( $user_id, 'evecorp_character_ID', true );
+
+	if ( is_ssl() ) {
+		$protocol = 'https://';
+	} else {
+		$protocol		 = 'http://';
+	}
+	$host			 = 'image.eveonline.com';
+	$server_path	 = 'Character';
+	$eve_size		 = evecorp_avatar_size( $size );
+	$suffix			 = 'jpg';
+	$eve_avatar_url	 = $protocol . trailingslashit( $host ) . trailingslashit( $server_path ) . $character_ID . '_' . $eve_size . '.' . $suffix;
+	$eve_avatar		 = "<img alt='{$alt}' src='{$eve_avatar_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' />";
+	return $eve_avatar;
+}
+
+function evecorp_author_mail( $value, $user_id )
+{
+	if ( empty( $value ) )
+		$value = $user_id;
+	return $value;
+}
+
+/**
+ * Returns the neaerest image size available for Eve Online character portraits.
+ *
+ * Valid Eve Online image sizes:
+ *  30, 32, 64, 128, 200, 256, 512
+ * (and 1024 for Incusrions 1.4 or later characters only).
+ *
+ * Valid Gravatar image sizes:
+ *  Default 80, everything from 1px to 2048px
+ *
+ * @param string $requested_size The image size requested
+ * @return string The image size available.
+ */
+function evecorp_avatar_size( $requested_size )
+{
+	$eve_image_sizes = array( 30, 32, 64, 128, 200, 256, 512 );
+	if ( in_array( $requested_size, $eve_image_sizes ) )
+		return $requested_size;
+	foreach ( $eve_image_sizes as $size ) {
+
+		/* Return the next bigger available */
+		if ( (int) $requested_size < $size )
+			return (string) $size;
+	}
+
+	/* Return the biggets available */
+	return '512';
 }
 
 /**

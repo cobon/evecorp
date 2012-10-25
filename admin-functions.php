@@ -27,7 +27,8 @@ function evecorp_activate()
  *
  * @param WP_Error $errors
  */
-function no_user_mail( $errors )
+function evecorp_eveuser_mail( $errors, $update, $user )
 {
-	unset( $errors->errors['empty_email'] );
+	if ( get_user_meta( $user->ID, 'evecorp_character_ID', true ) )
+		unset( $errors->errors['empty_email'] );
 }
