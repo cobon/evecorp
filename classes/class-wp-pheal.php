@@ -8,6 +8,11 @@
  * @package evecorp
  */
 
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) ) {
+	die();
+}
+
 /**
  * WordPress implememntation of Pheal
  *

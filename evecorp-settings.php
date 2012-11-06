@@ -7,19 +7,12 @@
  * @package evecorp
  */
 
-require_once dirname( __FILE__ ) . '/admin-functions.php';
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
 
 /* Contextual Help text for settings page */
 include_once(dirname( __FILE__ ) . '/settings-help.php');
-
-/**
- * Adds a notification message  to the top of admin pages.
- *
- */
-function evecorp_config_notifiy()
-{
-	echo '<div class="error"><p>' . sprintf( 'Please adjust <a href="%s">subspace signal modulation</a>', admin_url( 'options-general.php?page=eve_options' ) ) . ' to connect with your station.</p></div>';
-}
 
 /**
  * Initialize form content for the plugin settings page
@@ -148,8 +141,6 @@ function evecorp_corpkey_access()
 		$result = evecorp_is_valid_key( $key, $evecorp_options['corpkey_type'], 'corp', $api_name, $evecorp_options['corpkey_access_mask'] );
 		if ( is_wp_error( $result ) ) {
 			echo evecorp_icon( 'no' );
-//			add_settings_error( 'evecorp_settings', 'section_corpkey', $result->get_error_message(), 'error' );
-//			var_dump( $result );
 		} else {
 			echo evecorp_icon( 'yes' );
 		}
@@ -197,7 +188,7 @@ function evecorp_apikey_url()
 {
 	global $evecorp_options;
 	$corp_url = evecorp_get_corp_url( $evecorp_options['corpkey_corporation_id'] );
-	if ( site_url() == untrailingslashit($corp_url) ) {
+	if ( site_url() == untrailingslashit( $corp_url ) ) {
 		echo 'This website address (' . site_url() . ') matches the coporation URL (' . $corp_url . ').' . evecorp_icon( 'yes' );
 	} else {
 		echo 'This website address (' . site_url() . ') does not match the coporation URL (' . $corp_url . ').' . evecorp_icon( 'no' );
@@ -224,6 +215,9 @@ function evecorp_validate_settings( $input )
 {
 
 	global $evecorp_options;
+
+	if ( !isset($_POST))
+		return;
 
 	/* Do we have a API key in options? */
 	if ( empty( $evecorp_options['corpkey_ID'] ) ) {
@@ -252,14 +246,18 @@ function evecorp_validate_settings( $input )
 	} else {
 
 		/* Was the Clear-Key button clicked? */
-		if ( $input['corpkey_remove'] == "Remove API Key" ) {
-			/* Remove it */
-			unset( $evecorp_options['corpkey_ID'] );
-			unset( $evecorp_options['corpkey_vcode'] );
-			add_settings_error( 'evecorp_settings', 'section_corpkey', 'API key information cleared.', 'updated' );
-			return $evecorp_options;
+		if ( is_array( $input ) ) {
+			if ( $input['corpkey_remove'] == 'Remove API Key' ) {
+
+				/* Remove it */
+				unset( $evecorp_options['corpkey_ID'] );
+				unset( $evecorp_options['corpkey_vcode'] );
+				$evecorp_options['corpkey_verified'] = false;
+				add_settings_error( 'evecorp_settings', 'section_corpkey', 'API key information cleared.', 'updated' );
+				return $evecorp_options;
+			}
 		}
-		$key = array(
+		$key								 = array(
 			'key_ID' => $evecorp_options['corpkey_ID'],
 			'vcode'	 => $evecorp_options['corpkey_vcode']
 		);
@@ -278,6 +276,7 @@ function evecorp_validate_settings( $input )
 		/* Key fails, remove it */
 		unset( $evecorp_options['corpkey_ID'] );
 		unset( $evecorp_options['corpkey_vcode'] );
+		$evecorp_options['corpkey_verified'] = false;
 		return $evecorp_options;
 	} else {
 
@@ -308,10 +307,12 @@ function evecorp_validate_settings( $input )
 	}
 
 	if ( $access_errors ) {
+		$evecorp_options['corpkey_verified'] = false;
 		add_settings_error( 'evecorp_settings', 'section_corpkey', 'There are problems with this API key.', 'error' );
 	} else {
 
 		/* If we reach here, out API key has passed all the API query tests. */
+		$evecorp_options['corpkey_verified'] = true;
 		add_settings_error( 'evecorp_settings', 'section_corpkey', 'Your API key has been verified.', 'updated' );
 	}
 	return $evecorp_options;
@@ -364,14 +365,11 @@ function evecorp_settings_page()
 				<?php
 				if ( empty( $evecorp_options['corpkey_ID'] ) ) {
 					submit_button( 'Verify Key', 'primary', 'submit', false );
-//					echo '<input type="submit" name="Submit" class="button-primary" value="Verify Key" />';
 				} else {
 					submit_button( 'Verify API Key', 'primary', 'submit', false );
 					echo '&nbsp;' . PHP_EOL;
 					evecorp_apikey_clear_button();
 					echo PHP_EOL;
-//					echo '<input type="submit" name="Submit" class="button-primary" value="-Re-Verify Key" />';
-//					echo '<input type="submit" name="Delete" class="button-secondary" value="Remove Key" />';
 				}
 				?>
 			</p>

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Eve Online Plugin for WordPress
  *
@@ -6,12 +7,17 @@
  *
  * @package evecorp
  */
+
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
+
 // Contextual Help for Eve Online settings
 function evecorp_settings_help()
 {
 
 
-$evecorp_options_help_overview = <<< END
+	$evecorp_options_help_overview = <<< END
 <p>
 	<strong>Protected Site</strong>
 
@@ -53,7 +59,7 @@ $evecorp_options_help_overview = <<< END
 </p>
 END;
 
-$evecorp_options_help_authentication = <<< END
+	$evecorp_options_help_authentication = <<< END
 
 <p>
 
@@ -78,7 +84,7 @@ $evecorp_options_help_authentication = <<< END
 </p>
 END;
 
-$evecorp_options_help_userkey = <<< END
+	$evecorp_options_help_userkey = <<< END
 <p>
 
 	The supplied Eve Online API Key only serves for the purpose of verifing that
@@ -112,7 +118,7 @@ $evecorp_options_help_userkey = <<< END
 </p>
 END;
 
-$evecorp_options_help_risks = <<< END
+	$evecorp_options_help_risks = <<< END
 <p>
 
 	<strong>Risks Involved</strong>
@@ -167,7 +173,7 @@ $evecorp_options_help_risks = <<< END
 </p>
 END;
 
-$evecorp_options_help_corpkey = <<< END
+	$evecorp_options_help_corpkey = <<< END
 
 <h4>Why is this needed?</h4>
 
@@ -230,7 +236,7 @@ $evecorp_options_help_corpkey = <<< END
 
 END;
 
-$evecorp_options_help_igb = <<< END
+	$evecorp_options_help_igb = <<< END
 <p>
 
 	<strong>The In-Game Browser and Trust</strong>
@@ -415,33 +421,33 @@ END;
 //			)
 //	);
 	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_corpkey',
-		'title' => __( 'Corporate API Key' ),
-		'content' => $evecorp_options_help_corpkey
+		'id'		 => 'evecorp_help_corpkey',
+		'title'		 => __( 'Corporate API Key' ),
+		'content'	 => $evecorp_options_help_corpkey
 			)
 	);
 	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_auth',
-		'title' => __( 'User Authentication' ),
-		'content' => $evecorp_options_help_authentication
+		'id'		 => 'evecorp_help_auth',
+		'title'		 => __( 'User Authentication' ),
+		'content'	 => $evecorp_options_help_authentication
 			)
 	);
 	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_userkey',
-		'title' => __( 'User API Key' ),
-		'content' => $evecorp_options_help_userkey
+		'id'		 => 'evecorp_help_userkey',
+		'title'		 => __( 'User API Key' ),
+		'content'	 => $evecorp_options_help_userkey
 			)
 	);
 	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_risk',
-		'title' => __( 'Risks' ),
-		'content' => $evecorp_options_help_risks
+		'id'		 => 'evecorp_help_risk',
+		'title'		 => __( 'Risks' ),
+		'content'	 => $evecorp_options_help_risks
 			)
 	);
 	$screen->add_help_tab( array(
-		'id' => 'evecorp_help_igb',
-		'title' => __( 'In-Game Browser' ),
-		'content' => $evecorp_options_help_igb
+		'id'		 => 'evecorp_help_igb',
+		'title'		 => __( 'In-Game Browser' ),
+		'content'	 => $evecorp_options_help_igb
 			)
 	);
 

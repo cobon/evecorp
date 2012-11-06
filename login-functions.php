@@ -8,24 +8,20 @@
  * @package evecorp
  */
 
-/**
- * Hook evecorp into the WordPress authentication flow.
- *
- * Ensure Site administrators can still login with user name/password,
- * all others need either a valid WP session cookies or supply Eve Online API
- * key information.
- */
-//	remove_all_filters( 'authenticate' );
-//	add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
-add_filter( 'authenticate', 'evecorp_authenticate_user', 20, 3 );
-//	add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
 
-/* Register shortcode handler */
-add_shortcode( 'eve', 'evecorp_shortcode' );
-add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
+function evecorp_login_form_labels( $defaults )
+{
+	$defaults['label_username']	 = 'API Key ID';
+	$defaults['label_password']	 = 'Verification Code';
+	return $defaults;
+}
 
 /**
  * Tests if the supplied credentials could belong to the WP admin account.
+ *
  * @param type $user
  * @param type $login
  * @param type $password
@@ -58,7 +54,7 @@ function evecorp_auth_admin( $user, $login, $password )
  * Known users will have their profile data updated based on the Eve Online
  * data present.
  *
- * @return WP_User|WP_Error authenticated user or error if unable to authenticate
+ * @return mixed WP_User object or WP_Error on failure to authenticate.
  */
 function evecorp_authenticate_user( $user, $key_ID, $vcode )
 {
@@ -66,6 +62,12 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	if ( is_a( $user, 'WP_User' ) ) {
 		return $user;
 	}
+
+	if ( !evecorp_corpkey_check() )
+		return new WP_Error( 'missing_corpkey',
+						'<strong>ERROR:</strong> Login with Eve Online API keys is currently disabled! ' .
+						sprintf( 'Please ask your WordPress administrator to visit the <a href="%s">Eve Online settings page</a>.', admin_url( 'options-general.php?page=evecorp_settings' ) )
+		);
 
 	/* If the form has not been submitted yet. */
 	if ( !isset( $_POST['wp-submit'] ) )
@@ -141,7 +143,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 			if ( $key_ID === (string) $index ) {
 
 				/* Has it been validated? */
-				if ( true === $value['validated'] )
+				if ( 'Yes' === $value['validated'] )
 					return $user;
 
 				/* Get validation code hash for this key */
@@ -151,11 +153,16 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 				if ( evecorp_userkey_validate( $user_login, $validation_hash ) ) {
 
 					/* We have a successful login */
-					$evecorp_userkeys[$key_ID]['validated'] = true;
+					$evecorp_userkeys[$key_ID]['validated']			 = 'Yes';
+					$evecorp_userkeys[$key_ID]['expires']			 = $keyinfo['expires'];
+					$evecorp_userkeys[$key_ID]['accessMask']		 = $keyinfo['accessMask'];
+					$evecorp_userkeys[$key_ID]['characterName']		 = $keyinfo['characters'][0]['characterName'];
+					$evecorp_userkeys[$key_ID]['characterID']		 = $keyinfo['characters'][0]['characterID'];
+					$evecorp_userkeys[$key_ID]['corporationName']	 = $keyinfo['characters'][0]['corporationName'];
 					update_user_meta( $user->ID, 'evecorp_userkeys', $evecorp_userkeys );
 
 					/* Update existing account */
-					evecorp_update_user( $user->ID, $keyinfo );
+					evecorp_update_user( $user->ID, $keyinfo['characters'][0]['characterID'] );
 
 					/* User is authenticated, now authorize. */
 					evecorp_authorize_user( $user, $keyinfo );
@@ -165,24 +172,31 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 				}
 
 				/* Key does not validate (yet) */
+				$evecorp_userkeys[$key_ID]['validated']			 = 'No';
+				$evecorp_userkeys[$key_ID]['expires']			 = $keyinfo['expires'];
+				$evecorp_userkeys[$key_ID]['accessMask']		 = $keyinfo['accessMask'];
+				$evecorp_userkeys[$key_ID]['characterName']		 = $keyinfo['characters'][0]['characterName'];
+				$evecorp_userkeys[$key_ID]['characterID']		 = $keyinfo['characters'][0]['characterID'];
+				$evecorp_userkeys[$key_ID]['corporationName']	 = $keyinfo['characters'][0]['corporationName'];
+				update_user_meta( $user->ID, 'evecorp_userkeys', $evecorp_userkeys );
 				return new WP_Error( 'awaiting_validation',
 								'Welcome back ' . $user_login . '.<br />This API
-								key	is awaiting validation.<br />Please allow up
-								to 30 minutes for processing after payment has
-								been made.<br />Thank you.' );
+								key	is waiting for identiy verification.<br />
+								Please allow up	to 30 minutes for processing
+								after payment has been made.<br />Thank you.' );
 			}
 		}
 	}
 
 	/* This API key ID has not been seen before */
-	$validation_code = evecorp_userkey_add( $user->ID, $key_ID );
+	$validation_code = evecorp_userkey_add( $user->ID, $key_ID, $keyinfo );
 	return new WP_Error( 'new_validation',
 					'Welcome ' . $user_login . '.<br /> As you never used this
-						API key before, we need to confirm your identity. <br />
-						Please send 1.00 ISK to ' .
+						API key before, we need to verify your identity. <br />
+						Please send 0.10 ISK to ' .
 					evecorp_corp( evecorp_get_option( 'corpkey_corporation_name' ) ) .
 					' and write the following in the reason field:<br />
-					<strong>Validate:' . $validation_code . '</strong><br />
+					<strong><pre>Validate:' . $validation_code . '</pre></strong><br />
 					Please allow up to 30 minutes for processing, after you made
 					the payment. Thank you.' );
 }
@@ -299,23 +313,21 @@ function evecorp_create_new_user( $user_login, $keyinfo )
 
 /**
  * Update the user data in the WP user table with the data retrieved from the
- * Eve Online character key information.
+ * Eve Online character information.
  *
  * @param string $user_ID WordPress user id.
  * @param array $keyinfo Eve Online API key informartion.
  */
-function evecorp_update_user( $user_ID, $keyinfo )
+function evecorp_update_user( $user_ID, $character_ID )
 {
 
-	/* Get saved API key ID's for this character from WP users meta table */
-	$evecorp_userkeys = get_user_meta( $user_ID, 'evecorp_userkeys', true );
+	/* Get current API character information */
+	$evecorp_char_info = evecorp_get_char_info( $character_ID );
+	if ( !is_wp_error( $evecorp_char_info ) ) {
 
-	/* Store some current information about the used API key */
-	$evecorp_userkeys[$key_ID]['expires']	 = $keyinfo['expires'];
-	$evecorp_userkeys[$key_ID]['accessMask'] = $keyinfo['accessMask'];
-
-	/* Update the WP users meta table */
-	update_user_meta( $user_ID, 'evecorp_userkeys', $evecorp_userkeys );
+		/* Update the WP users meta table */
+		update_user_meta( $user_ID, 'evecorp_character_info', $evecorp_char_info );
+	}
 }
 
 /**
@@ -353,7 +365,7 @@ function evecorp_split_name( $full_name, $prefix = '' )
  * @param string $key_ID Eve Online API key ID
  * @return string Validation code for the user to use as payment-reason
  */
-function evecorp_userkey_add( $user_ID, $key_ID )
+function evecorp_userkey_add( $user_ID, $key_ID, $keyinfo )
 {
 	/* Create validation code */
 	$validation_code = wp_generate_password( 12, false );
@@ -364,7 +376,12 @@ function evecorp_userkey_add( $user_ID, $key_ID )
 
 	/* Update the WP users meta table */
 	$evecorp_userkeys[$key_ID]['validation_hash']	 = $validation_hash;
-	$evecorp_userkeys[$key_ID]['validated']			 = false;
+	$evecorp_userkeys[$key_ID]['validated']			 = 'No';
+	$evecorp_userkeys[$key_ID]['expires']			 = $keyinfo['expires'];
+	$evecorp_userkeys[$key_ID]['accessMask']		 = $keyinfo['accessMask'];
+	$evecorp_userkeys[$key_ID]['characterName']		 = $keyinfo['characters'][0]['characterName'];
+	$evecorp_userkeys[$key_ID]['characterID']		 = $keyinfo['characters'][0]['characterID'];
+	$evecorp_userkeys[$key_ID]['corporationName']	 = $keyinfo['characters'][0]['corporationName'];
 	update_user_meta( $user_ID, 'evecorp_userkeys', $evecorp_userkeys );
 	return $validation_code;
 }
@@ -387,7 +404,7 @@ function evecorp_userkey_validate( $user_login, $validation_hash )
 		if ( '10' === $transaction['refTypeID'] ) {
 
 			/* From current WP user logging on? */
-			if ( $user_login === $transaction['ownerName1'] ) {
+			if ( $user_login === sanitize_user( $transaction['ownerName1'] ) ) {
 
 				/* Is there a validation code? */
 				$validation_code = '';
@@ -404,5 +421,3 @@ function evecorp_userkey_validate( $user_login, $validation_hash )
 	}
 	return false;
 }
-
-?>

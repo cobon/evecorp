@@ -7,7 +7,7 @@
   Version: 0.1
   Author: Mitome Cobon-Han
   Author URI: https://gate.eveonline.com/Profile/Mitome%20Cobon-Han
-  License: GPL3
+  License: GPLv2 or later
 
  * Copyright (c) 2012 Mitome Cobon-Han (mitome.ch@gmail.com)
  *
@@ -15,7 +15,7 @@
  *
  * evecorp is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
+ * Foundation, either version 2 of the License, or (at your option) any later
  * version. evecorp is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
@@ -48,27 +48,46 @@
 /**
  * @package evecorp
  * @author Mitome Cobon-Han <mitome.ch@gmail.com>
- * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GENERAL PUBLIC LICENSE Version 3
+ * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU GENERAL PUBLIC LICENSE Version 2 or later
  * @version 0.1
  */
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
+
 /* Who am I? */
-define( "EVECORP", "Eve Online Player Corporation Plugin for WordPress" );
-define( "EVECORP_VERSION", 0.1 );
+define( 'EVECORP', 'Eve Online Player Corporation Plugin for WordPress' );
+define( 'EVECORP_VERSION', 0.1 );
+define( 'EVECORP_MIN_WP_VERSION', '3.3' );
+define( 'EVECORP_MIN_PHP_VERSION', '5.2.4' );
 
-/* Make sure we don't expose anything if called directly */
-if ( !function_exists( 'add_action' ) ) {
-	die(); /* Silence is golden. */
-}
-
-/* Load common functions library */
+/* Load common libraries */
 require_once dirname( __FILE__ ) . "/functions.php";
-//require_once dirname( __FILE__ ) . "/login-functions.php";
+require_once dirname( __FILE__ ) . "/api-functions.php";
 
+/**
+ * Global enqueues, actions, and filters.
+ *
+ */
 /* Initialize plugin options */
 add_action( 'init', 'evecorp_init_options' );
 
-/* admin actions */
+/* Use Eve Online portraits instead of Gravatar */
+add_filter( 'get_avatar', 'evecorp_get_avatar', 10, 3 );
+
+/* Allow empty mail address for Eve Online users */
+add_filter( 'get_the_author_user_email', 'evecorp_author_mail', 10, 2 );
+
+/* Add some Eve Online related links to the admin-bar */
+add_action( 'admin_bar_menu', 'evecorp_toolbar_links', 999 );
+
 if ( is_admin() ) {
+	/**
+	 * Admin enqueues, actions, and filters.
+	 *
+	 */
+	/* Load admin libraries */
+	require_once dirname( __FILE__ ) . '/admin-functions.php';
 	require_once dirname( __FILE__ ) . "/evecorp-settings.php";
 
 	register_activation_hook( __FILE__, 'evecorp_activate' );
@@ -80,19 +99,53 @@ if ( is_admin() ) {
 	/* Define options page sections and allowed options for admin pages */
 	add_action( 'admin_init', 'evecorp_admin_init' );
 
-	/* Notify administrator if active but unconfigured. */
-	$evecorp_corpkey_ID		 = evecorp_get_option( 'corpkey_ID' );
-	$evecorp_corpkey_vcode	 = evecorp_get_option( 'corpkey_vcode' );
-	if ( empty( $evecorp_corpkey_ID ) || empty( $evecorp_corpkey_vcode ) )
+	/* Notify administrator if corporate API key is missing or invalid. */
+	if ( !evecorp_corpkey_check() )
 		add_action( 'admin_notices', 'evecorp_config_notifiy' );
+
+	/* Don't show password fields in user settings for Eve Online characters. */
+	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
 
 	/* Allow user profile updates without e-mail address */
 	add_action( 'user_profile_update_errors', 'evecorp_eveuser_mail', 10, 3 );
-} else {
-	/* non-admin enqueues, actions, and filters */
 
-	/* login functions, enqueues, actions, and filters */
+	/* Outputs a section and table-listing with API keys for edited user. */
+	add_action( 'edit_user_profile', 'evecorp_userkeys' );
+
+	/* Outputs a section and table-listing with API keys for current user. */
+	add_action( 'show_user_profile', 'evecorp_userkeys' );
+
+	/* Output HTML form for adding API key ID and vcode. */
+	add_action( 'show_user_profile', 'evecorp_userkeys_form' );
+
+	/* Add a Eve Online API key ID to a current users meta data. */
+	add_action( 'personal_options_update', 'evecorp_altkey_add' );
+} else {
+	/**
+	 * Non-admin enqueues, actions, and filters
+	 *
+	 */
+	/* Load login libraries */
 	require_once dirname( __FILE__ ) . "/login-functions.php";
+
+	/* Register shortcode handler */
+	add_shortcode( 'eve', 'evecorp_shortcode' );
+
+	/* jQuery context menu for Eve Online stuff */
+	add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
+
+	/**
+	 * Hook evecorp into the WordPress authentication flow.
+	 *
+	 * Ensure Site administrators can still login with user name/password,
+	 * all others need either a valid WP session cookies or supply Eve Online API
+	 * key information.
+	 */
+//	remove_all_filters( 'authenticate' );
+//	add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
+	add_filter( 'authenticate', 'evecorp_authenticate_user', 20, 3 );
+//	add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
+	add_filter( 'login_form_defaults', 'evecorp_login_form_labels' );
 }
 
 function evecorp_menu_scripts()
@@ -104,10 +157,6 @@ function evecorp_menu_scripts()
 	wp_enqueue_script( 'evecorp.contextMenu' );
 	wp_enqueue_style( 'evecorp-contextMenu' );
 }
-
-/* Eve Online avatar filter */
-add_filter( 'get_avatar', 'evecorp_get_avatar', 10, 3 );
-add_filter( 'get_the_author_user_email', 'evecorp_author_mail', 10, 2 );
 
 /**
  * Eve Online Shortcode handler
@@ -212,4 +261,3 @@ function evecorp_corp( $corp_name )
 			'" title="Corporation Information">' . $corp_name . '</a>';
 	return $html;
 }
-

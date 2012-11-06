@@ -2,7 +2,7 @@
 Contributors: mitome
 Donate link: http://fisr.dnsd.info/
 Tags: eve, eve online, eve-online, eve-igb, eve corporation, eve corp
-Requires at least: 3.4
+Requires at least: 3.3
 Tested up to: 3.4.2
 Stable tag: trunk
 License: GPLv2 or later
