@@ -151,31 +151,36 @@ function evecorp_userkey_remove( $user_ID, $key_ID )
 
 /**
  * Output HTML form for adding API key ID and vcode.
+ *
+ * @param WP_User $profileuser
  */
-function evecorp_userkeys_form()
+function evecorp_userkeys_form( $profileuser )
 {
-	?>
-	<h4>Add alternate Character Key</h4>
-	<p>Add Eve Online API character keys for your alternate characters here.
-		They will not be usable for login on this website. To add a new API key
-		usable for login, simply login with API key ID and vcode.</p>
-	<table class="form-table">
-		<tr>
-			<th><label for="key_ID">API Key ID</label></th>
-			<td>
-				<input type="text" name="key_ID" id="key_id" value="" class="regular-text" />
-			</td>
-		</tr>
-		<tr>
-			<th><label for="vcode">API Verification Code</label></th>
-			<td>
-				<textarea id='vcode' name='vcode' cols='32' rows='2'></textarea>
-				<p class="description">The verification code is only used to
-					retrieve character information and will not be saved.</p>
-			</td>
-		</tr>
-	</table>
-	<?php
+	/* Is the displayed user-profile an Eve Online character? */
+	if ( get_user_meta( $profileuser->ID, 'evecorp_character_ID', true ) ) {
+		?>
+		<h4>Add alternate Character Key</h4>
+		<p>Add Eve Online API character keys for your alternate characters here.
+			They will not be usable for login on this website. To add a new API key
+			usable for login, simply login with API key ID and vcode.</p>
+		<table class="form-table">
+			<tr>
+				<th><label for="key_ID">API Key ID</label></th>
+				<td>
+					<input type="text" name="key_ID" id="key_id" value="" class="regular-text" />
+				</td>
+			</tr>
+			<tr>
+				<th><label for="vcode">API Verification Code</label></th>
+				<td>
+					<textarea id='vcode' name='vcode' cols='32' rows='2'></textarea>
+					<p class="description">The verification code is only used to
+						retrieve character information and will not be saved.</p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
 }
 
 /**
