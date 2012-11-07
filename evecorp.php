@@ -86,12 +86,15 @@ if ( is_admin() ) {
 	 * Admin enqueues, actions, and filters.
 	 *
 	 */
+	register_activation_hook( __FILE__, 'evecorp_activate' );
+	register_deactivation_hook( __FILE__, 'evecorp_deactivate' );
+
 	/* Load admin libraries */
 	require_once dirname( __FILE__ ) . '/admin-functions.php';
 	require_once dirname( __FILE__ ) . "/evecorp-settings.php";
 
-	register_activation_hook( __FILE__, 'evecorp_activate' );
-	register_deactivation_hook( __FILE__, 'evecorp_deactivate' );
+	/* Load our online help text contents */
+	include_once dirname( __FILE__ ) . '/userprofile-help.php';
 
 	/* Add a menu entry to administration menu */
 	add_action( 'admin_menu', 'evecorp_add_settings_menu' );
@@ -109,10 +112,10 @@ if ( is_admin() ) {
 	/* Allow user profile updates without e-mail address */
 	add_action( 'user_profile_update_errors', 'evecorp_eveuser_mail', 10, 3 );
 
-	/* Outputs a section and table-listing with API keys for edited user. */
+	/* Outputs a section and table-listing with API keys on user-edit page. */
 	add_action( 'edit_user_profile', 'evecorp_userkeys' );
 
-	/* Outputs a section and table-listing with API keys for current user. */
+	/* Outputs a section and table-listing with API keys on userprofile page. */
 	add_action( 'show_user_profile', 'evecorp_userkeys' );
 
 	/* Output HTML form for adding API key ID and vcode. */
@@ -120,6 +123,12 @@ if ( is_admin() ) {
 
 	/* Add a Eve Online API key ID to a current users meta data. */
 	add_action( 'personal_options_update', 'evecorp_altkey_add' );
+
+	/* Add contextual help to the userprofile page */
+	add_action( 'load-profile.php', 'evecorp_userprofile_help' );
+
+	/* Add contextual help to the user-edit page */
+	add_action( 'load-user-edit.php', 'evecorp_userprofile_help' );
 } else {
 	/**
 	 * Non-admin enqueues, actions, and filters

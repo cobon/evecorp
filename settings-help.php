@@ -12,445 +12,49 @@
 if ( !function_exists( 'add_action' ) )
 	die();
 
-// Contextual Help for Eve Online settings
+/**
+ * Contextual Help for Eve Online settings
+ *
+ * @global string $evecorp_settings_page_hook
+ */
 function evecorp_settings_help()
 {
-
-
-	$evecorp_options_help_overview = <<< END
-<p>
-	<strong>Protected Site</strong>
-
-</p><p>
-
-	This corporation website is protected from access by non-members and
-	from anyone trying to impersonate a corporation member.
-
-</p><p>
-
-	Visitors need to be authenticated and authorized in order to access
-	non-public information and be able to write pages and posts or leave
-	comments.
-
-</p><p>
-
-	<strong>No User Registration</strong>
-
-</p><p>
-
-	Users don't need to register with user-ids and passwords. They don't need to
-	disclose their email address or any other personal information.
-
-</p><p>
-
-	<strong>No User Management</strong>
-
-</p><p>
-
-	No additional user management involved.	Characters who are no longer members
-	of the corporation are immediately and automatically denyied access. As well
-	as new recruits gain access the moment they become members.
-
-</p><p>
-
-	See the help tabs on the left for information on how this works in detail
-	and what risks are involved.
-
-</p>
-END;
-
-	$evecorp_options_help_authentication = <<< END
-
-<p>
-
-	<strong>Authorization</strong>
-
-</p><p>
-
-	Eve Online servers will be contacted to verify that the supplied character
-	name is a current and valid member of your corporation.
-
-
-</p><p>
-
-	<strong>Authentication</strong>
-
-</p><p>
-
-	The user needs to supply a customizable API key from Eve Online to verify
-	that the character accessing the website is controlled by the corresponding
-	and rightful Eve Online player account.
-
-</p>
-END;
-
-	$evecorp_options_help_userkey = <<< END
-<p>
-
-	The supplied Eve Online API Key only serves for the purpose of verifing that
-	the visting character name is in fact controlled by its rightful Eve Online
-	player-account.
-
-</p><p>
-
-	The API key does not need to allow access to any data of that character or
-	other characters of the player account or any data the player account itself
-	(access mask 0).
-
-</p><p>
-
-	The website does not request use or store any additional information on the
-	the character or the user. We aks the Eve Online servers only for a "yes"
-	or a "no" to the question if we should allow access to the webiste.
-
-</p><p>
-
-	The user can choose if he wants the ID and verification code of his supplied
-	API key stored in the database of this webserver. This will allow him to be
-	logged in automatically on subsuquent visits to the site (by browser cookie).
-
-</p><p>
-
-	If the user chooses not to save the key credentials, he will need to supply
-	them again on every visit. As in this case will be used by the website for
-	the duration of the visist only and discarded afterwards.
-
-</p>
-END;
-
-	$evecorp_options_help_risks = <<< END
-<p>
-
-	<strong>Risks Involved</strong>
-
-</p><p>
-
-	Stored IDs and verification codes of API keys could fall in to the wrong
-	hands, in case of a server break-in, hacker-attack, or also by users giving
-	out the that information themself.
-
-</p><p>
-
-	Aside from what is publicly available in-game and on Eve Gate, an attacker
-	in posession of ID and verification code, can gain access to the following
-	information:
-
-</p>
-<ul>
-	<li>
-		The access Mask of the key (which should be 0)
-	</li>
-	<li>
-		The access level of the key (which can be one of "Account", "Character"
-		or "Corporation" and should be "Character")
-	</li>
-	<li>
-		The date the API key expires.
-	</li>
-</ul>
-<p>
-
-	An attacker in posession of ID and verification code will be able to
-	inpersonate the corporation member on this website and gain access to
-	internal information.
-
-</p>
-<ul>
-
-	<li>Never use the same API keys on multiple websites, services or
-	applications.</li>
-
-	<li>Set expiration date on a short time-span (default is one year) and renew the
-	key periodically.</li>
-
-</ul>
-<p>
-
-	The user can change the verification code or delete the key anytime on the
-	Eve Online API website, thus will be no longer usable either by this website
-	or anyone else.
-
-</p>
-END;
-
-	$evecorp_options_help_corpkey = <<< END
-
-<h4>Why is this needed?</h4>
-
-<p>
-
-	The corporation API key allows this website to retrieve information about
-	your corporation from Eve Online servers.
-
-</p><p>
-
-	It is used to automatically manage user profiles and access rights on this
-	website, according to actual status, role and title of your
-	corporation-members.
-
-</p>
-
-<h4>Where do I get the API key?</h4>
-
-<p>
-
-	The CEO and the directors of a coporation can create corporation keys
-	at the <a href="https://support.eveonline.com/api/"
-		title="Eve Online Support website" target="_BLANK">
-		Eve Online Support website</a>.
-
-</p>
-
-<h4>Which permissions are needed?</h4>
-
-<p>
-
-	The corporation keys must be able to retrieve the following information from
-	the Eve Online Servers:
-
-</p>
-<ul>
-	<li>Account and Market
-		<ul>
-			<li>WalletJournal</li>
-		</ul>
-	</li>
-	<li>Corporation Members
-		<ul>
-			<li>Titles</li>
-			<li>MemberTrackingLimited</li>
-			<li>MemberSecurity</li>
-		</ul>
-	</li>
-	<li>Corporation Members
-		<ul>
-			<li>CorporationSheet</li>
-		</ul>
-	</li>
-</ul>
-<p>
-
-	The Access Mask field should display the number <strong>524448</strong>.
-
-</p>
-
-END;
-
-	$evecorp_options_help_igb = <<< END
-<p>
-
-	<strong>The In-Game Browser and Trust</strong>
-
-</p><p>
-
-	The in-game browser of Eve Online has additional features, which no other
-	browser provides, as they are directly related to the game.
-
-</p><p>
-
-	For the most part, these features are very similar to the links used in chat
-	channels.
-
-</p><p>
-
-	This makes it very easy for 3rd-party websites and web-designers to
-	contribute to the game expirience and let the Eve universe expand on to the
-	internet. Or better, let the internet expand from its earth-bound existence
-	in to far away galaxies like New Eden.
-
-</p><p>
-
-	<strong>Functionality any website can provide</strong>
-
-</p><p>
-
-	The following functions can be made available by any websites for their visitors
-	as their is no risk for the pilot involved.
-
-</p>
-<ul>
-	<li>
-		Open the information and preview windows for items like:
-		<ul>
-			<li>
-				Corporations, alliances and factions
-			</li><li>
-				Characters (including NPC characters like agents)
-			</li><li>
-				Regions, constellations, solar systems and stations
-			</li><li>
-				Any items (ships, modules, commodities, etc.)
-			</li>
-		</ul>
-	</li><li>
-		Open the market window for items traded there.
-	</li><li>
-		Open the star map and show the location of a system or the route to it.
-	</li><li>
-		Show a fitting for a ship.
-	</li><li>
-		Show a specific contract.
-	</li><li>
-		 Open a new eve-mail window with a recipient pre-filled.
-	</li>
-</ul>
-<p>
-
-	<strong>Trusted Websites</strong>
-
-</p><p>
-
-	Other more advanced functions can be regarded as risky or reveal information
-	about you while visiting the website. These functions should only be availabe,
-	if you know who you are dealing with.
-
-</p><p>
-
-	Therefore a website can request to be trusted, usually when you visit that
-	site the first time. You then decide for yourself, if you want grant that
-	trust to a webiste, respectively its owners and web-developers.
-
-</p><p>
-
-	<strong>Functions only trusted websites can provide</strong>
-
-</p><p>
-
-	The following additional functions are only available, if you have added a
-	website to your list of trusted sites:
-
-</p>
-<ul>
-	<li>
-		Set a destination or add a waypoint to your autopilot.
-	</li><li>
-		Remove all waypoints from your autopilot.
-	</li><li>
-		Join a chat channel or a mailing list.
-	</li><li>
-		Open the windows for buying or selling items and creating or searching contracts.
-	</li><li>
-		Add an item to the market quickbar
-	</li><li>
-		Open the contents window of a container or a ship.
-	</li><li>
-		Add, edit or remove contacts.
-	</li><li>
-		Block contacts from saying anything in your chat windows.
-	</li><li>
-		Form a fleet with a character or invite him to your existing fleet.
-	</li><li>
-		Start a private conversation with a character.
-	</li><li>
-		Add a bounty for the killing of a character.
-	</li><li>
-		Edit a corporation member, or decorate him with an award.
-	</li><li>
-		Create mail message with recipient, subject and body pre-filled.
-	</li><li>
-		Create a bookmark.
-	</li>
-</ul>
-
-<p>
-
-	Its important to note that, with the exception of the autopilot, they only
-	open the windows to initiate the actions, sometimes with information
-	pre-filled. They do not buy or sell anything fully automated, without any
-	confirmation from your part.
-
-</p><p>
-
-	<strong>Information Revealed to Trusted Websites</strong>
-
-</p><p>
-
-	Your browser also sends additional information about you to websites you
-	have marked as trusted:
-
-</p>
-<ul>
-	<li>
-		Your characters name, corporation, alliance and possibly warfaction.
-	</li><li>
-		In what region, constellation and solar system you are currently located.
-	</li><li>
-		If you are currently in space or docked and if, at which station.
-	</li><li>
-		The name and type of ship you are currently in.
-	</li><li>
-		Roles you have with your corporation.
-	</li>
-</ul>
-<p>
-
-	<strong>Revoke Trust</strong>
-
-</p><p>
-
-	You can always revoke the trust by removing an URL from the trusted sites
-	list.
-
-</p><p>
-
-	You can find the list in the “Options” menue, called “Trusted sites”
-	of your In-game browser.
-
-</p>
-END;
-
-	// Hook to screen from add_options_page()
+	/* Hook to screen from add_options_page() */
 	global $evecorp_settings_page_hook;
 	$screen = get_current_screen();
 
-	/*
-	 * Check if current screen is My Admin Page
-	 * Don't add help tab if it's not
-	 */
+	/* Check if current screen is our plugin page */
 	if ( $screen->id != $evecorp_settings_page_hook )
 		return;
 
-	// Remove the admin notice about visting this page.
+	/* Remove the admin notice about visting this page. */
 	remove_action( 'admin_notices', 'evecorp_config_notifiy' );
 
-	// Add my_help_tab if current screen is My Admin Page
-//	$screen->add_help_tab( array(
-//		'id' => 'evecorp_help_overview',
-//		'title' => __( 'Overview' ),
-//		'content' => $evecorp_options_help_overview
-//			)
-//	);
+	/* Add help tabs */
+	$screen->add_help_tab( array(
+		'id'		 => 'evecorp_help_overview',
+		'title'		 => __( 'Overview' ),
+		'callback'	 => 'evecorp_settings_help_overview'
+			)
+	);
 	$screen->add_help_tab( array(
 		'id'		 => 'evecorp_help_corpkey',
 		'title'		 => __( 'Corporate API Key' ),
-		'content'	 => $evecorp_options_help_corpkey
+		'callback'	 => evecorp_settings_help_corpkey
 			)
 	);
 	$screen->add_help_tab( array(
 		'id'		 => 'evecorp_help_auth',
 		'title'		 => __( 'User Authentication' ),
-		'content'	 => $evecorp_options_help_authentication
+		'callback'	 => 'evecorp_settings_help_authentication'
 			)
 	);
 	$screen->add_help_tab( array(
-		'id'		 => 'evecorp_help_userkey',
-		'title'		 => __( 'User API Key' ),
-		'content'	 => $evecorp_options_help_userkey
+		'id'		 => 'evecorp_help_authz',
+		'title'		 => __( 'User Authorization' ),
+		'callback'	 => 'evecorp_settings_help_authorization'
 			)
 	);
-	$screen->add_help_tab( array(
-		'id'		 => 'evecorp_help_risk',
-		'title'		 => __( 'Risks' ),
-		'content'	 => $evecorp_options_help_risks
-			)
-	);
-	$screen->add_help_tab( array(
-		'id'		 => 'evecorp_help_igb',
-		'title'		 => __( 'In-Game Browser' ),
-		'content'	 => $evecorp_options_help_igb
-			)
-	);
-
 	$screen->set_help_sidebar( '
 
 		<p><strong>For more information:</strong></p>
@@ -467,4 +71,241 @@ END;
 			title="Eve 3rd-Party Developer Forum"
 			target="_blank">Eve Technology Lab</a></p>
 			' );
+
+	function evecorp_settings_help_overview()
+	{
+		?>
+		<p>
+
+			This website can now be protected from access by non-members and also
+			from anyone trying to impersonate a corporation member.
+
+		</p><p>
+
+			Visitors will be authenticated and authorized as corporation members in
+			order to access non-public information and be able to write pages and
+			posts or leave comments.
+
+		</p>
+
+		<h4>No User Registration</h4>
+
+		<p>
+
+			Users don't need to register with user-ids and passwords. They don't need to
+			disclose their email address or any other personal information.
+
+		</p>
+
+		<h4>No User Management</h4>
+
+		<p>
+
+			No additional user management involved.	Characters who are no longer members
+			of the corporation are immediately and automatically denyied access. As well
+			as new recruits gain access the moment they become members.
+
+		</p><p>
+
+			See the help tabs on the left for information on how this works in
+			detail and what risks are involved.
+
+		</p>
+		<?php
+
+	}
+
+	function evecorp_settings_help_corpkey()
+	{
+		?>
+		<p>
+
+			The corporation API key allows this website to retrieve information about
+			your corporation from Eve Online servers.
+
+		</p><p>
+
+			It is used to automatically manage user profiles and access rights on this
+			website, according to actual status, role and title of your
+			corporation-members.
+
+		</p>
+
+		<h4>Where do I get the API key?</h4>
+
+		<p>
+
+			The CEO and the directors of a coporation can create corporation keys
+			at the <a href="https://support.eveonline.com/api/"
+					  title="Eve Online Support website" target="_BLANK">
+				Eve Online Support website</a>.
+
+		</p>
+
+		<h4>Which permissions are needed?</h4>
+
+		<p>
+
+			Following is a list of the information your corporation key must be able to
+			retrieve from the Eve Online Servers:
+
+		</p>
+		<ul>
+			<li>Account and Market
+				<ul>
+					<li>WalletJournal<br />
+						<i>to confirm a users identity trough ISK payments.</i></li>
+				</ul>
+			</li>
+			<li>Corporation Members
+				<ul>
+					<li>Titles<br />
+						<i>to apply roles and capabilites on the website based on a characters corporation titles.</i></li>
+					<li>MemberTrackingLimited<br />
+						<i>to retrieve the list of all current corporation members.</i></li>
+					<li>MemberSecurity<br />
+						<i>to apply roles and capabilites on the website according to characters coporation roles.</i></li>
+				</ul>
+			</li>
+			<li>Corporation Members
+				<ul>
+					<li>CorporationSheet<br />
+						<i>to retrieve general information about the corporaiton.</i></li>
+				</ul>
+			</li>
+		</ul>
+		<p>
+
+			The Access Mask field should display the number <strong>524448</strong>.
+
+		</p>
+		<?php
+
+	}
+
+	function evecorp_settings_help_authentication()
+	{
+		?>
+		<p>
+
+			Your corporation members will login with a API key ID and verification
+			code insead of the usual user-id and password.
+
+		</p><p>
+
+			Eve Online servers will be contacted to verify that the supplied
+			API key belongs to a character which is a current and valid member of
+			your corporation.
+
+		</p><p>
+
+			A new userprofile for the character is automatically created if its not
+			already existing. Existing users will have their user profile
+			updated with current Eve Online character information.
+
+		</p><p>
+
+			If a API key is used the first time an additional identity verification
+			trough a small ISK payment is required, before access to the site is
+			actually granted.
+
+		</p><p>
+
+			This is to ensure nobody can login with API keys given
+			out to third parties in the past. A validation code is displayed to the
+			user, which he must include as payment reason.
+
+		</p><p>
+
+			The next time someone uses the same API key to login, your corporation
+			journal is checked for payments made by that character.
+
+		</p><p>
+
+			If a payment with matching validation code is found, that API key
+			considered as verified and can be subsequently used for login to this
+			site.
+
+		</p>
+		<?php
+
+	}
+
+	function evecorp_settings_help_authorization()
+	{
+		?>
+		<p>
+
+			Once the user is succesfully authenticated, Eve Online servers will be
+			asked for the characters roles and titles within your corporation.
+
+		</p><p>
+
+			The user is then given specific WordPress roles and access rights
+			according to his roles and titles in the corporation.
+
+		</p>
+
+		<table class="wp-list-table widefat fixed eveonlineapikeys" cellspacing="0">
+			<thead>
+				<tr>
+					<th class='manage-column sortable desc'>Eve Online Role</th>
+					<th class='manage-column sortable desc'>WordPress Role</th>
+					<th class='manage-column sortable desc'>Additional Capabilities</th>
+				</tr>
+			</thead>
+			<tbody id="the-list" class='list:eveonlineapikey'>
+				<tr class="alternate">
+					<td>Director</td>
+					<td>Administrator</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Communications Officer</td>
+					<td>Editor</td>
+					<td></td>
+				</tr>
+				<tr class="alternate">
+					<td>Diplomat</td>
+					<td>Author</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Personnel Manager</td>
+					<td>(New User Default Role)</td>
+					<td>list_users, edit_users</td>
+				</tr>
+				<tr class="alternate">
+					<td>(All others)</td>
+					<td>(New User Default Role)</td>
+					<td></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<p>
+
+			The "New User Default Role" can be set in "General Settings" by
+			WordPress Administrators.
+
+		</p><p>
+
+			Additionally if a Eve Online character has a "Title" in the corporation
+			and a WordPress "Role" with the same name exists, his WordPress
+			user-profile will be assigned to that Role.
+
+		</p><p>
+
+			The "WordPress Roles" of these users can be manually changed by
+			Administrators and others who have the capability to update user
+			profiles. However if changes of "Eve Online Roles and Titles" are
+			detected in the corresponding Eve Online character, the "WordPress
+			Roles and Capabilities" are reset as listed in the table above.
+
+		</p>
+		<?php
+
+	}
+
 }
+
