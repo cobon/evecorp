@@ -240,6 +240,42 @@ function evecorp_author_mail( $value, $user_id )
 }
 
 /**
+ * Return a GMT offset in hours from user options if found.
+ *
+ * @param string $site_gmt_offset GTM offset in hours.
+ * @return string GTM offset in hours.
+ */
+function evecorp_gmt_offset( $site_gmt_offset )
+{
+	if ( isset( $_REQUEST['user_id'] ) ) {
+		$user_gmt_offset = get_user_option( 'evecorp_gmt_offset', $_REQUEST['user_id'] );
+	} else {
+		$user_gmt_offset = get_user_option( 'evecorp_gmt_offset' );
+	}
+	if ( $user_gmt_offset )
+		return $user_gmt_offset;
+	return $site_gmt_offset;
+}
+
+/**
+ * Return a timezone location string from user options if found.
+ *
+ * @param string $site_timezone_string Timezone string.
+ * @return string Timezone string.
+ */
+function evecorp_timezone_string( $site_timezone_string )
+{
+	if ( isset( $_REQUEST['user_id'] ) ) {
+		$user_timezone_string = get_user_option( 'evecorp_timezone_string', $_REQUEST['user_id'] );
+	} else {
+		$user_timezone_string = get_user_option( 'evecorp_timezone_string' );
+	}
+	if ( $user_timezone_string )
+		return $user_timezone_string;
+	return $site_timezone_string;
+}
+
+/**
  * Returns the neaerest image size available for Eve Online character portraits.
  *
  * Valid Eve Online image sizes:

@@ -79,6 +79,12 @@ add_filter( 'get_avatar', 'evecorp_get_avatar', 10, 3 );
 /* Allow empty mail address for Eve Online users */
 add_filter( 'get_the_author_user_email', 'evecorp_author_mail', 10, 2 );
 
+/* Use GMT offset from user options instead of site options */
+add_filter( 'option_gmt_offset', 'evecorp_gmt_offset' );
+
+/* Use timezone string from user options instead of site options */
+add_filter( 'option_timezone_string', 'evecorp_timezone_string' );
+
 /* Add some Eve Online related links to the admin-bar */
 add_action( 'admin_bar_menu', 'evecorp_toolbar_links', 999 );
 
@@ -112,6 +118,18 @@ if ( is_admin() ) {
 
 	/* Allow user profile updates without e-mail address */
 	add_action( 'user_profile_update_errors', 'evecorp_eveuser_mail', 10, 3 );
+
+	/* Outputs a user timezone setting on user-edit page. */
+	add_action( 'edit_user_profile', 'evecorp_user_TZ_form' );
+
+	/* Outputs a user timezone seetting on userprofile page. */
+	add_action( 'show_user_profile', 'evecorp_user_TZ_form' );
+
+	/* Save the timezone setting to the current users meta data. */
+	add_action( 'personal_options_update', 'evecorp_set_user_TZ' );
+
+	/* Save the timezone setting to the a users meta data. */
+	add_action( 'edit_user_profile_update', 'evecorp_set_user_TZ' );
 
 	/* Outputs a section and table-listing with API keys on user-edit page. */
 	add_action( 'edit_user_profile', 'evecorp_userkeys' );
@@ -160,10 +178,10 @@ if ( is_admin() ) {
 
 function evecorp_menu_scripts()
 {
-	wp_register_style( 'evecorp-contextMenu', plugin_dir_url( __FILE__ ) . 'js/jquery.contextMenu.css' );
-	wp_register_script( 'jquery.ui.position', plugin_dir_url( __FILE__ ) . 'js/jquery.ui.position.js', array( 'jquery' ) );
-	wp_register_script( 'jquery.contextMenu', plugin_dir_url( __FILE__ ) . 'js/jquery.contextMenu.js', array( 'jquery', 'jquery.ui.position' ) );
-	wp_register_script( 'evecorp.contextMenu', plugin_dir_url( __FILE__ ) . 'js/evecorp.contextMenu.js', array( 'jquery.contextMenu' ) );
+	wp_register_style( 'evecorp-contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.css' );
+	wp_register_script( 'jquery.ui.position', EVECORP_PLUGIN_URL . 'js/jquery.ui.position.js', array( 'jquery' ) );
+	wp_register_script( 'jquery.contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.js', array( 'jquery', 'jquery.ui.position' ) );
+	wp_register_script( 'evecorp.contextMenu', EVECORP_PLUGIN_URL . 'js/evecorp.contextMenu.js', array( 'jquery.contextMenu' ) );
 	wp_enqueue_script( 'evecorp.contextMenu' );
 	wp_enqueue_style( 'evecorp-contextMenu' );
 }

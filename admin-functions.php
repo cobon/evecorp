@@ -150,6 +150,131 @@ function evecorp_userkey_remove( $user_ID, $key_ID )
 }
 
 /**
+ * Output HTML form for setting the users time-zone.
+ *
+ * @param WP_User $profileuser
+ */
+function evecorp_user_TZ_form( $profileuser )
+{
+	/* translators: date and time format for exact current time, mainly about
+	 * timezones, see http://php.net/date */
+	$timezone_format = _x( 'Y-m-d G:i:s', 'timezone date format' );
+	?>
+	<table class="form-table">
+		<tr>
+			<?php
+			$current_offset	 = get_user_option( 'evecorp_gmt_offset', $profileuser->ID );
+			if ( !$current_offset )
+				$current_offset	 = get_option( 'gmt_offset' );
+			$tzstring		 = get_user_option( 'evecorp_timezone_string', $profileuser->ID );
+			if ( !$tzstring )
+				$tzstring		 = get_option( 'timezone_string' );
+			$check_zone_info = true;
+
+			/* Remove old Etc mappings. Fallback to gmt_offset. */
+			if ( false !== strpos( $tzstring, 'Etc/GMT' ) )
+				$tzstring = '';
+
+			/* Create a UTC+- zone if no timezone string exists. */
+			if ( empty( $tzstring ) ) {
+				$check_zone_info = false;
+				if ( 0 == $current_offset )
+					$tzstring		 = 'UTC+0';
+				elseif ( $current_offset < 0 )
+					$tzstring		 = 'UTC' . $current_offset;
+				else
+					$tzstring		 = 'UTC+' . $current_offset;
+			}
+			?>
+			<th scope="row"><label for="timezone_string"><?php _e( 'Your Timezone on Earth' ) ?></label></th>
+			<td>
+
+				<select id="timezone_string" name="timezone_string">
+					<?php echo wp_timezone_choice( $tzstring ); ?>
+				</select>
+
+				<span id="utc-time"><?php printf( __( 'Current <abbr title="Eve Standard Time (ET)">Eve time</abbr> is <code>%s</code>' ), date_i18n( $timezone_format, false, 'gmt' ) ); ?></span>
+				<?php if ( get_user_option( 'evecorp_timezone_string', $profileuser->ID ) || !empty( $current_offset ) ) : ?>
+					<span id="local-time"><?php printf( __( 'Your local earth time is <code>%1$s</code>' ), date_i18n( $timezone_format ) ); ?></span>
+				<?php endif; ?>
+				<p class="description"><?php _e( 'Choose a city on planet earth in the same timezone as you.' ); ?></p>
+				<?php if ( $check_zone_info && $tzstring ) : ?>
+					<br />
+					<span>
+						<?php
+						/* Set TZ so localtime works. */
+						date_default_timezone_set( $tzstring );
+						$now			 = localtime( time(), true );
+						if ( $now['tm_isdst'] )
+							_e( 'Your timezone on earth is currently in daylight saving time.' );
+						else
+							_e( 'Your timezone on earth is currently in standard time.' );
+						?>
+						<br />
+						<?php
+						$allowed_zones	 = timezone_identifiers_list();
+
+						if ( in_array( $tzstring, $allowed_zones ) ) {
+							$found					 = false;
+							$date_time_zone_selected = new DateTimeZone( $tzstring );
+							$tz_offset				 = timezone_offset_get( $date_time_zone_selected, date_create() );
+							$right_now				 = time();
+							foreach ( timezone_transitions_get( $date_time_zone_selected ) as $tr ) {
+								if ( $tr['ts'] > $right_now ) {
+									$found = true;
+									break;
+								}
+							}
+
+							if ( $found ) {
+								echo ' ';
+								$message = $tr['isdst'] ?
+										__( 'Daylight saving time begins on: <code>%s</code>.' ) :
+										__( 'Standard time begins on: <code>%s</code>.' );
+
+								/* Add the difference between the current offset and the new offset to ts to get the correct transition time from date_i18n(). */
+								printf( $message, date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $tr['ts'] + ($tz_offset - $tr['offset']) ) );
+							} else {
+								_e( 'It does not observe daylight saving time.' );
+							}
+						}
+						// Set back to UTC.
+						date_default_timezone_set( 'UTC' );
+						?>
+					</span>
+				<?php endif; ?>
+			</td>
+
+		</tr>
+	</table>
+	<?php
+}
+
+function evecorp_set_user_TZ( $user_ID )
+{
+//	var_dump($_REQUEST);
+//	die;
+	$timezone_string = sanitize_option( 'timezone_string', $_POST['timezone_string'] );
+	if ( !empty( $timezone_string ) ) {
+
+		/* Do we have a GMT offset instead of a location? */
+		if ( preg_match( '/^UTC[+-]/', $timezone_string ) ) {
+
+			/* Map UTC+- timezones to gmt_offsets. */
+			$gmt_offset = preg_replace( '/UTC\+?/', '', $timezone_string );
+
+			/* Emtpy the timezone location. */
+			$timezone_string = '';
+		} else {
+			/* Empty any GMT offseet. */
+			$gmt_offset = '';
+		}
+		update_user_option( $user_ID, 'evecorp_timezone_string', $timezone_string );
+		update_user_option( $user_ID, 'evecorp_gmt_offset', $gmt_offset );
+	}
+}
+
+/**
  * Output HTML form for adding API key ID and vcode.
  *
  * @param WP_User $profileuser
