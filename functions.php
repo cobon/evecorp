@@ -159,6 +159,25 @@ function evecorp_IGB_data()
 	return($evecorp_IGB_data);
 }
 
+function evecorp_get_portrait( $character_ID, $size, $alt = '' )
+{
+	if ( is_ssl() ) {
+		$protocol = 'https://';
+	} else {
+		$protocol = 'http://';
+	}
+	if ( empty( $alt ) ) {
+		$alt		 = 'Portrait of a Pilot';
+	}
+	$host		 = 'image.eveonline.com';
+	$server_path = 'Character';
+	$eve_size	 = evecorp_avatar_size( $size );
+	$suffix		 = 'jpg';
+	$image_url	 = $protocol . trailingslashit( $host ) . trailingslashit( $server_path ) . $character_ID . '_' . $eve_size . '.' . $suffix;
+	$html		 = "<img alt='{$alt}' src='{$image_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' />";
+	return $html;
+}
+
 /**
  * Returns Eve Online character portrait image (replacing the Gravatar image).
  *
@@ -202,18 +221,7 @@ function evecorp_get_avatar( $avatar, $id_or_email, $size )
 
 	$alt			 = $user->user_nicename;
 	$character_ID	 = get_user_meta( $user_id, 'evecorp_character_ID', true );
-
-	if ( is_ssl() ) {
-		$protocol = 'https://';
-	} else {
-		$protocol		 = 'http://';
-	}
-	$host			 = 'image.eveonline.com';
-	$server_path	 = 'Character';
-	$eve_size		 = evecorp_avatar_size( $size );
-	$suffix			 = 'jpg';
-	$eve_avatar_url	 = $protocol . trailingslashit( $host ) . trailingslashit( $server_path ) . $character_ID . '_' . $eve_size . '.' . $suffix;
-	$eve_avatar		 = "<img alt='{$alt}' src='{$eve_avatar_url}' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' />";
+	$eve_avatar		 = evecorp_get_portrait( $character_ID, $size, $alt );
 	return $eve_avatar;
 }
 
@@ -258,6 +266,62 @@ function evecorp_avatar_size( $requested_size )
 
 	/* Return the biggets available */
 	return '1024';
+}
+
+function evecorp_get_alts( $character_name )
+{
+	$alts = array( );
+	/* Is the character a registred WP user? */
+	$user = get_user_by( 'login', sanitize_user( $character_name ) );
+	if ( $user ) {
+
+		/* Are there any Eve Online API key stored with this user? */
+		$userkeys = get_user_meta( $user->ID, 'evecorp_userkeys', true );
+		if ( is_array( $userkeys ) ) {
+
+			/* Our corporation name */
+			$site_corp_name = evecorp_get_option( 'corpkey_corporation_name' );
+
+			/* Work trough the stored API keys */
+			foreach ( $userkeys as $userkey ) {
+
+				/* Skip any key that belongs to the user itself,
+				 * we only want his alts. */
+				if ( $character_name !== $userkey['characterName'] ) {
+
+					/* He may have changed corporation since this API key was
+					 * stored. */
+					$alt_corp_name = evecorp_get_char_corp( $userkey['characterID'] );
+					if ( $site_corp_name != $alt_corp_name ) {
+
+						/* @todo Update stored userkey with new corporation. */
+						$userkey['corporationName']	 = $alt_corp_name;
+					}
+					$alts[]						 = array(
+						'character_name'	 => $userkey['characterName'],
+						'character_ID'		 => $userkey['characterID'],
+						'corporation_name'	 => $userkey['corporationName']
+					);
+				}
+			}
+		}
+	}
+	return $alts;
+}
+
+function camelcase_split( $camelcase_str )
+{
+	$regex	 = '/# Match position between camelCase "words".
+    (?<=[a-z])  # Position is after a lowercase,
+    (?=[A-Z])   # and before an uppercase letter.
+    /x';
+	$array	 = preg_split( $regex, $camelcase_str );
+	$count	 = count( $array );
+	for ( $i = 0; $i < $count; ++$i ) {
+		$str .= $array[$i] . ' ';
+	}
+	$str = substr( $str, 0, -1 );
+	return $str;
 }
 
 /**

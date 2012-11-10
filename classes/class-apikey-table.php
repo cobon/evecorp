@@ -35,6 +35,8 @@ class evecorp_APIKey_Table extends WP_List_Table {
 	function __construct()
 	{
 
+		global $status, $page;
+
 		/* Set parent defaults */
 		parent::__construct( array(
 			'singular'	 => 'Eve Online API Key', //singular name of the listed records
@@ -219,25 +221,13 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		return 'Unknwon status';
 	}
 
-	/**
-	 * Bulk actions defintion.
-	 *
-	 * @return array An associative array containing all the bulk actions: 'slugs'=>'Visible Titles'
-	 */
-	function get_bulk_actions()
-	{
-		$actions = array(
-			'remove' => 'Remove'
-		);
-		return $actions;
-	}
 
 	/**
 	 * Remove API keys bulk action.
 	 *
 	 * @see $this->prepare_items()
 	 */
-	function process_bulk_action()
+	function process_action()
 	{
 
 		/* Detect when a (bulk) action is being triggered... */
@@ -274,8 +264,8 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		/* Column headers */
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 
-		/* Bulk actions handler */
-		$this->process_bulk_action();
+		/* Actions handler */
+		$this->process_action();
 
 		/* Get the data to display */
 		$keys = get_user_meta( $user_ID, 'evecorp_userkeys', true );
@@ -346,9 +336,20 @@ class evecorp_APIKey_Table extends WP_List_Table {
 	 * Blank override method because WP_List_Table generates its own conflicting
 	 * nonce to the edit user-profile nonce.
 	 */
-	function display_tablenav()
+	function display_tablenav( $which )
 	{
-		return;
+		if ( 'top' == $which )
+		?>
+		<div class="tablenav <?php echo esc_attr( $which ); ?>">
+
+			<?php
+			$this->extra_tablenav( $which );
+			$this->pagination( $which );
+			?>
+
+			<br class="clear" />
+		</div>
+		<?php
 	}
 
 }

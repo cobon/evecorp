@@ -1,5 +1,4 @@
 <?php
-
 /*
   Plugin Name: Eve Online Plugin for WordPress
   Plugin URI: http://fisr.dnsd.info/
@@ -60,6 +59,8 @@ define( 'EVECORP', 'Eve Online Player Corporation Plugin for WordPress' );
 define( 'EVECORP_VERSION', 0.1 );
 define( 'EVECORP_MIN_WP_VERSION', '3.3' );
 define( 'EVECORP_MIN_PHP_VERSION', '5.2.4' );
+define( 'EVECORP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'EVECORP_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 /* Load common libraries */
 require_once dirname( __FILE__ ) . "/functions.php";
@@ -269,4 +270,26 @@ function evecorp_corp( $corp_name )
 			'" name="' . esc_attr( $corp_name ) .
 			'" title="Corporation Information">' . $corp_name . '</a>';
 	return $html;
+}
+
+/**
+ * Output a list of corporation members as HTML table.
+ *
+ */
+function evecorp_the_members()
+{
+	require_once dirname( __FILE__ ) . "/classes/class-members-table.php";
+
+	/* Create an instance of key_Table class */
+	$Members_Table = new evecorp_Members_Table();
+
+	/* Fetch, prepare, sort, and filter our data */
+	$Members_Table->prepare_items();
+
+	/* Display */
+	?>
+	<!-- Begin members list table -->
+	<?php $Members_Table->display() ?>
+	<!-- End members list table -->
+	<?php
 }
