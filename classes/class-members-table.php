@@ -146,23 +146,21 @@ class evecorp_Members_Table extends WP_List_Table {
 	{
 
 		if ( empty( $item['alts'] ) ) {
-			return 'None that we know of';
+			return '&nbsp;';
 		} else {
 
 			/* Our corporation name */
 			$site_corp_name = evecorp_get_option( 'corpkey_corporation_name' );
 
 			/* List the alts */
-			$alts_html = '<table class="alts">';
 			foreach ( $item['alts'] as $alt ) {
-				$alts_html .= '<tr><td>';
+				$alts_html .= '<div class="alts">';
 				$alts_html .= evecorp_get_portrait( $alt['character_ID'], $this->portrait_size / 2 );
 				$alts_html .= '<strong>' . evecorp_char( $alt['character_name'] ) . '</strong>';
 				if ( $alt['corporation_name'] != $site_corp_name )
 					$alts_html .= '<br />' . evecorp_corp( $alt['corporation_name'] );
-				$alts_html .= '</td></tr>';
+				$alts_html .= '</div>';
 			}
-			$alts_html .='</table>';
 			return $alts_html;
 		}
 	}
@@ -198,10 +196,8 @@ class evecorp_Members_Table extends WP_List_Table {
 			}
 
 			/* Current date/time in the specified time zone. */
-//			$date = new DateTime( null, new DateTimeZone( $item['timezone'] ) );
-			//	return $date->format('Y-m-d H:i:s P');
 			$html = $item['localtime']->format( $date_format . ' ' . $time_format );
-			$html .= ' (' . $item['timezone'] . ')';
+			$html .= '<div class="timezone">' . $item['timezone'] . '</div>';
 			return $html;
 		}
 	}
