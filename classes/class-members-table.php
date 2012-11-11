@@ -22,7 +22,7 @@ if ( !class_exists( 'WP_List_Table' ) ) {
  */
 class evecorp_Members_Table extends WP_List_Table {
 
-	var $portrait_size = 128;
+	var $portrait_size = 96;
 
 	/**
 	 * Constructor.
@@ -34,18 +34,13 @@ class evecorp_Members_Table extends WP_List_Table {
 	 */
 	function __construct( $args = array( ) )
 	{
-		global $status, $page;
+//		global $status, $page;
 
 		$args = wp_parse_args( $args, array(
 			'plural'	 => '',
 			'singular'	 => '',
 			'ajax'		 => false
 				) );
-
-//		$screen = get_current_screen();
-//		add_filter( "manage_{$screen->id}_columns", array( &$this, 'get_columns' ), 0 );
-//		if ( !$args['plural'] )
-//			$args['plural'] = $screen->base;
 
 		$args['plural']		 = sanitize_key( $args['plural'] );
 		$args['singular']	 = sanitize_key( $args['singular'] );
@@ -143,7 +138,7 @@ class evecorp_Members_Table extends WP_List_Table {
 		$titles_html = substr( $titles_html, 0, -2 );
 
 		$html .=$portrait_html .
-				'<strong>'.evecorp_char( $character_name ) . '</strong><br />' . $roles_html . '<br />' . $titles_html;
+				'<strong>' . evecorp_char( $character_name ) . '</strong><br />' . $roles_html . '<br />' . $titles_html;
 		return $html;
 	}
 
@@ -162,9 +157,9 @@ class evecorp_Members_Table extends WP_List_Table {
 			foreach ( $item['alts'] as $alt ) {
 				$alts_html .= '<tr><td>';
 				$alts_html .= evecorp_get_portrait( $alt['character_ID'], $this->portrait_size / 2 );
-				$alts_html .= '<strong>'.evecorp_char( $alt['character_name'] ).'</strong>';
+				$alts_html .= '<strong>' . evecorp_char( $alt['character_name'] ) . '</strong>';
 				if ( $alt['corporation_name'] != $site_corp_name )
-					$alts_html .= ' (' . evecorp_corp( $alt['corporation_name'] ) . ')';
+					$alts_html .= '<br />' . evecorp_corp( $alt['corporation_name'] );
 				$alts_html .= '</td></tr>';
 			}
 			$alts_html .='</table>';
@@ -175,25 +170,23 @@ class evecorp_Members_Table extends WP_List_Table {
 	/**
 	 * Return HTML for rendering the API key expiry date column.
 	 *
+	 * @todo Add time format from browser locale.
+	 *
 	 * @param array $item Array containing all column-data for this row.
 	 * @return string HTML text data to output.
 	 */
 	function column_localtime( $item )
 	{
-		if ( !isset( $item['location'] ) ) {
-			return 'Unknown Location';
+		if ( empty( $item['localtime'] ) ) {
+			return 'Don\'t know';
 		} else {
 
 			/* Day of week short */
-			$date_format = date_i18n( 'D' );
+			$date_format = 'D';
 			if ( get_user_option( 'time_format' ) ) {
 
 				/* Time format from user options */
 				$time_format = get_user_option( 'time_format' );
-			} elseif ( true ) {
-
-				/* Time format from browser locale */
-				$time_format = true;
 			} elseif ( get_option( 'time_format' ) ) {
 
 				/* Time format from site options */
@@ -205,11 +198,10 @@ class evecorp_Members_Table extends WP_List_Table {
 			}
 
 			/* Current date/time in the specified time zone. */
-			$date = new DateTime( null, new DateTimeZone( $item['location'] ) );
-
+//			$date = new DateTime( null, new DateTimeZone( $item['timezone'] ) );
 			//	return $date->format('Y-m-d H:i:s P');
-			$localtime	 = $date->format( $date_format . ' ' . $time_format );
-			$html		 = $localtime;
+			$html = $item['localtime']->format( $date_format . ' ' . $time_format );
+			$html .= ' (' . $item['timezone'] . ')';
 			return $html;
 		}
 	}
@@ -295,13 +287,43 @@ class evecorp_Members_Table extends WP_List_Table {
 				/* Get known alts of member */
 				$alts = evecorp_get_alts( $member['name'] );
 
+				/* Get timezone of member */
+
+				/* Is the character a registred WP user? */
+				$user = get_user_by( 'login', sanitize_user( $member['name'] ) );
+				if ( $user ) {
+
+					/* Get his personal time zone settings. */
+					$gmt_offset		 = get_user_option( 'evecorp_gmt_offset', $user->ID );
+					$timezone_string = get_user_option( 'evecorp_timezone_string', $user->ID );
+					if ( !empty( $gmt_offset ) ) {
+						$timezone = $gmt_offset;
+					}
+					if ( !empty( $timezone_string ) ) {
+						$timezone	 = $timezone_string;
+					}
+					/* Timezone object */
+					$tz			 = new DateTimeZone( $timezone );
+
+					/* Current date/time in the specified time zone. */
+					$localtime = new DateTime( null, $tz );
+
+					/* Calculate GMT offset for sorting */
+					$timezone_offset = $tz->getOffset( $localtime );
+				} else {
+					$localtime		 = '';
+					$timezone_offset = '';
+				}
+
 				/* Assign */
-				$row['name']		 = $member['name'];
-				$row['characterID']	 = $member['characterID'];
-				$row['titles']		 = $member['titles'];
-				$row['roles']		 = $member['roles'];
-				$row['alts']		 = $alts;
-				$row['localtime']	 = 'Unknown';
+				$row['name']			 = $member['name'];
+				$row['characterID']		 = $member['characterID'];
+				$row['titles']			 = $member['titles'];
+				$row['roles']			 = $member['roles'];
+				$row['alts']			 = $alts;
+				$row['localtime']		 = $localtime;
+				$row['timezone-offset']	 = $timezone_offset;
+				$row['timezone']		 = $timezone;
 
 				/* Add */
 				$rows[] = $row;

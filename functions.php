@@ -448,3 +448,12 @@ function evecorp_toolbar_links( $wp_admin_bar )
 	$wp_admin_bar->add_node( $petitions );
 	$wp_admin_bar->add_node( $API_keys );
 }
+
+if ( !is_admin() ) {
+	if ( !function_exists( 'get_current_screen' ) ) {
+		function get_current_screen( )
+		{
+			return null;
+		}
+	}
+}
