@@ -139,20 +139,20 @@ function evecorp_IGB_data()
 
 	foreach ( $_SERVER as $key => $value ) {
 
-		// Skip on non-Eve headers
+// Skip on non-Eve headers
 		if ( strpos( $key, 'HTTP_EVE_' ) === 0 ) {
 
-			// IGB browser detected
+// IGB browser detected
 			$evecorp_IGB_data['is_igb'] = true;
 
-			// Remove the HTTP_EVE_ prefix and make it lowercase
+// Remove the HTTP_EVE_ prefix and make it lowercase
 			$key = strtolower( str_replace( 'HTTP_EVE_', '', $key ) );
 
-			// Set the trusted value to true if the header has been sent.
+// Set the trusted value to true if the header has been sent.
 			if ( $key === 'trusted' && 'Yes' === $value )
 				$evecorp_IGB_data['trusted'] = true;
 
-			// Store key and value in array
+// Store key and value in array
 			$evecorp_IGB_data['values'][$key] = $value;
 		}
 	}
@@ -451,9 +451,33 @@ function evecorp_toolbar_links( $wp_admin_bar )
 
 if ( !is_admin() ) {
 	if ( !function_exists( 'get_current_screen' ) ) {
-		function get_current_screen( )
+
+		function get_current_screen()
 		{
 			return null;
 		}
+
 	}
+}
+
+function evecorp_query_vars( $query_vars )
+{
+	$query_vars[]	 = 'members_list';
+	$query_vars[]	 = 'member';
+	return $query_vars;
+}
+
+function evecorp_parse_request( &$wp )
+{
+	/* Do we have a request for a individual members page? */
+	if ( array_key_exists( 'member', $wp->query_vars ) ) {
+		var_dump( $wp->query_vars );
+		die( 'single member' );
+	}
+	/* Do we have a request for the list of all members? */
+	if ( array_key_exists( 'members_list', $wp->query_vars ) ) {
+		var_dump( $wp->query_vars );
+		die( 'member listing' );
+	}
+	return;
 }

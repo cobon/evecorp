@@ -12,7 +12,7 @@ if ( !function_exists( 'add_action' ) )
 	die();
 
 /* Contextual Help text for settings page */
-include_once(dirname( __FILE__ ) . '/settings-help.php');
+include_once(EVECORP_PLUGIN_DIR . '/settings-help.php');
 
 /**
  * Initialize form content for the plugin settings page
@@ -216,7 +216,7 @@ function evecorp_validate_settings( $input )
 
 	global $evecorp_options;
 
-	if ( !isset($_POST))
+	if ( !isset( $_POST ) )
 		return;
 
 	/* Do we have a API key in options? */

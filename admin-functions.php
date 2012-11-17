@@ -20,7 +20,8 @@ if ( !function_exists( 'add_action' ) )
  */
 function evecorp_activate()
 {
-	global $wp_version, $evecorp_options;
+	global $wp_rewrite, $wp_version, $evecorp_options;
+
 	$plugin = dirname( __FILE__ ) . '/evecorp.php';
 
 	/* WordPress version check */
@@ -46,6 +47,10 @@ function evecorp_activate()
 	/* Add some sane default options */
 	evecorp_init_options();
 	add_option( 'evecorp_options', $evecorp_options );
+
+	evecorp_add_rewrite_rules();
+	/* Flush rewrite rules. */
+	$wp_rewrite->flush_rules();
 }
 
 /**
@@ -54,7 +59,26 @@ function evecorp_activate()
  */
 function evecorp_deactivate()
 {
+	/* Nothing to do here yet. */
 	return;
+}
+
+/**
+ * Add rewrite rules for Eve online specific pages.
+ */
+function evecorp_add_rewrite_rules()
+{
+	global $wp_rewrite;
+
+	/* Examples URLs:
+	 *	example.com/members/
+	 *	example.com/members/John_Doe/
+	 */
+
+	$wp_rewrite->add_rule( '^members/([^/]*)/?', 'index.php?&member=$matches[1]', 'top' );
+	add_rewrite_tag( '%member%', '([^&]+)' );
+
+	$wp_rewrite->add_rule( '^members$', 'index.php?members_list=1', 'top' );
 }
 
 /**
@@ -132,7 +156,7 @@ function evecorp_userkeys( $user )
 }
 
 /**
- * Removes a API key from WordPress user meta data.
+ * Remove a API key from WordPress user meta data.
  *
  * @param type $user_ID ID number of WordPress user profile.
  * @param type $key_ID ID number of Eve Online API key.

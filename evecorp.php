@@ -59,12 +59,13 @@ define( 'EVECORP', 'Eve Online Player Corporation Plugin for WordPress' );
 define( 'EVECORP_VERSION', 0.1 );
 define( 'EVECORP_MIN_WP_VERSION', '3.3' );
 define( 'EVECORP_MIN_PHP_VERSION', '5.2.4' );
-define( 'EVECORP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'EVECORP_PLUGIN_URL', plugin_dir_url( __FILE__ ));
+define( 'EVECORP_PLUGIN_FILE', __FILE__ );
+define( 'EVECORP_PLUGIN_DIR', plugin_dir_path( EVECORP_PLUGIN_FILE ) );
+define( 'EVECORP_PLUGIN_URL', plugin_dir_url( EVECORP_PLUGIN_FILE ) );
 
 /* Load common libraries */
-require_once dirname( __FILE__ ) . "/functions.php";
-require_once dirname( __FILE__ ) . "/api-functions.php";
+require_once EVECORP_PLUGIN_DIR . "/functions.php";
+require_once EVECORP_PLUGIN_DIR . "/api-functions.php";
 
 /**
  * Global enqueues, actions, and filters.
@@ -93,15 +94,15 @@ if ( is_admin() ) {
 	 * Admin enqueues, actions, and filters.
 	 *
 	 */
-	register_activation_hook( __FILE__, 'evecorp_activate' );
-	register_deactivation_hook( __FILE__, 'evecorp_deactivate' );
+	register_activation_hook( EVECORP_PLUGIN_FILE, 'evecorp_activate' );
+	register_deactivation_hook( EVECORP_PLUGIN_FILE, 'evecorp_deactivate' );
 
 	/* Load admin libraries */
-	require_once dirname( __FILE__ ) . '/admin-functions.php';
-	require_once dirname( __FILE__ ) . "/evecorp-settings.php";
+	require_once EVECORP_PLUGIN_DIR . '/admin-functions.php';
+	require_once EVECORP_PLUGIN_DIR . "/evecorp-settings.php";
 
 	/* Load our online help text contents */
-	include_once dirname( __FILE__ ) . '/userprofile-help.php';
+	include_once EVECORP_PLUGIN_DIR . '/userprofile-help.php';
 
 	/* Add a menu entry to administration menu */
 	add_action( 'admin_menu', 'evecorp_add_settings_menu' );
@@ -148,19 +149,28 @@ if ( is_admin() ) {
 
 	/* Add contextual help to the user-edit page */
 	add_action( 'load-user-edit.php', 'evecorp_userprofile_help' );
+
+	/* Add rewrite rules four our special Eve Online pages (members, et al) */
+	add_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
 } else {
 	/**
 	 * Non-admin enqueues, actions, and filters
 	 *
 	 */
 	/* Load login libraries */
-	require_once dirname( __FILE__ ) . "/login-functions.php";
+	require_once EVECORP_PLUGIN_DIR . "/login-functions.php";
 
 	/* Register shortcode handler */
 	add_shortcode( 'eve', 'evecorp_shortcode' );
 
 	/* jQuery context menu for Eve Online stuff */
 	add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
+
+	/* Add query variables for Eve Online pages (members, et al) */
+	add_filter( 'query_vars', 'evecorp_query_vars' );
+
+	/* Eve Online page processing (members, et al) */
+	add_action( 'parse_request', 'evecorp_parse_request' );
 
 	/**
 	 * Hook evecorp into the WordPress authentication flow.
@@ -307,7 +317,9 @@ function evecorp_the_members()
 	/* Display */
 	?>
 	<!-- Begin members list table -->
-	<?php $Members_Table->display() ?>
+	<div class="entry-content">
+		<?php $Members_Table->display() ?>
+	</div>
 	<!-- End members list table -->
 	<?php
 }

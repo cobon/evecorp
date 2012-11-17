@@ -24,8 +24,8 @@ function evecorp_init_pheal()
 	if ( !class_exists( 'WP_Pheal', FALSE ) ) {
 
 		/* Load the stuff */
-		require_once dirname( __FILE__ ) . "/classes/pheal/Pheal.php";
-		require_once dirname( __FILE__ ) . "/classes/class-wp-pheal.php";
+		require_once EVECORP_PLUGIN_DIR . "/classes/pheal/Pheal.php";
+		require_once EVECORP_PLUGIN_DIR . "/classes/class-wp-pheal.php";
 
 		/* Register the class loader */
 		spl_autoload_register( "Pheal::classload" );
