@@ -16,7 +16,7 @@ jQuery(function(){
 			"ShowInfo": {
 				name: "Show Info",
 				callback: function(opt1, opt2){
-					CCPEVE.showInfo("1377", jQuery(this).attr("id"))
+					CCPEVE.showInfo("1377", jQuery(this).attr("id"));
 				}
 			},
 			"sep1": "---------",
@@ -24,14 +24,14 @@ jQuery(function(){
 				name: "Add Contact",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.addContact(jQuery(this).attr("id"))
+					CCPEVE.addContact(jQuery(this).attr("id"));
 				}
 			},
 			"block": {
 				name: "Block",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.block(jQuery(this).attr("id"))
+					CCPEVE.block(jQuery(this).attr("id"));
 				}
 			},
 			"sep2": "---------",
@@ -39,21 +39,21 @@ jQuery(function(){
 				name: "Start Conversation",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.startConversation(jQuery(this).attr("id"))
+					CCPEVE.startConversation(jQuery(this).attr("id"));
 				}
 			},
 			"sendMail": {
 				name: "Send Message",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.sendMail(jQuery(this).attr("id"),'Subject','Body')
+					CCPEVE.sendMail(jQuery(this).attr("id"),'Subject','Body');
 				}
 			},
 			"inviteToFleet": {
 				name: "Invite to Fleet",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.inviteToFleet(jQuery(this).attr("id"))
+					CCPEVE.inviteToFleet(jQuery(this).attr("id"));
 				}
 			},
 			"sep3": "---------",
@@ -61,7 +61,7 @@ jQuery(function(){
 				name: "Add Bounty",
 				disabled: !jQuery(".evecorp-char-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.addBounty(jQuery(this).attr("id"))
+					CCPEVE.addBounty(jQuery(this).attr("id"));
 				}
 			},
 			"sep4": "---------",
@@ -90,7 +90,7 @@ jQuery(function(){
 				}
 			}
 		}
-	})
+	});
 
 	/* Corporations In-Game Browser Context Menu */
 	jQuery.contextMenu({
@@ -100,7 +100,7 @@ jQuery(function(){
 			"ShowInfo": {
 				name: "Show Info",
 				callback: function(opt1, opt2){
-					CCPEVE.showInfo("2", jQuery(this).attr("id"))
+					CCPEVE.showInfo("2", jQuery(this).attr("id"));
 				}
 			},
 			"sep1": "---------",
@@ -108,14 +108,14 @@ jQuery(function(){
 				name: "Add Contact",
 				disabled: !jQuery(".evecorp-corp-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.addContact(jQuery(this).attr("id"))
+					CCPEVE.addContact(jQuery(this).attr("id"));
 				}
 			},
 			"block": {
 				name: "Block",
 				disabled: !jQuery(".evecorp-corp-igb").hasClass("trusted"),
 				callback: function(opt){
-					CCPEVE.block(jQuery(this).attr("id"))
+					CCPEVE.block(jQuery(this).attr("id"));
 				}
 			},
 			"sep2": "---------",
@@ -144,7 +144,7 @@ jQuery(function(){
 				}
 			}
 		}
-	})
+	});
 
 /* Characters Out-of-Game Browser Context Menu */
 	jQuery.contextMenu({
@@ -187,7 +187,7 @@ jQuery(function(){
 				}
 			}
 		}
-	})
+	});
 
 	/* Corporations Out-of-Game Browser Context Menu */
 	jQuery.contextMenu({
@@ -219,6 +219,6 @@ jQuery(function(){
 				}
 			}
 		}
-	})
+	});
 
 });
