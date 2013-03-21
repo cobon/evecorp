@@ -22,15 +22,13 @@ function evecorp_activate()
 {
 	global $wp_rewrite, $wp_version, $evecorp_options;
 
-	$plugin = dirname( __FILE__ ) . '/evecorp.php';
-
 	/* WordPress version check */
 	$wp_version_error = EVECORP . ' requires WordPress ' . EVECORP_MIN_WP_VERSION .
 			' or newer. This server is running WordPress version ' . $wp_version .
 			'. <a href="http://codex.wordpress.org/Upgrading_WordPress">
 			Please update!</a>';
 	if ( version_compare( $wp_version, EVECORP_MIN_WP_VERSION, '<' ) ) {
-		deactivate_plugins( $plugin );
+		deactivate_plugins( EVECORP_PLUGIN_FILE );
 		wp_die( $wp_version_error, '', array( 'response'	 => 200, 'back_link'	 => TRUE ) );
 	}
 
@@ -40,7 +38,7 @@ function evecorp_activate()
 			'. <a href="http://www.php.net/downloads.php">
 			Please update!</a>';
 	if ( version_compare( PHP_VERSION, EVECORP_MIN_PHP_VERSION, '<' ) ) {
-		deactivate_plugins( $plugin );
+		deactivate_plugins( EVECORP_PLUGIN_FILE );
 		wp_die( $php_version_error, '', array( 'response'	 => 200, 'back_link'	 => TRUE ) );
 	}
 
@@ -130,7 +128,7 @@ function evecorp_userkeys( $user )
 {
 	/* Is the displayed user-profile an Eve Online character? */
 	if ( get_user_meta( $user->ID, 'evecorp_character_ID', true ) ) {
-		require_once dirname( __FILE__ ) . "/classes/class-apikey-table.php";
+		require_once EVECORP_PLUGIN_DIR . '/classes/class-apikey-table.php';
 
 		/* Create an instance of key_Table class */
 		$APIKey_Table = new evecorp_APIKey_Table();
