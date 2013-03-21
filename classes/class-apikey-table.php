@@ -194,9 +194,9 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		} else {
 			$date = date_i18n( get_option( 'date_format' ), $item['expires'] );
 			if ( $item['expires'] > time() ) {
-				$time_left = 'in ' . human_time_diff( time(), $item['expires'] );
+				$time_left = 'in ' . evecorp_human_time_diff( time(), $item['expires'] );
 			} else {
-				$time_left = human_time_diff( $item['expires'], time() ) . ' ago ';
+				$time_left = evecorp_human_time_diff( $item['expires'], time() ) . ' ago ';
 			}
 			return $time_left . '<br />' . $date;
 		}
