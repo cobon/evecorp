@@ -351,13 +351,13 @@ function camelcase_split( $camelcase_str )
     (?<=[a-z])  # Position is after a lowercase,
     (?=[A-Z])   # and before an uppercase letter.
     /x';
+	$str	= '';
 	$array	 = preg_split( $regex, $camelcase_str );
 	$count	 = count( $array );
 	for ( $i = 0; $i < $count; ++$i ) {
 		$str .= $array[$i] . ' ';
 	}
-	$str = substr( $str, 0, -1 );
-	return $str;
+	return substr( $str, 0, -1 );
 }
 
 /**
@@ -471,13 +471,104 @@ function evecorp_parse_request( &$wp )
 {
 	/* Do we have a request for a individual members page? */
 	if ( array_key_exists( 'member', $wp->query_vars ) ) {
-		var_dump( $wp->query_vars );
-		die( 'single member' );
+		$template		 = 'member.php';
+		/* Look for the template in the active theme. */
+		$template_file	 = locate_template( $template );
+		if ( !$template_file ) {
+			$template_file = EVECORP_PLUGIN_DIR . $template;
+		}
+		require_once $template_file;
+		exit;
 	}
+
 	/* Do we have a request for the list of all members? */
 	if ( array_key_exists( 'members_list', $wp->query_vars ) ) {
-		var_dump( $wp->query_vars );
-		die( 'member listing' );
+		$template = 'members-list.php';
+
+		/* Look for the template in the active theme. */
+		$template_file = locate_template( $template );
+		if ( !$template_file ) {
+			$template_file = EVECORP_PLUGIN_DIR . $template;
+		}
+		require_once $template_file;
+		exit;
 	}
-	return;
+}
+
+function evecorp_singular_body( $classes )
+{
+//	print '<pre>';
+//	var_dump( $classes );
+//	print '</pre>';
+//	die;
+//	$classes[]	 = 'singular';
+//	$classes[]	 = 'one-column';
+	return $classes;
+}
+
+/**
+ * Determines the difference between two timestamps.
+ *
+ * The difference is returned in a human readable format such as "1 hour",
+ * "5 mins", "2 days".
+ *
+ * @since 1.5.0
+ *
+ * @param int $from Unix timestamp from which the difference begins.
+ * @param int $to Optional. Unix timestamp to end the time difference. Default becomes time() if not set.
+ * @return string Human readable time difference.
+ */
+function evecorp_human_time_diff( $from, $to = '' )
+{
+	/* Units */
+	$one_second	 = 1; // 1
+	$one_minute	 = 60 * $one_second; // 60
+	$one_hour	 = 60 * $one_minute; // 3600
+	$one_day	 = 24 * $one_hour;   //
+	$one_week	 = 7 * $one_day;
+	$one_month	 = 30 * $one_day;
+	$one_year	 = 365 * $one_day;
+
+	if ( empty( $to ) )
+		$to		 = time();
+	$diff	 = (int) abs( $to - $from );
+
+	if ( $one_second <= $diff && $one_minute > $diff ) {
+		$seconds = round( $diff / $one_second );
+		if ( $seconds <= 1 )
+			$seconds = 1;
+		$since	 = sprintf( _n( '%s second', '%s seconds', $seconds ), $seconds );
+	} else if ( $one_minute <= $diff && $one_hour > $diff ) {
+		$minutes = round( $diff / $one_minute );
+		if ( $minutes <= 1 )
+			$minutes = 1;
+		$since	 = sprintf( _n( '%s minute', '%s minutes', $minutes ), $minutes );
+	} else if ( $one_hour <= $diff && $one_day > $diff ) {
+		$hours	 = round( $diff / $one_hour );
+		if ( $hours <= 1 )
+			$hours	 = 1;
+		$since	 = sprintf( _n( '%s hour', '%s hours', $hours ), $hours );
+	} else if ( $one_day <= $diff && $one_week > $diff ) {
+		$days	 = round( $diff / $one_day );
+		if ( $days <= 1 )
+			$days	 = 1;
+		$since	 = sprintf( _n( '%s day', '%s days', $days ), $days );
+	} else if ( $one_week <= $diff && $one_month > $diff ) {
+		$weeks	 = round( $diff / $one_week );
+		if ( $weeks <= 1 )
+			$weeks	 = 1;
+		$since	 = sprintf( _n( '%s week', '%s weeks', $weeks ), $weeks );
+	} else if ( $one_month <= $diff && $one_year > $diff ) {
+		$months	 = round( $diff / $one_month );
+		if ( $months <= 1 )
+			$months	 = 1;
+		$since	 = sprintf( _n( '%s month', '%s months', $months ), $months );
+	} else if ( $one_year <= $diff ) {
+		$years	 = round( $diff / $one_year );
+		if ( $years <= 1 )
+			$years	 = 1;
+		$since	 = sprintf( _n( '%s year', '%s years', $years ), $years );
+	}
+
+	return $since;
 }
