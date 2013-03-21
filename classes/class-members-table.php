@@ -47,7 +47,9 @@ class evecorp_Members_Table extends WP_List_Table {
 
 		$this->_args = $args;
 
-		wp_enqueue_style( 'member-table', EVECORP_PLUGIN_URL . 'css/members-table.css', array( ), EVECORP_VERSION, 'all' );
+		if ( !wp_style_is( 'member-table' ) ) {
+			wp_enqueue_style( 'member-table', EVECORP_PLUGIN_URL . 'css/members-table.css', array( ), EVECORP_VERSION, 'all' );
+		}
 
 		if ( $args['ajax'] ) {
 			wp_enqueue_script( 'list-table' );
@@ -73,7 +75,7 @@ class evecorp_Members_Table extends WP_List_Table {
 	{
 		$columns = array(
 			'name'		 => 'Name',
-			'alts'		 => 'Alts',
+			'alts'		 => 'Alternate Characters',
 			'localtime'	 => 'Local Time'
 		);
 		return $columns;
@@ -87,8 +89,8 @@ class evecorp_Members_Table extends WP_List_Table {
 	function get_sortable_columns()
 	{
 		$sortable_columns = array(
-			'name' => array( 'name', false ), //true means its already sorted
-			'localtime' => array( 'timezone-offset', false )
+			'name'		 => array( 'name', false ), //true means its already sorted
+			'localtime'	 => array( 'timezone-offset', false )
 		);
 		return $sortable_columns;
 	}
@@ -126,19 +128,22 @@ class evecorp_Members_Table extends WP_List_Table {
 		$portrait_html = evecorp_get_portrait( $character_ID, $this->portrait_size, $character_name );
 
 		/* List the roles */
+		$roles_list = '';
 		foreach ( $roles as $role ) {
-			$roles_html .= $role . ', ';
+			$roles_list .= $role . ', ';
 		}
-		$roles_html = substr( $roles_html, 0, -2 );
+		$roles_html = substr( $roles_list, 0, -2 );
 
 		/* List the titles */
+		$titles_list = '';
 		foreach ( $titles as $title ) {
-			$titles_html .= $title . ', ';
+			$titles_list .= $title . ', ';
 		}
-		$titles_html = substr( $titles_html, 0, -2 );
+		$titles_html = substr( $titles_list, 0, -2 );
 
-		$html .=$portrait_html .
-				'<strong>' . evecorp_char( $character_name ) . '</strong><br />' . $roles_html . '<br />' . $titles_html;
+		$html = $portrait_html .
+				'<strong><a href="' . rawurlencode( $character_name ) . '">' . $character_name . '</a></strong><br />'
+				. $roles_html . '<br />' . $titles_html;
 		return $html;
 	}
 
@@ -153,12 +158,16 @@ class evecorp_Members_Table extends WP_List_Table {
 			$site_corp_name = evecorp_get_option( 'corpkey_corporation_name' );
 
 			/* List the alts */
+			$alts_html = '';
 			foreach ( $item['alts'] as $alt ) {
 				$alts_html .= '<div class="alts">';
 				$alts_html .= evecorp_get_portrait( $alt['character_ID'], $this->portrait_size / 2 );
-				$alts_html .= '<strong>' . evecorp_char( $alt['character_name'] ) . '</strong>';
-				if ( $alt['corporation_name'] != $site_corp_name )
+				if ( $alt['corporation_name'] != $site_corp_name ) {
+					$alts_html .= '<strong>' . evecorp_char( $alt['character_name'] ) . '</strong>';
 					$alts_html .= '<br />' . evecorp_corp( $alt['corporation_name'] );
+				} else {
+					$alts_html .= '<strong><a href="' . rawurlencode( $alt['character_name'] ) . '">' . $alt['character_name'] . '</a></strong>';
+				}
 				$alts_html .= '</div>';
 			}
 			return $alts_html;
@@ -241,9 +250,9 @@ class evecorp_Members_Table extends WP_List_Table {
 		$per_page = 5;
 
 		/* Define column headers and a list of sortable columns */
-		$columns = $this->get_columns();
-		$hidden	 = array( );
-		$sortable = $this->get_sortable_columns();
+		$columns	 = $this->get_columns();
+		$hidden		 = array( );
+		$sortable	 = $this->get_sortable_columns();
 
 		/* Column headers */
 		$this->_column_headers = array( $columns, $hidden, $sortable );
