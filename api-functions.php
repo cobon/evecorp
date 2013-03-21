@@ -233,6 +233,7 @@ function evecorp_get_char_name( $character_ID )
 
 /**
  * Returns the name of the corporation of the Eve Online character.
+ *
  * @param string $character_ID ID number of the character to lookup.
  * @return \WP_Error|string Corporation name or WP_Error object on failure.
  */
@@ -242,6 +243,22 @@ function evecorp_get_char_corp( $character_ID )
 	if ( is_wp_error( $character_info ) )
 		return $character_info;
 	return $character_info['corporation'];
+}
+
+function evecorp_get_sec_status( $character_ID )
+{
+	$character_info = evecorp_get_char_info( $character_ID );
+	if ( is_wp_error( $character_info ) )
+		return $character_info;
+	return $character_info['securityStatus'];
+
+}
+
+function evecorp_get_membership($character_ID) {
+	$character_info = evecorp_get_char_info( $character_ID );
+	if ( is_wp_error( $character_info ) )
+		return $character_info;
+	return $character_info['corporationDate'];
 }
 
 /**
