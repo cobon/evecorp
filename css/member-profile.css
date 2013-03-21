@@ -1,0 +1,97 @@
+/*
+ * Eve Online Plugin for WordPress
+ *
+ * Corporation member profile stylesheet
+ *
+ * @package evecorp
+*/
+
+#profile-content {
+    width: 100%;
+	clear: both;
+}
+
+#profile-top {
+    width: 100%;
+	clear: both;
+}
+
+#profile-portrait {
+	float: left;
+	width: 200px;
+	position: relative;
+	/*padding: 10px;*/
+	margin: 0;
+}
+
+#profile-title {
+    width: 100%;
+	/*clear: both;*/
+	float: none;
+}
+
+#profile-name {
+	/*float: left;*/
+}
+
+#profile-security {
+	/*float: left;*/
+}
+
+#profile-personal, #profile-corporate {
+	/*position: relative;*/
+	/*	left: 200px;*/
+    width: 50%;
+	/*padding: 10px;*/
+	/*margin: 0;*/
+	border: 1px white solid;
+}
+#profile-personal {
+	/*float: left;*/
+	/*clear: right;*/
+}
+
+#profile-corporate {
+	float: right;
+	/*clear: left;*/
+}
+
+#profile-sub {
+	clear: both;
+}
+
+#profile-sub-menu{}
+
+#profile-sub-history-data{}
+
+
+#profile-data #name {
+	font-size-adjust: 1;
+	font-weight: bold;
+}
+
+#profile-history, #profile-history-title
+{
+	clear: both;
+
+}
+
+.highsec {
+	color: green;
+	background-color: inherit;
+}
+
+.neutralsec {
+	color: white;
+	background-color: inherit;
+}
+
+.lowsec {
+	color: yellow;
+	background-color: inherit;
+}
+
+.verylowsec {
+	color: red;
+	background-color: inherit;
+}
