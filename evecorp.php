@@ -306,9 +306,9 @@ function evecorp_corp( $corp_name )
  */
 function evecorp_the_members()
 {
-	require_once dirname( __FILE__ ) . "/classes/class-members-table.php";
+	require_once EVECORP_PLUGIN_DIR . '/classes/class-members-table.php';
 
-	/* Create an instance of key_Table class */
+	/* Create an instance of the Members_Table class */
 	$Members_Table = new evecorp_Members_Table();
 
 	/* Fetch, prepare, sort, and filter our data */
@@ -317,9 +317,52 @@ function evecorp_the_members()
 	/* Display */
 	?>
 	<!-- Begin members list table -->
-	<div class="entry-content">
-		<?php $Members_Table->display() ?>
-	</div>
+	<!--<div class="entry-content">-->
+	<?php $Members_Table->display() ?>
+	<!--</div>-->
 	<!-- End members list table -->
 	<?php
+}
+
+function evecorp_the_member()
+{
+	global $wp;
+
+	require_once EVECORP_PLUGIN_DIR . '/classes/class-member-profile.php';
+
+	/* Get character name and ID */
+	$character_ID = evecorp_get_ID( urldecode( $wp->query_vars['member'] ) );
+	if ( is_wp_error( $character_ID ) ) {
+		wp_die( var_dump( $character_ID ) );
+	}
+
+	/* Create an instance of the Member_Profile class */
+	$Member_Profile = new evecorp_Member_Profile();
+
+	/* Fetch and prepare our data */
+	$Member_Profile->prepare_profile( $character_ID );
+
+	/* Display */
+	?>
+	<!-- Begin member profile -->
+	<div class="entry-content">
+		<?php $Member_Profile->display() ?>
+	</div>
+	<!-- End member profile -->
+	<?php
+	/* Is the requested character valid and actual corporation member? */
+//	if ( evecorp_is_member( $character_ID ) ) {
+//	var_dump( $character_info );
+//	} else {
+
+	/* Make it a 404 */
+//		global $wp_query;
+//		$wp_query->set_404();
+//			var_dump($wp_query);
+//			var_dump( $wp );
+//			die( 'single member' );
+//		header( "HTTP/1.0 404 Not Found - Member not found" );
+//		require TEMPLATEPATH . '/404.php';
+//		exit;
+//	}
 }
