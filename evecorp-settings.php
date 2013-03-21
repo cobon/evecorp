@@ -177,9 +177,9 @@ function evecorp_apikey_expiry()
 	$unixtime = strtotime( $evecorp_options['corpkey_expires'] );
 	echo date_i18n( get_option( 'date_format' ), $unixtime );
 	if ( $unixtime > time() ) {
-		echo ' (' . human_time_diff( time(), $unixtime ) . ' from now). ' . evecorp_icon( 'yes' );
+		echo ' (' . evecorp_human_time_diff( time(), $unixtime ) . ' from now). ' . evecorp_icon( 'yes' );
 	} else {
-		echo ' (expired ' . human_time_diff( $unixtime, time() ) . ' ago). ' . evecorp_icon( 'no' );
+		echo ' (expired ' . evecorp_human_time_diff( $unixtime, time() ) . ' ago). ' . evecorp_icon( 'no' );
 	}
 	echo PHP_EOL;
 }
