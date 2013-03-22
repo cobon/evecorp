@@ -1,6 +1,6 @@
 <?php
 /*
-  Plugin Name: Eve Online Plugin for WordPress
+  Plugin Name: Eve Online Player Corporation
   Plugin URI: http://fisr.dnsd.info/
   Description: Secure and easy websites for Eve Online Player Corporations.
   Version: 0.1
@@ -8,7 +8,7 @@
   Author URI: https://gate.eveonline.com/Profile/Mitome%20Cobon-Han
   License: GPLv2 or later
 
- * Copyright (c) 2012 Mitome Cobon-Han (mitome.ch@gmail.com)
+ * Copyright (c) 2012, 2013 Mitome Cobon-Han (mitome.ch@gmail.com)
  *
  * This file is part of evecorp.
  *
@@ -30,14 +30,11 @@
  * jQuery contextMenu by Rodney Rehm, Addy Osmani licensed under MIT License and
  * GPL v3
  *
- * EveApiRoles class Copyright (c) 2008, Michael Cummings licensed under the
- * Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.
- *
  * This program connects to and exchanges data with API servers of Eve Online.
  * by using this program you agree with the website terms of service of Eve
  * Online published under <http://community.eveonline.com/pnp/termsofuse.asp>.
  *
- * Eve Online is copyright (c) 1997-2012, CCP hf, Reykjavík, Iceland
+ * Eve Online is copyright (c) 1997-2013, CCP hf, Reykjavík, Iceland
  *
  * EVE Online and the EVE logo are the registered trademarks of CCP hf. All
  * rights are reserved worldwide.

@@ -59,6 +59,15 @@ This section describes how to install the plugin and get it working.
 In development. Not for public consumption.
 
 
-= Acknowledgment =
+== Acknowledgment ==
 This software uses Pheal <http://github.com/ppetermann/pheal/> a PHP library for
 accessing the EVE API by Peter Petermann (eve: Peter Powers).
+
+This program connects to and exchanges data with API servers of Eve Online.
+by using this program you agree with the website terms of service of Eve Online
+published under <http://community.eveonline.com/pnp/termsofuse.asp>.
+
+Eve Online is copyright (c) 1997-2013, CCP hf, Reykjavík, Iceland
+
+EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights
+are reserved worldwide.
