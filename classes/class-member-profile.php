@@ -128,7 +128,7 @@ class evecorp_Member_Profile {
 		/**
 		 * @todo Allow theme supplied stylesheet.
 		 */
-		if ( wp_style_is( 'member-page' ) ) {
+		if ( !wp_style_is( 'member-page' ) ) {
 			wp_enqueue_style( 'member-page', EVECORP_PLUGIN_URL . 'css/member-profile.css', array( ), EVECORP_VERSION, 'all' );
 		}
 		?>
@@ -150,14 +150,16 @@ class evecorp_Member_Profile {
 					</div>
 					<div style="border:1px yellow solid; clear:right; position: relative;">
 						<div style="border:1px green solid;">
-							<p>Age: <?php $this->the_age(); ?><br />
-								Date of birth: <?php $this->the_date_of_birth(); ?><br />
-								Race: <?php echo $this->character_info['race']; ?><br />
-								Bloodline: <?php echo $this->character_info['bloodline']; ?></p>
+							<p>Age: <?php $this->the_age(); ?>
+								(born <?php $this->the_date_of_birth(); ?>)<br />
+								Race / Bloodline:
+								<?php echo $this->character_info['race']; ?> /
+								<?php echo $this->character_info['bloodline']; ?>
+							</p>
 						</div>
 						<div style="border:1px blue solid;">
-							<p>Member since <?php $this->the_membership(); ?><br />
-								Join date: <?php $this->the_joindate(); ?><br />
+							<p>Member since <?php $this->the_membership(); ?>
+								(joined <?php $this->the_joindate(); ?>)<br />
 								Roles: <?php $this->the_roles(); ?><br />
 								Titles: <?php $this->the_titles(); ?></p>
 						</div>
