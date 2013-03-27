@@ -141,10 +141,15 @@ class evecorp_Members_Table extends WP_List_Table {
 		}
 		$titles_html = substr( $titles_list, 0, -2 );
 
-		$html = $portrait_html .
-				'<strong><a href="' . rawurlencode( $character_name ) . '">' . $character_name . '</a></strong><br />'
-				. $roles_html . '<br />' . $titles_html;
-		return $html;
+		/* Portrait and name of character */
+		$name_html = $portrait_html;
+		$name_html .= '<strong><a href="';
+		$name_html .= trailingslashit( $_SERVER['SCRIPT_URI'] );
+		$name_html .= rawurlencode( $character_name ) . '">';
+		$name_html .= $character_name;
+		$name_html .= '</a></strong><br />';
+		$name_html .= $roles_html . '<br />' . $titles_html;
+		return $name_html;
 	}
 
 	function column_alts( $item )
@@ -166,7 +171,11 @@ class evecorp_Members_Table extends WP_List_Table {
 					$alts_html .= '<strong>' . evecorp_char( $alt['character_name'] ) . '</strong>';
 					$alts_html .= '<br />' . evecorp_corp( $alt['corporation_name'] );
 				} else {
-					$alts_html .= '<strong><a href="' . rawurlencode( $alt['character_name'] ) . '">' . $alt['character_name'] . '</a></strong>';
+					$alts_html .= '<strong><a href="';
+					$alts_html .= trailingslashit( $_SERVER['SCRIPT_URI'] );
+					$alts_html .= rawurlencode( $alt['character_name'] ) . '">';
+					$alts_html .= $alt['character_name'];
+					$alts_html .= '</a></strong>';
 				}
 				$alts_html .= '</div>';
 			}
