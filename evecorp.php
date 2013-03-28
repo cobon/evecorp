@@ -186,8 +186,7 @@ if ( is_admin() ) {
 function evecorp_menu_scripts()
 {
 	wp_register_style( 'evecorp-contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.css' );
-	wp_register_script( 'jquery.ui.position', EVECORP_PLUGIN_URL . 'js/jquery.ui.position.js', array( 'jquery' ) );
-	wp_register_script( 'jquery.contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.js', array( 'jquery', 'jquery.ui.position' ) );
+	wp_register_script( 'jquery.contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.js', array( 'jquery', 'jquery-ui-position' ) );
 	wp_register_script( 'evecorp.contextMenu', EVECORP_PLUGIN_URL . 'js/evecorp.contextMenu.js', array( 'jquery.contextMenu' ) );
 	wp_enqueue_script( 'evecorp.contextMenu' );
 	wp_enqueue_style( 'evecorp-contextMenu' );
