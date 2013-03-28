@@ -125,6 +125,9 @@ class evecorp_Member_Profile {
 
 	function display()
 	{
+		wp_register_script( 'evecorp.memberTabs', EVECORP_PLUGIN_URL . 'js/evecorp.memberTabs.js', array( 'jquery-ui-tabs' ) );
+		wp_enqueue_script( 'evecorp.memberTabs' );
+
 		/**
 		 * @todo Allow theme supplied stylesheet.
 		 */
@@ -136,138 +139,153 @@ class evecorp_Member_Profile {
 			<div style="float: left; width: 200px; position: relative">
 				<div id="profile-portrait" style="clear: both; float: left; position: relative;">
 					<?php echo evecorp_get_portrait( $this->character_ID, 200 ); ?>
-				</div>
-			</div>
-			<div style="margin: 10px 15px 10px 200px;">
-				<div style="min-height: 400px; height: auto !important; width: 100%; padding: 15px; float: left; position: relative; border: magenta 1px solid;">
-					<div id="profile-title">
-						<div id="profile-name">
-							<p><span id="name"><?php echo evecorp_char( $this->character_info['characterName'] ); ?></span></p>
+					<div id="tabs">
+						<ul>
+							<li><a href="#tabs-1">Skills</a></li>
+							<li><a href="#tabs-2">Certificates</a></li>
+							<li><a href="#tabs-3">Decorations</a></li>
+							<li><a href="#tabs-4">Attributes</a></li>
+							<li><a href="#tabs-5">Augmentations</a></li>
+							<li><a href="#tabs-6">Jump Clones</a></li>
+							<li><a href="#tabs-7">Bio</a></li>
+							<li><a href="#tabs-8">Employment History</a></li>
+							<li><a href="#tabs-9">Standings</a></li>
+							<li><a href="#tabs-10">Security Status</a></li>
+							<li><a href="#tabs-11">Kill Rights</a></li>
+							<li><a href="#tabs-12">Combat Log</a></li>
+							<li><a href="#tabs-13">Pilot License</a></li>
+						</ul>
+						<div id="tabs-1">
+							<h2>Skills</h2>
+							<p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
 						</div>
-						<div id="profile-security">
-							<p>Security Status: <?php $this->the_sec_status(); ?></p>
+						<div id="tabs-2">
+							<h2>Certificates</h2>
+							<p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+						</div>
+						<div id="tabs-3">
+							<h2>Decorations</h2>
+							<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+							<p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+						</div>
+						<div id="tabs-8">
+							<h2>Employment History</h2>
+							<p><?php $this->the_history(); ?></p>
 						</div>
 					</div>
-					<div style="border:1px yellow solid; clear:right; position: relative;">
-						<div style="border:1px green solid;">
-							<p>Age: <?php $this->the_age(); ?>
-								(born <?php $this->the_date_of_birth(); ?>)<br />
-								Race / Bloodline:
-								<?php echo $this->character_info['race']; ?> /
-								<?php echo $this->character_info['bloodline']; ?>
-							</p>
-						</div>
-						<div style="border:1px blue solid;">
-							<p>Member since <?php $this->the_membership(); ?>
-								(joined <?php $this->the_joindate(); ?>)<br />
-								Roles: <?php $this->the_roles(); ?><br />
-								Titles: <?php $this->the_titles(); ?></p>
-						</div>
-					</div>
 				</div>
 			</div>
-			<div id="profile-sub">
-				<div id="profile-sub-menu">
-					<div id="profile-history-title">
-						<p>Employment History:</p>
-					</div>
-				</div>
-				<div id="profile-sub-history-data">
-					<?php $this->the_history(); ?>
-				</div>
+			<div style="margin-left: 200px; border: orange 1px solid;">
+				<p>
+					<span id="name">
+						<?php echo evecorp_char( $this->character_info['characterName'] ); ?>
+					</span><br />
+					Security Status: <?php $this->the_sec_status(); ?><br />
+					Age: <?php $this->the_age(); ?>
+					(born <?php $this->the_date_of_birth(); ?>)<br />
+					Race and Bloodline:
+					<?php echo $this->character_info['race']; ?> -
+					<?php echo $this->character_info['bloodline']; ?>
+					<br />
+					Member since <?php $this->the_membership(); ?>
+					(joined <?php $this->the_joindate(); ?>)<br />
+					Roles: <?php $this->the_roles(); ?><br />
+					Titles: <?php $this->the_titles(); ?>
+				</p>
 			</div>
-			<?php
-		}
-
-		function the_date_of_birth()
-		{
-			echo date_i18n( get_option( 'date_format' ), $this->birthtime );
-		}
-
-		function the_age()
-		{
-			echo evecorp_human_time_diff( time(), $this->birthtime );
-		}
-
-		function the_sec_status()
-		{
-			$html		 = '';
-			$sec_status	 = round( floatval( $this->character_info['securityStatus'] ), 1 );
-			if ( $sec_status >= 5 ) {
-				$html = '<span class="highsec">';
-			} elseif ( $sec_status < 1 && $sec_status > 0 ) {
-				$html = '<span class="neutralsec">';
-			} elseif ( $sec_status < 0 && $sec_status > -5 ) {
-				$html = '<span class="lowsec">';
-			} elseif ( $sec_status <= -5 ) {
-				$html = '<span class="verylowsec">';
-			}
-			$html.= strval( $sec_status ) . '</span>';
-			echo $html;
-		}
-
-		function the_membership()
-		{
-			$unixtime = strtotime( $this->character_info['corporationDate'] );
-			echo evecorp_human_time_diff( $unixtime, time() );
-		}
-
-		function the_joindate()
-		{
-			$unixtime = strtotime( $this->character_info['corporationDate'] );
-			echo date_i18n( get_option( 'date_format' ), $unixtime );
-		}
-
-		function the_roles()
-		{
-			$roles_list = '';
-			foreach ( $this->roles as $role ) {
-
-				/* Make it human */
-				$roles_list .= $role . ', ';
-			}
-			$roles_html = substr( $roles_list, 0, -2 );
-			echo $roles_html;
-		}
-
-		function the_titles()
-		{
-			$titles_list = '';
-			foreach ( $this->titles as $title ) {
-
-				/* Make it human */
-				$titles_list .= $title . ', ';
-			}
-			$titles_html = substr( $titles_list, 0, -2 );
-			echo $titles_html;
-		}
-
-		function the_history()
-		{
-			$html	 = '';
-			$history = $this->character_info['employmentHistory'];
-			foreach ( $history as $key => $corp ) {
-				$corp_name		 = evecorp_get_corp_name( $corp['corporationID'] );
-				$unix_start_date = strtotime( $corp['startDate'] );
-				if ( 0 === $key ) {
-					$unix_end_date	 = time();
-					$adj			 = ' since ';
-				} else {
-					$unix_end_date	 = strtotime( $history[$key - 1]['startDate'] );
-					$adj			 = ' for ';
-				}
-				/* Skip current corporation */
-				if ( 0 === $key )
-					continue;
-				$html .= 'Joined ';
-				$html .= evecorp_corp( $corp_name );
-				$html .= ' on ';
-				$html .= date_i18n( get_option( 'date_format' ), $unix_start_date );
-				$html .= $adj;
-				$html .= evecorp_human_time_diff( $unix_start_date, $unix_end_date );
-				$html .= '<br />' . PHP_EOL;
-			}
-			echo $html;
-		}
-
+		</div>
+		<?php
 	}
+
+	function the_date_of_birth()
+	{
+		echo date_i18n( get_option( 'date_format' ), $this->birthtime );
+	}
+
+	function the_age()
+	{
+		echo evecorp_human_time_diff( time(), $this->birthtime );
+	}
+
+	function the_sec_status()
+	{
+		$html		 = '';
+		$sec_status	 = round( floatval( $this->character_info['securityStatus'] ), 1 );
+		if ( $sec_status >= 5 ) {
+			$html = '<span class="highsec">';
+		} elseif ( $sec_status < 1 && $sec_status > 0 ) {
+			$html = '<span class="neutralsec">';
+		} elseif ( $sec_status < 0 && $sec_status > -5 ) {
+			$html = '<span class="lowsec">';
+		} elseif ( $sec_status <= -5 ) {
+			$html = '<span class="verylowsec">';
+		}
+		$html.= strval( $sec_status ) . '</span>';
+		echo $html;
+	}
+
+	function the_membership()
+	{
+		$unixtime = strtotime( $this->character_info['corporationDate'] );
+		echo evecorp_human_time_diff( $unixtime, time() );
+	}
+
+	function the_joindate()
+	{
+		$unixtime = strtotime( $this->character_info['corporationDate'] );
+		echo date_i18n( get_option( 'date_format' ), $unixtime );
+	}
+
+	function the_roles()
+	{
+		$roles_list = '';
+		foreach ( $this->roles as $role ) {
+
+			/* Make it human */
+			$roles_list .= $role . ', ';
+		}
+		$roles_html = substr( $roles_list, 0, -2 );
+		echo $roles_html;
+	}
+
+	function the_titles()
+	{
+		$titles_list = '';
+		foreach ( $this->titles as $title ) {
+
+			/* Make it human */
+			$titles_list .= $title . ', ';
+		}
+		$titles_html = substr( $titles_list, 0, -2 );
+		echo $titles_html;
+	}
+
+	function the_history()
+	{
+		$html	 = '';
+		$history = $this->character_info['employmentHistory'];
+		foreach ( $history as $key => $corp ) {
+			$corp_name		 = evecorp_get_corp_name( $corp['corporationID'] );
+			$unix_start_date = strtotime( $corp['startDate'] );
+			if ( 0 === $key ) {
+				$unix_end_date	 = time();
+				$adj			 = ' since ';
+			} else {
+				$unix_end_date	 = strtotime( $history[$key - 1]['startDate'] );
+				$adj			 = ' for ';
+			}
+			/* Skip current corporation */
+			if ( 0 === $key )
+				continue;
+			$html .= 'Joined ';
+			$html .= evecorp_corp( $corp_name );
+			$html .= ' on ';
+			$html .= date_i18n( get_option( 'date_format' ), $unix_start_date );
+			$html .= $adj;
+			$html .= evecorp_human_time_diff( $unix_start_date, $unix_end_date );
+			$html .= '<br />' . PHP_EOL;
+		}
+		echo $html;
+	}
+
+}
