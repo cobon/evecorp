@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Eve Online Plugin for WordPress
  *
@@ -78,10 +77,10 @@ class evecorp_APIKey_Table extends WP_List_Table {
 	function get_sortable_columns()
 	{
 		$sortable_columns = array(
-			'key_ID' => array( 'key_ID', false ), //true means its already sorted
-			'username' => array( 'character_name', false ),
-			'expires' => array( 'expires', false ),
-			'validated' => array( 'validated', false )
+			'key_ID'	 => array( 'key_ID', false ), //true means its already sorted
+			'username'	 => array( 'character_name', false ),
+			'expires'	 => array( 'expires', false ),
+			'validated'	 => array( 'validated', false )
 		);
 		return $sortable_columns;
 	}
@@ -113,14 +112,14 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		$html = '<strong>' . $item['key_ID'] . '</strong>';
 
 		/* Define row actions */
-		$actions['remove'] = array(
-			'args' => array(
-				'action'			 => 'remove',
-				'key_ID'			 => $item['key_ID']
+		$actions['remove']								 = array(
+			'args'				 => array(
+				'action' => 'remove',
+				'key_ID' => $item['key_ID']
 			),
 			'label'				 => 'Delete',
 			'html_attributes'	 => array(
-				'title'											 => 'Remove this API key.',
+				'title' => 'Remove this API key.',
 			)
 		);
 		if ( 'Yes' === $item['validated'] )
@@ -221,7 +220,6 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		return 'Unknwon status';
 	}
 
-
 	/**
 	 * Remove API keys bulk action.
 	 *
@@ -257,9 +255,9 @@ class evecorp_APIKey_Table extends WP_List_Table {
 		$per_page = 5;
 
 		/* Define column headers and a list of sortable columns */
-		$columns = $this->get_columns();
-		$hidden	 = array( );
-		$sortable = $this->get_sortable_columns();
+		$columns	 = $this->get_columns();
+		$hidden		 = array( );
+		$sortable	 = $this->get_sortable_columns();
 
 		/* Column headers */
 		$this->_column_headers = array( $columns, $hidden, $sortable );
@@ -277,7 +275,11 @@ class evecorp_APIKey_Table extends WP_List_Table {
 				$row['character_name']	 = $values['characterName'];
 				$row['corporation_name'] = $values['corporationName'];
 				$row['expires']			 = strtotime( $values['expires'] );
-				$row['validated']		 = $values['validated'];
+				if ( isset( $values['validated'] ) ) {
+					$row['validated'] = $values['validated'];
+				} else {
+					$row['validated'] = 'No';
+				}
 
 				/* Access Mask */
 				if ( !isset( $row['access_mask'] ) )
@@ -339,7 +341,8 @@ class evecorp_APIKey_Table extends WP_List_Table {
 	function display_tablenav( $which )
 	{
 		if ( 'top' == $which )
-		?>
+
+			?>
 		<div class="tablenav <?php echo esc_attr( $which ); ?>">
 
 			<?php
