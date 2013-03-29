@@ -64,9 +64,8 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	}
 
 	if ( !evecorp_corpkey_check() )
-		return new WP_Error( 'missing_corpkey',
-						'<strong>ERROR:</strong> Login with Eve Online API keys is currently disabled! ' .
-						sprintf( 'Please ask your WordPress administrator to visit the <a href="%s">Eve Online settings page</a>.', admin_url( 'options-general.php?page=evecorp_settings' ) )
+		return new WP_Error( 'missing_corpkey', '<strong>ERROR:</strong> Login with Eve Online API keys is currently disabled! ' .
+				sprintf( 'Please ask your WordPress administrator to visit the <a href="%s">Eve Online settings page</a>.', admin_url( 'options-general.php?page=evecorp_settings' ) )
 		);
 
 	/* If the form has not been submitted yet. */
@@ -89,7 +88,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	}
 
 	/* Test the submitted credentials */
-	$key = array(
+	$key	 = array(
 		'key_ID' => $key_ID,
 		'vcode'	 => $vcode
 	);
@@ -105,8 +104,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 
 	/* Is the key type for characters (and not a corp key or account key)? */
 	if ( 'Character' <> $keyinfo['type'] )
-		return new WP_Error( 'not_char_key',
-						'<strong>ERROR</strong>: This API key is not a character
+		return new WP_Error( 'not_char_key', '<strong>ERROR</strong>: This API key is not a character
 							key.' );
 
 	/* Get a sanitized user login name from API key's character name */
@@ -115,8 +113,8 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	/* Is the character a member of our corporation? */
 	if ( evecorp_get_option( 'corpkey_corporation_name' ) <> $keyinfo['characters'][0]['corporationName'] )
 		return new WP_Error( 'not_corp_member', '<strong>ERROR</strong>: ' .
-						$user_login . ' is not a member of ' .
-						evecorp_get_option( 'corpkey_corporation_name' ) . '.' );
+				$user_login . ' is not a member of ' .
+				evecorp_get_option( 'corpkey_corporation_name' ) . '.' );
 
 	/* Lookup account in WP users table */
 	$user = get_user_by( 'login', $user_login );
@@ -179,8 +177,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 				$evecorp_userkeys[$key_ID]['characterID']		 = $keyinfo['characters'][0]['characterID'];
 				$evecorp_userkeys[$key_ID]['corporationName']	 = $keyinfo['characters'][0]['corporationName'];
 				update_user_meta( $user->ID, 'evecorp_userkeys', $evecorp_userkeys );
-				return new WP_Error( 'awaiting_validation',
-								'Welcome back ' . $user_login . '.<br />This API
+				return new WP_Error( 'awaiting_validation', 'Welcome back ' . $user_login . '.<br />This API
 								key	is waiting for identity verification.<br />
 								Please allow up	to 30 minutes for processing
 								after payment has been made.<br />Thank you.' );
@@ -190,15 +187,15 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 
 	/* This API key ID has not been seen before */
 	$validation_code = evecorp_userkey_add( $user->ID, $key_ID, $keyinfo );
-	return new WP_Error( 'new_validation',
-					'Welcome ' . $user_login . '.<br /> As you never used this
+	return new WP_Error( 'new_validation', 'Welcome ' . $user_login . '.<br /> As you never used this
 						API key before, we need to verify your identity. <br />
 						Please send 0.10 ISK to ' .
-					evecorp_corp( evecorp_get_option( 'corpkey_corporation_name' ) ) .
-					' and write the following in the reason field:<br />
+			evecorp_corp( evecorp_get_option( 'corpkey_corporation_name' ) ) .
+			' and write the following in the reason field:<br />
 					<strong><pre>Validate:' . $validation_code . '</pre></strong><br />
-					Please allow up to 30 minutes for processing, after you made
-					the payment. Thank you.' );
+					Be aware that this validation code can not be displayed
+					again and please allow up to 30 minutes for processing,
+					after you made the payment. Thank you.' );
 }
 
 /**
