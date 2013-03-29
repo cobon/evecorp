@@ -181,7 +181,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 				update_user_meta( $user->ID, 'evecorp_userkeys', $evecorp_userkeys );
 				return new WP_Error( 'awaiting_validation',
 								'Welcome back ' . $user_login . '.<br />This API
-								key	is waiting for identiy verification.<br />
+								key	is waiting for identity verification.<br />
 								Please allow up	to 30 minutes for processing
 								after payment has been made.<br />Thank you.' );
 			}
