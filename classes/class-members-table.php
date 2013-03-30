@@ -307,24 +307,35 @@ class evecorp_Members_Table extends WP_List_Table {
 				$user = get_user_by( 'login', sanitize_user( $member['name'] ) );
 				if ( $user ) {
 
-					/* Get his personal time zone settings. */
+					/* Get his personal time zone settings, if any */
 					$gmt_offset		 = get_user_option( 'evecorp_gmt_offset', $user->ID );
 					$timezone_string = get_user_option( 'evecorp_timezone_string', $user->ID );
-					if ( !empty( $gmt_offset ) ) {
-						$timezone = $gmt_offset;
-					}
-					if ( !empty( $timezone_string ) ) {
-						$timezone	 = $timezone_string;
-					}
-					/* Timezone object */
-					$tz			 = new DateTimeZone( $timezone );
 
-					/* Current date/time in the specified time zone. */
-					$localtime = new DateTime( null, $tz );
+					if ( (false == $gmt_offset) && (false == $timezone_string) ) {
 
-					/* Calculate GMT offset for sorting */
-					$timezone_offset = $tz->getOffset( $localtime );
+						/* User has not set his/her timezone */
+						$localtime		 = '';
+						$timezone_offset = '';
+					} else {
+
+						if ( !empty( $gmt_offset ) ) {
+							$timezone = $gmt_offset;
+						}
+						if ( !empty( $timezone_string ) ) {
+							$timezone	 = $timezone_string;
+						}
+						/* Timezone object */
+						$tz			 = new DateTimeZone( $timezone );
+
+						/* Current date/time in the specified time zone. */
+						$localtime = new DateTime( null, $tz );
+
+						/* Calculate GMT offset for sorting */
+						$timezone_offset = $tz->getOffset( $localtime );
+					}
 				} else {
+
+					/* Character is not a registred WP user */
 					$localtime		 = '';
 					$timezone_offset = '';
 				}
