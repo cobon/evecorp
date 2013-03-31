@@ -40,7 +40,7 @@ function evecorp_settings_help()
 	$screen->add_help_tab( array(
 		'id'		 => 'evecorp_help_corpkey',
 		'title'		 => __( 'Corporate API Key' ),
-		'callback'	 => evecorp_settings_help_corpkey
+		'callback'	 => 'evecorp_settings_help_corpkey'
 			)
 	);
 	$screen->add_help_tab( array(
