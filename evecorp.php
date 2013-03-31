@@ -160,7 +160,7 @@ if ( is_admin() ) {
 	require_once EVECORP_PLUGIN_DIR . "/login-functions.php";
 
 	/* jQuery context menu for Eve Online stuff */
-	add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
+	//add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
 
 	/* Eve Online page processing (members, et al) */
 	add_action( 'parse_request', 'evecorp_parse_request' );
@@ -185,6 +185,10 @@ if ( is_admin() ) {
 	add_filter( 'login_form_defaults', 'evecorp_login_form_labels' );
 }
 
+/**
+ * jQuery context menu for Eve Online stuff
+ *
+ */
 function evecorp_menu_scripts()
 {
 	wp_register_style( 'evecorp-contextMenu', EVECORP_PLUGIN_URL . 'js/jquery.contextMenu.css' );
@@ -245,6 +249,9 @@ function evecorp_shortcode( $shortcode )
  */
 function evecorp_char( $name )
 {
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
 	$classes = 'evecorp-char';
 
 	/* Access from Eve Online in-game browser? */
@@ -276,6 +283,9 @@ function evecorp_char( $name )
  */
 function evecorp_corp( $corp_name )
 {
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
 	$classes = 'evecorp-corp';
 
 	/* Access from Eve Online in-game browser? */
