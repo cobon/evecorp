@@ -60,14 +60,14 @@ define( 'EVECORP_PLUGIN_FILE', __FILE__ );
 define( 'EVECORP_PLUGIN_DIR', plugin_dir_path( EVECORP_PLUGIN_FILE ) );
 define( 'EVECORP_PLUGIN_URL', plugin_dir_url( EVECORP_PLUGIN_FILE ) );
 
-/* Load common libraries */
+/**
+ * Global includes, actions and filters.
+ *
+ */
+/* Load global libraries */
 require_once EVECORP_PLUGIN_DIR . "/functions.php";
 require_once EVECORP_PLUGIN_DIR . "/api-functions.php";
 
-/**
- * Global enqueues, actions, and filters.
- *
- */
 /* Initialize plugin options */
 add_action( 'init', 'evecorp_init_options' );
 
@@ -88,31 +88,25 @@ add_action( 'admin_bar_menu', 'evecorp_toolbar_links', 999 );
 
 if ( is_admin() ) {
 	/**
-	 * Admin enqueues, actions, and filters.
+	 * Admin includes, hooks, actions and fliters.
 	 *
 	 */
-	register_activation_hook( EVECORP_PLUGIN_FILE, 'evecorp_activate' );
-	register_deactivation_hook( EVECORP_PLUGIN_FILE, 'evecorp_deactivate' );
-
 	/* Load admin libraries */
 	require_once EVECORP_PLUGIN_DIR . '/admin-functions.php';
 	require_once EVECORP_PLUGIN_DIR . "/evecorp-settings.php";
 
-	/* Load our online help text contents */
+	/* Load online help text */
 	include_once EVECORP_PLUGIN_DIR . '/userprofile-help.php';
+
+	/* Admin hooks */
+	register_activation_hook( EVECORP_PLUGIN_FILE, 'evecorp_activate' );
+	register_deactivation_hook( EVECORP_PLUGIN_FILE, 'evecorp_deactivate' );
 
 	/* Add a menu entry to administration menu */
 	add_action( 'admin_menu', 'evecorp_add_settings_menu' );
 
 	/* Define options page sections and allowed options for admin pages */
 	add_action( 'admin_init', 'evecorp_admin_init' );
-
-	/* Notify administrator if corporate API key is missing or invalid. */
-	if ( !evecorp_corpkey_check() )
-		add_action( 'admin_notices', 'evecorp_config_notifiy' );
-
-	/* Don't show password fields in user settings for Eve Online characters. */
-	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
 
 	/* Allow user profile updates without e-mail address */
 	add_action( 'user_profile_update_errors', 'evecorp_eveuser_mail', 10, 3 );
@@ -147,30 +141,38 @@ if ( is_admin() ) {
 	/* Add contextual help to the user-edit page */
 	add_action( 'load-user-edit.php', 'evecorp_userprofile_help' );
 
-	/* Add rewrite rules four our special Eve Online pages (members, et al) */
+	/* Add rewrite rules for our auto-generated Eve Online pages (members, et al) */
 	add_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
+
+	/* Notify administrator if corporate API key is missing or invalid. */
+	if ( !evecorp_corpkey_check() )
+		add_action( 'admin_notices', 'evecorp_config_notifiy' );
+
+	/* Don't show password fields in user settings for Eve Online characters. */
+	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
+
 } else {
 	/**
-	 * Non-admin enqueues, actions, and filters
+	 * Non-admin includes, actions and filters.
 	 *
 	 */
 	/* Load login libraries */
 	require_once EVECORP_PLUGIN_DIR . "/login-functions.php";
 
-	/* Register shortcode handler */
-	add_shortcode( 'eve', 'evecorp_shortcode' );
-
 	/* jQuery context menu for Eve Online stuff */
 	add_action( 'wp_enqueue_scripts', 'evecorp_menu_scripts' );
-
-	/* Add query variables for Eve Online pages (members, et al) */
-	add_filter( 'query_vars', 'evecorp_query_vars' );
 
 	/* Eve Online page processing (members, et al) */
 	add_action( 'parse_request', 'evecorp_parse_request' );
 
+	/* Add query variables for our auto-generated Eve Online pages (members, et al) */
+	add_filter( 'query_vars', 'evecorp_query_vars' );
+
+	/* Register shortcode handler */
+	add_shortcode( 'eve', 'evecorp_shortcode' );
+
 	/**
-	 * Hook evecorp into the WordPress authentication flow.
+	 * Hook us into the WordPress authentication flow.
 	 *
 	 * Ensure Site administrators can still login with user name/password,
 	 * all others need either a valid WP session cookies or supply Eve Online API
@@ -342,16 +344,16 @@ function evecorp_the_member()
 	?>
 	<!-- Begin member profile -->
 	<div class="entry-content">
-		<?php $Member_Profile->display() ?>
+	<?php $Member_Profile->display() ?>
 	</div>
 	<!-- End member profile -->
-	<?php
-	/* Is the requested character valid and actual corporation member? */
+		<?php
+		/* Is the requested character valid and actual corporation member? */
 //	if ( evecorp_is_member( $character_ID ) ) {
 //	var_dump( $character_info );
 //	} else {
 
-	/* Make it a 404 */
+		/* Make it a 404 */
 //		global $wp_query;
 //		$wp_query->set_404();
 //			var_dump($wp_query);
@@ -361,4 +363,4 @@ function evecorp_the_member()
 //		require TEMPLATEPATH . '/404.php';
 //		exit;
 //	}
-}
+	}

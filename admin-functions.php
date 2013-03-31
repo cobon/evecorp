@@ -20,7 +20,7 @@ if ( !function_exists( 'add_action' ) )
  */
 function evecorp_activate()
 {
-	global $wp_rewrite, $wp_version, $evecorp_options;
+	global $wp_version, $evecorp_options;
 
 	/* WordPress version check */
 	$wp_version_error = EVECORP . ' requires WordPress ' . EVECORP_MIN_WP_VERSION .
@@ -46,9 +46,11 @@ function evecorp_activate()
 	evecorp_init_options();
 	add_option( 'evecorp_options', $evecorp_options );
 
+	/* Add rewrite rules for our auto-generated Eve Online specific pages */
 	evecorp_add_rewrite_rules();
-	/* Flush rewrite rules. */
-	$wp_rewrite->flush_rules();
+
+	/* Recreate rewrite rules */
+	flush_rewrite_rules();
 }
 
 /**
@@ -57,26 +59,37 @@ function evecorp_activate()
  */
 function evecorp_deactivate()
 {
-	/* Nothing to do here yet. */
-	return;
+	/* Remove our rewrite rules */
+	evecorp_remove_rewrite_rules();
 }
 
 /**
  * Add rewrite rules for Eve online specific pages.
+ *
+ * Examples URLs:
+ * 	www.example.com/members/
+ * 	www.example.com/members/John_Doe/
+ *
  */
 function evecorp_add_rewrite_rules()
 {
 	global $wp_rewrite;
 
-	/* Examples URLs:
-	 *	example.com/members/
-	 *	example.com/members/John_Doe/
-	 */
-
-	$wp_rewrite->add_rule( '^members/([^/]*)/?', 'index.php?&member=$matches[1]', 'top' );
 	add_rewrite_tag( '%member%', '([^&]+)' );
-
+	$wp_rewrite->add_rule( '^members/([^/]*)/?', 'index.php?&member=$matches[1]', 'top' );
 	$wp_rewrite->add_rule( '^members$', 'index.php?members_list=1', 'top' );
+}
+
+/**
+ * Remove rewrite rules for Eve online specific pages.
+ */
+function evecorp_remove_rewrite_rules()
+{
+	/* Remove our rewrite rules */
+	remove_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
+
+	/* Recreate rewrite rules, without ours included */
+	flush_rewrite_rules();
 }
 
 /**
@@ -358,7 +371,7 @@ function evecorp_altkey_add( $user_ID )
 					)
 			);
 
-		$key = array(
+		$key	 = array(
 			'key_ID' => $key_ID,
 			'vcode'	 => $vcode
 		);
