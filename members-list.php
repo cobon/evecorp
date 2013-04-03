@@ -10,7 +10,16 @@
  *
  * @package evecorp_theme
  */
-// Apply filter
+
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
+
+/* This is for members eyes only */
+if ( !is_user_logged_in() )
+	auth_redirect();
+
+/* Apply page template filter */
 add_filter( 'body_class', 'evecorp_singular_body' );
 
 get_header();
@@ -18,7 +27,7 @@ get_header();
 <!-- end get_header() -->
 <div id="primary">
 	<div id="content" role="main">
-		<article id="post-0" class="post error404 not-found">
+		<div id="article" class="page type-page status-publish">
 			<header class="page-header">
 				<h1 class="page-title">Corporation Members</h1>
 			</header>

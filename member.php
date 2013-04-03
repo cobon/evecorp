@@ -10,8 +10,17 @@
  *
  * @package evecorp_theme
  */
-// Apply filter
-add_filter('body_class', 'evecorp_singular_body');
+
+/* Silence is golden. */
+if ( !function_exists( 'add_action' ) )
+	die();
+
+/* This is for members eyes only */
+if ( !is_user_logged_in() )
+	auth_redirect();
+
+/* Apply page template filter */
+add_filter( 'body_class', 'evecorp_singular_body' );
 
 get_header();
 ?>
