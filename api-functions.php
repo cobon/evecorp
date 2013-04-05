@@ -251,10 +251,10 @@ function evecorp_get_sec_status( $character_ID )
 	if ( is_wp_error( $character_info ) )
 		return $character_info;
 	return $character_info['securityStatus'];
-
 }
 
-function evecorp_get_membership($character_ID) {
+function evecorp_get_membership( $character_ID )
+{
 	$character_info = evecorp_get_char_info( $character_ID );
 	if ( is_wp_error( $character_info ) )
 		return $character_info;
@@ -262,7 +262,8 @@ function evecorp_get_membership($character_ID) {
 }
 
 /**
- * Returns the ID of a character or corporation by its name from Eve Online API.
+ * Returns the ID of a character, corporation, alliance, faction, region,
+ * costellation, solar-system or station by its name from Eve Online API.
  * Doesn't need API key authorization
  *
  * @param string $name. Name of the character or coporation to lookup.
@@ -279,14 +280,19 @@ function evecorp_get_ID( $name )
 	if ( is_wp_error( $result ) )
 		return $result;
 
+	/* Apparently API servers return 0 if name was not found */
+	if ( '0' === $result->characters[0]->characterID ) {
+		return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'Unknown Name', 404 );
+	}
+
 	/* Get the result as string in a PHP variable */
 	return $result->characters[0]->characterID;
 }
 
 /**
  * Tests if character or corporation name is valid/existing by looking it up
- *  with Eve Online API
- * Doesn't need API key authorization
+ *  with Eve Online API.
+ * Doesn't need API key authorization.
  *
  * @param string $characterName. Name of the character or coporation to lookup.
  * @return boolean true on success, false if not or on failure.
@@ -297,6 +303,69 @@ function evecorp_is_name( $name )
 	if ( is_wp_error( $result ) )
 		return false;
 	return true;
+}
+
+/**
+ * Check what type of entity a eve ID is.
+ * According to Inferno 1.2 data-dump 2012-08-08 09:39h.
+ *
+ * @param string $ID ID number of the object to check.
+ * @return string The type of object.
+ */
+function evecorp_get_ID_type( $ID )
+{
+
+	/* Factions start 500'001 end 500'020 */
+	if ( $ID > 50000 && $ID < 599999 )
+		return 'Faction';
+
+	/* NPCs start 1'000'002 end 1'000'182 */
+	if ( $ID > 100000 && $ID < 1999999 )
+		return 'NPC corporation';
+
+	/* Non-player characters */
+	if ( $ID > 3000000 && $ID < 3999999 ) {
+
+		/* Agents start 3'008'416 end 3'019'501 */
+		if ( $ID > 3008415 && $ID < 3019502 )
+			return 'Agent';
+
+		return 'Non-player character';
+	}
+
+	/* Regions start 10'000'001 end 11'000'030 */
+	if ( $ID > 1000000 && $ID < 19999999 )
+		return 'Region';
+
+	/* Constellations start 20'000'001 end 21'000'323 */
+	if ( $ID > 2000000 && $ID < 29999999 )
+		return 'Constellation';
+
+	/* Solar-Systems start 30'000'001 end 31'002'504 */
+	if ( $ID > 3000000 && $ID < 39999999 )
+		return 'Solar-System';
+
+	/* Stations start 60'000'004 end 60'015'147 */
+	if ( $ID > 6000000 && $ID < 69999999 )
+		return 'Station';
+
+	/* Lookup character with this ID */
+	$character_name = evecorp_get_char_name($ID);
+	if ( !is_wp_error( $character_name ) )
+		return 'Character';
+
+	/* Lookup Corporation with this ID */
+	$corp_name = evecorp_get_corp_name($ID);
+	if ( !is_wp_error( $corp_name ) )
+		return 'Corporation';
+
+	/* Lookup Alliance with this ID */
+	$alliance_name = evecorp_get_alliance_name($ID);
+	if ( !is_wp_error( $alliance_name ) )
+		return 'Alliance';
+
+	/* ID does not macht anything we know of */
+	return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'Unknown type', 404 );
 }
 
 /**
@@ -356,7 +425,7 @@ function evecorp_is_member( $character_ID, $corporation_ID = '' )
 {
 	if ( empty( $corporation_ID ) )
 		$corporation_ID	 = evecorp_get_option( 'corpkey_corporation_id' );
-	$character_info = evecorp_get_char_info( $character_ID );
+	$character_info	 = evecorp_get_char_info( $character_ID );
 	if ( is_wp_error( $character_info ) )
 		return false;
 
@@ -376,9 +445,9 @@ function evecorp_is_member( $character_ID, $corporation_ID = '' )
 function evecorp_get_members()
 {
 	/* Get our corp API key from options */
-	$key = array(
-		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
+	$key		 = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
 	);
 	$key_type	 = evecorp_get_option( 'corpkey_type' );
 	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
@@ -404,9 +473,9 @@ function evecorp_member_security()
 {
 
 	/* Get our corp API key from options */
-	$key = array(
-		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
+	$key		 = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
 	);
 	$key_type	 = evecorp_get_option( 'corpkey_type' );
 	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
@@ -429,7 +498,7 @@ function evecorp_member_security()
  */
 function evecorp_get_roles( $character_ID )
 {
-	$roles = array( );
+	$roles	 = array( );
 	$members = evecorp_member_security();
 	if ( is_wp_error( $members ) )
 		return $members;
@@ -451,7 +520,7 @@ function evecorp_get_roles( $character_ID )
  */
 function evecorp_get_titles( $character_ID )
 {
-	$titles = array( );
+	$titles	 = array( );
 	$members = evecorp_member_security();
 	if ( is_wp_error( $members ) )
 		return $members;
@@ -498,9 +567,9 @@ function evecorp_is_CEO( $character_ID, $corporation_ID = '' )
  */
 function evecorp_is_director( $character_ID )
 {
-	$key = array(
-		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
+	$key		 = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
 	);
 	$key_type	 = evecorp_get_option( 'corpkey_key_type' );
 	$access_mask = evecorp_get_option( 'access_mask' );
@@ -532,9 +601,9 @@ function evecorp_is_director( $character_ID )
  */
 function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count = '' )
 {
-	$key = array(
-		'key_ID'	 => evecorp_get_option( 'corpkey_ID' ),
-		'vcode'		 => evecorp_get_option( 'corpkey_vcode' )
+	$key		 = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' )
 	);
 	$key_type	 = evecorp_get_option( 'corpkey_type' );
 	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
@@ -549,9 +618,9 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 	}
 
 	if ( '' != $row_count ) {
-		$arguments['rowCount']	 = $row_count;
+		$arguments['rowCount'] = $row_count;
 	}
-	$result					 = evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
+	$result = evecorp_api( 'corp', 'WalletJournal', $arguments, $key, $key_type, $access_mask );
 	if ( is_wp_error( $result ) )
 		return $result;
 
