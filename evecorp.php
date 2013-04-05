@@ -150,7 +150,6 @@ if ( is_admin() ) {
 
 	/* Don't show password fields in user settings for Eve Online characters. */
 	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
-
 } else {
 	/**
 	 * Non-admin includes, actions and filters.
@@ -205,8 +204,9 @@ function evecorp_menu_scripts()
  * normal browsers.
  *
  * Usage examples: <br>
- * 	[eve name="Mitome Cobon-Han"] <br>
+ * 	[eve char="Mitome Cobon-Han"] <br>
  * 	[eve corp="Federation Interstellar Resources"] <br>
+ *  [eve alliance="Legionum Tenebrae"] <br>
  * 	[eve system="Misneden"] <br>
  * 	[eve item="Tritanium"] <br>
  *  [eve id=123456789]
@@ -217,24 +217,46 @@ function evecorp_menu_scripts()
 function evecorp_shortcode( $shortcode )
 {
 	$sc = shortcode_atts( array(
-		'name'	 => '',
-		'corp'	 => '',
+		'char'			 => '',
+		'corp'			 => '',
+		'alliance'		 => '',
+		'system'		 => '',
+		'constellation'	 => '',
+		'region'		 => '',
+		'station'		 => '',
 			), $shortcode );
 
 	foreach ( $sc as $key => $value ) {
 		if ( '' <> $value ) {
 			switch ( $key ) {
-				case 'name':
+				case 'char':
 					$html	 = evecorp_char( $value );
 					break;
 				case 'corp':
 					$html	 = evecorp_corp( $value );
+					break;
+				case 'alliance':
+					$html	 = evecorp_alliance( $value );
+					break;
+				case 'system':
+					$html	 = evecorp_solarsystem( $value );
+					break;
+				case 'constellation':
+					$html	 = evecorp_constellation( $value );
+					break;
+				case 'region':
+					$html	 = evecorp_region( $value );
+					break;
+				case 'station':
+					$html	 = evecorp_station( $value );
 					break;
 				default:
 					break;
 			}
 		}
 	}
+	if ( !isset( $html ) )
+		$html = '[shortcode error]';
 	return $html;
 }
 
@@ -270,7 +292,7 @@ function evecorp_char( $name )
 			'" class="' . esc_attr( $classes ) .
 			'" id="' . esc_attr( $id ) .
 			'" name="' . esc_attr( $name ) .
-			'" title="Pilot Information">' . $name . '</a>';
+			'" title="Capsuleer Information">' . $name . '</a>';
 	return $html;
 }
 
@@ -305,6 +327,179 @@ function evecorp_corp( $corp_name )
 			'" id="' . esc_attr( $id ) .
 			'" name="' . esc_attr( $corp_name ) .
 			'" title="Corporation Information">' . $corp_name . '</a>';
+	return $html;
+}
+
+/**
+ * Returns HTML code with the linked Eve Online alliance name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $alliance_name The name of the alliance to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_alliance( $alliance_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-alliance';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $alliance_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '" ' . $alliance_name . '</a>';
+	$html	 = '<a href="https://gate.eveonline.com/Alliance/' . $alliance_name .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $alliance_name ) .
+			'" title="Alliance Information">' . $alliance_name . '</a>';
+	return $html;
+}
+
+/**
+ * Returns HTML code with the linked Eve Online solar system name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $solarsystem_name The name of the solar system to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_solarsystem( $solarsystem_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-solarsystem';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $solarsystem_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '"/>' . $solarsystem_name . '</a>';
+	$html	 = '<a href="http://wiki.eveonline.com/en/wiki/' . $solarsystem_name .
+			'_%28System%29' .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $solarsystem_name ) .
+			'" title="Solar System Information">' . $solarsystem_name . '</a>';
+	return $html;
+}
+
+/**
+ * Returns HTML code with the linked Eve Online constellation name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $constellation_name The name of the solar system to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_constellation( $constellation_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-constellation';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $constellation_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '"/>' . $constellation_name . '</a>';
+	$html	 = '<a href="http://wiki.eveonline.com/en/wiki/Category:' . $constellation_name .
+			'_%28Constellation%29' .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $constellation_name ) .
+			'" title="Constellation Information">' . $constellation_name . '</a>';
+	return $html;
+}
+
+/**
+ * Returns HTML code with the linked Eve Online region name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $region_name The name of the solar system to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_region( $region_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-region';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $region_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '"/>' . $region_name . '</a>';
+	$html	 = '<a href="http://wiki.eveonline.com/en/wiki/Category:' . $region_name .
+			'_%28Region%29' .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $region_name ) .
+			'" title="Region Information">' . $region_name . '</a>';
+	return $html;
+}
+
+/**
+ * Returns HTML code with the linked Eve Online station name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $station_name The name of the solar system to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_station( $station_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-station';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $station_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '"/>' . $station_name . '</a>';
+	$html	 = '<a href="http://evemaps.dotlan.net/station/' . $station_name .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $station_name ) .
+			'" title="Station Information">' . $station_name . '</a>';
 	return $html;
 }
 
@@ -354,16 +549,16 @@ function evecorp_the_member()
 	?>
 	<!-- Begin member profile -->
 	<div class="entry-content">
-	<?php $Member_Profile->display() ?>
+		<?php $Member_Profile->display() ?>
 	</div>
 	<!-- End member profile -->
-		<?php
-		/* Is the requested character valid and actual corporation member? */
+	<?php
+	/* Is the requested character valid and actual corporation member? */
 //	if ( evecorp_is_member( $character_ID ) ) {
 //	var_dump( $character_info );
 //	} else {
 
-		/* Make it a 404 */
+	/* Make it a 404 */
 //		global $wp_query;
 //		$wp_query->set_404();
 //			var_dump($wp_query);
@@ -373,4 +568,4 @@ function evecorp_the_member()
 //		require TEMPLATEPATH . '/404.php';
 //		exit;
 //	}
-	}
+}
