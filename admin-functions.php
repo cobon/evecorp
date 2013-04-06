@@ -287,8 +287,6 @@ function evecorp_user_TZ_form( $profileuser )
 
 function evecorp_set_user_TZ( $user_ID )
 {
-//	var_dump($_REQUEST);
-//	die;
 	$timezone_string = sanitize_option( 'timezone_string', $_POST['timezone_string'] );
 	if ( !empty( $timezone_string ) ) {
 
@@ -409,4 +407,53 @@ function evecorp_altkey_add( $user_ID )
 		$evecorp_userkeys[$key_ID]['corporationName']	 = $keyinfo['characters'][0]['corporationName'];
 		update_user_meta( $user_ID, 'evecorp_userkeys', $evecorp_userkeys );
 	}
+}
+
+/**
+ * Add buttons to the tinyMCE toolbar for creating links to Eve Online stuff.
+ */
+function evecorp_init_mce()
+{
+	/* Does this user ever see TinyMCE? */
+
+	/* Does he have any editing rights? */
+	if ( current_user_can( 'edit_posts' ) || current_user_can( 'edit_pages' ) ) {
+
+		/* Does he have TinyMCE enabled in his profile? */
+		$mce_user = get_user_option( 'rich_editing' );
+		if ( 'true' === $mce_user ) {
+
+			/* Add a callback to register our TinyMCE plugin */
+			add_filter( "mce_external_plugins", "evecorp_add_mce_plugin" );
+
+			/* Add a callback to add our button to the TinyMCE toolbar */
+			add_filter( 'mce_buttons', 'evecorp_add_mce_button' );
+		}
+	}
+}
+
+/**
+ *  Register our TinyMCE plugin for adding links to Eve Online stuff.
+ *
+ * @param array $mce_plugins List of TinyMCE-plugins.
+ * @return array Modified list of TinyMCE-plugins.
+ */
+function evecorp_add_mce_plugin( $mce_plugins )
+{
+	$mce_plugins['evecorp'] = EVECORP_PLUGIN_URL . 'js/evecorp.mceButtons.js';
+	return $mce_plugins;
+}
+
+/**
+ *  Add our buttons to the TinyMCE toolbar.
+ *
+ * @param array $mce_buttons List of TinyMCE toolbar buttons.
+ * @return array Modified list of TinyMCE toolbar buttons.
+ */
+function evecorp_add_mce_button( $mce_buttons )
+{
+	/* Add the button ID */
+	array_push( $mce_buttons, '|', 'eve_char', 'eve_corp', 'eve_alliance', 'eve_station', 'eve_solarsystem', 'eve_constellation', 'eve_region'
+	);
+	return $mce_buttons;
 }

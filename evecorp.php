@@ -144,12 +144,16 @@ if ( is_admin() ) {
 	/* Add rewrite rules for our auto-generated Eve Online pages (members, et al) */
 	add_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
 
+	/* Add buttons to the tinyMCE editor for Eve Online shortcodes */
+	add_action('init', 'evecorp_init_mce');
+
 	/* Notify administrator if corporate API key is missing or invalid. */
 	if ( !evecorp_corpkey_check() )
 		add_action( 'admin_notices', 'evecorp_config_notifiy' );
 
 	/* Don't show password fields in user settings for Eve Online characters. */
 	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
+
 } else {
 	/**
 	 * Non-admin includes, actions and filters.
@@ -174,13 +178,13 @@ if ( is_admin() ) {
 	 * Hook us into the WordPress authentication flow.
 	 *
 	 * Ensure Site administrators can still login with user name/password,
-	 * all others need either a valid WP session cookies or supply Eve Online API
+	 * all others need either valid WP session cookies or supply Eve Online API
 	 * key information.
 	 */
-//	remove_all_filters( 'authenticate' );
-//	add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
+	remove_all_filters( 'authenticate' );
+	add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
 	add_filter( 'authenticate', 'evecorp_authenticate_user', 20, 3 );
-//	add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
+	add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
 	add_filter( 'login_form_defaults', 'evecorp_login_form_labels' );
 }
 
@@ -220,10 +224,10 @@ function evecorp_shortcode( $shortcode )
 		'char'			 => '',
 		'corp'			 => '',
 		'alliance'		 => '',
+		'station'		 => '',
 		'system'		 => '',
 		'constellation'	 => '',
 		'region'		 => '',
-		'station'		 => '',
 			), $shortcode );
 
 	foreach ( $sc as $key => $value ) {
@@ -238,6 +242,9 @@ function evecorp_shortcode( $shortcode )
 				case 'alliance':
 					$html	 = evecorp_alliance( $value );
 					break;
+				case 'station':
+					$html	 = evecorp_station( $value );
+					break;
 				case 'system':
 					$html	 = evecorp_solarsystem( $value );
 					break;
@@ -246,9 +253,6 @@ function evecorp_shortcode( $shortcode )
 					break;
 				case 'region':
 					$html	 = evecorp_region( $value );
-					break;
-				case 'station':
-					$html	 = evecorp_station( $value );
 					break;
 				default:
 					break;
@@ -365,6 +369,40 @@ function evecorp_alliance( $alliance_name )
 }
 
 /**
+ * Returns HTML code with the linked Eve Online station name
+ * inlcuding CSS selectors for the jQuery context menu.
+ *
+ * @param string $station_name The name of the solar system to be linked.
+ * @return string HTML code to display on page.
+ */
+function evecorp_station( $station_name )
+{
+	/* Add CSS and JavaScript for the JQuery context menu */
+	evecorp_menu_scripts();
+
+	$classes = 'evecorp-station';
+
+	/* Access from Eve Online in-game browser? */
+	if ( evecorp_is_eve() ) {
+
+		$classes .= '-igb';
+
+		/* Are we in the browsers list of trusted sites? */
+		if ( evecorp_is_trusted() )
+			$classes .=' trusted';
+	}
+	$id		 = evecorp_get_id( $station_name );
+	if ( is_wp_error( $id ) )
+		return '<a title="' . $id->get_error_message() . '"/>' . $station_name . '</a>';
+	$html	 = '<a href="http://evemaps.dotlan.net/station/' . $station_name .
+			'" class="' . esc_attr( $classes ) .
+			'" id="' . esc_attr( $id ) .
+			'" name="' . esc_attr( $station_name ) .
+			'" title="Station Information">' . $station_name . '</a>';
+	return $html;
+}
+
+/**
  * Returns HTML code with the linked Eve Online solar system name
  * inlcuding CSS selectors for the jQuery context menu.
  *
@@ -466,40 +504,6 @@ function evecorp_region( $region_name )
 			'" id="' . esc_attr( $id ) .
 			'" name="' . esc_attr( $region_name ) .
 			'" title="Region Information">' . $region_name . '</a>';
-	return $html;
-}
-
-/**
- * Returns HTML code with the linked Eve Online station name
- * inlcuding CSS selectors for the jQuery context menu.
- *
- * @param string $station_name The name of the solar system to be linked.
- * @return string HTML code to display on page.
- */
-function evecorp_station( $station_name )
-{
-	/* Add CSS and JavaScript for the JQuery context menu */
-	evecorp_menu_scripts();
-
-	$classes = 'evecorp-station';
-
-	/* Access from Eve Online in-game browser? */
-	if ( evecorp_is_eve() ) {
-
-		$classes .= '-igb';
-
-		/* Are we in the browsers list of trusted sites? */
-		if ( evecorp_is_trusted() )
-			$classes .=' trusted';
-	}
-	$id		 = evecorp_get_id( $station_name );
-	if ( is_wp_error( $id ) )
-		return '<a title="' . $id->get_error_message() . '"/>' . $station_name . '</a>';
-	$html	 = '<a href="http://evemaps.dotlan.net/station/' . $station_name .
-			'" class="' . esc_attr( $classes ) .
-			'" id="' . esc_attr( $id ) .
-			'" name="' . esc_attr( $station_name ) .
-			'" title="Station Information">' . $station_name . '</a>';
 	return $html;
 }
 
