@@ -145,7 +145,7 @@ if ( is_admin() ) {
 	add_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
 
 	/* Add buttons to the tinyMCE editor for Eve Online shortcodes */
-	add_action('init', 'evecorp_init_mce');
+	add_action( 'init', 'evecorp_init_mce' );
 
 	/* Notify administrator if corporate API key is missing or invalid. */
 	if ( !evecorp_corpkey_check() )
@@ -153,7 +153,6 @@ if ( is_admin() ) {
 
 	/* Don't show password fields in user settings for Eve Online characters. */
 	add_filter( 'show_password_fields', 'evecorp_show_password_fields', 10, 2 );
-
 } else {
 	/**
 	 * Non-admin includes, actions and filters.
@@ -225,7 +224,7 @@ function evecorp_shortcode( $shortcode )
 		'corp'			 => '',
 		'alliance'		 => '',
 		'station'		 => '',
-		'system'		 => '',
+		'solarsystem'	 => '',
 		'constellation'	 => '',
 		'region'		 => '',
 			), $shortcode );
@@ -245,7 +244,7 @@ function evecorp_shortcode( $shortcode )
 				case 'station':
 					$html	 = evecorp_station( $value );
 					break;
-				case 'system':
+				case 'solarsystem':
 					$html	 = evecorp_solarsystem( $value );
 					break;
 				case 'constellation':
