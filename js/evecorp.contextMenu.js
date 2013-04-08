@@ -7,6 +7,72 @@
  */
 
 jQuery(function() {
+
+	/**
+	 * Tooltips.
+	 */
+
+	/* Character tooltip */
+	jQuery('a[class|="evecorp-char"]').tooltip({
+		content:
+				function() {
+					portrait = "<img src='http://image.eveonline.com/Character/" + jQuery(this).attr("id") + "_64.jpg' class='avatar avatar-64 photo' height='64' width='64'>";
+					name = '<strong>' + jQuery(this).attr("name") + '</strong><br />';
+					age = jQuery(this).attr("age") + ' old<br />';
+					kills = jQuery(this).attr("kills") + ' kills, ';
+					losses = jQuery(this).attr("losses") + ' losses<br />';
+					security_status = 'Security-Status: ' + jQuery(this).attr("security-status");
+					return portrait + '<p>' + name + age + kills + losses + security_status + '</p>';
+				}
+	});
+
+	/* Corporation tooltip */
+	jQuery('a[class|="evecorp-corp"]').tooltip({
+		content:
+				function() {
+					logo = "<img src='http://image.eveonline.com/Corporation/" + jQuery(this).attr("id") + "_64.png' class='avatar avatar-64 photo' height='64' width='64'>";
+					name = '<strong>' + jQuery(this).attr("name") + '</strong><br />';
+					member_count = jQuery(this).attr("member_count") + ' Members<br />';
+					kills = jQuery(this).attr("kills") + ' kills, ';
+					losses = jQuery(this).attr("losses") + ' losses';
+					return logo + '<p>' + name + member_count + kills + losses + '</p>';
+				}
+	});
+
+	/* Alliance tooltip */
+	jQuery('a[class|="evecorp-alliance"]').tooltip({
+		content:
+				function() {
+					logo = "<img src='http://image.eveonline.com/Alliance/" + jQuery(this).attr("id") + "_64.png' class='avatar avatar-64 photo' height='64' width='64'>";
+					name = '<strong>' + jQuery(this).attr("name") + '</strong><br />';
+					age = jQuery(this).attr("age") + ' old<br />';
+					member_count = jQuery(this).attr("member_count") + ' Members<br />';
+					kills = jQuery(this).attr("kills") + ' kills, ';
+					losses = jQuery(this).attr("losses") + ' losses';
+					return logo + '<p>' + name + age + member_count + kills + losses + '</p>';
+				}
+	});
+
+	/* Station tooltip */
+	jQuery('a[class|="evecorp-station"]').tooltip({
+		content: "This is a Space Station!"
+	});
+
+	/* Solar System tooltip */
+	jQuery('a[class|="evecorp-solarsystem"]').tooltip({
+		content: "This is a Solar System!"
+	});
+
+	/* Constellation tooltip */
+	jQuery('a[class|="evecorp-constellation"]').tooltip({
+		content: "This is a Constellation!"
+	});
+
+	/* Region tooltip */
+	jQuery('a[class|="evecorp-region"]').tooltip({
+		content: "This is a Region!"
+	});
+
 	/**
 	 * In-Game Browser menues.
 	 */

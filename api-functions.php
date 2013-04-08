@@ -316,10 +316,10 @@ function evecorp_get_ID_type( $ID )
 {
 
 	/* Factions start 500'001 end 500'020 */
-	if ( $ID > 50000 && $ID < 599999 )
+	if ( $ID > 50000 && $ID < 999999 )
 		return 'Faction';
 
-	/* NPCs start 1'000'002 end 1'000'182 */
+	/* NPC corps start 1'000'002 end 1'000'182 */
 	if ( $ID > 100000 && $ID < 1999999 )
 		return 'NPC corporation';
 
@@ -349,23 +349,41 @@ function evecorp_get_ID_type( $ID )
 	if ( $ID > 6000000 && $ID < 69999999 )
 		return 'Station';
 
-	/* Lookup character with this ID */
-	$character_name = evecorp_get_char_name($ID);
-	if ( !is_wp_error( $character_name ) )
+	/* Characters created after Inv64 start 90'000'000 end 98'000'000 */
+	if ( $ID >= 90000000 && $ID <= 98000000 )
 		return 'Character';
 
-	/* Lookup Corporation with this ID */
-	$corp_name = evecorp_get_corp_name($ID);
-	if ( !is_wp_error( $corp_name ) )
+	/* Corporations created after Inv64 start 98'000'000 end 99'000'000 */
+	if ( $ID >= 98000000 && $ID < 99000000 )
 		return 'Corporation';
 
-	/* Lookup Alliance with this ID */
-	$alliance_name = evecorp_get_alliance_name($ID);
-	if ( !is_wp_error( $alliance_name ) )
+	/* Alliances created after Inv64 start 99'000'000 end 100'000'000 */
+	if ( $ID >= 99000000 && $ID <= 100000000 )
 		return 'Alliance';
 
-	/* ID does not macht anything we know of */
-	return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'Unknown type', 404 );
+	/* All pre Inv64 owners are on the range of 100'000'000 to 2'100'000'000 */
+	if ( $ID >= 100000000 && $ID <= 2100000000 ) {
+
+		/* IDs in this range are not to be trusted and require check */
+
+		/* Lookup character with this ID */
+		$character_name = evecorp_get_char_name( $ID );
+		if ( !is_wp_error( $character_name ) )
+			return 'Character';
+
+		/* Lookup Corporation with this ID */
+		$corp_sheet = evecorp_get_corpsheet( $ID );
+		if ( !is_wp_error( $corp_sheet ) )
+			return 'Corporation';
+
+		/* Lookup Alliance with this ID */
+		$alliance_info = evecorp_get_alliance_info( $ID );
+		if ( !is_wp_error( $alliance_info ) )
+			return 'Alliance';
+	}
+
+	/* ID does not match anything we know of */
+	return 'Unknown type';
 }
 
 /**
@@ -402,6 +420,9 @@ function evecorp_get_corpsheet( $corporation_ID )
 function evecorp_get_corp_name( $corporation_ID )
 {
 	$corpsheet = evecorp_get_corpsheet( $corporation_ID );
+	if ( is_wp_error( $corpsheet ) )
+		return $corpsheet;
+
 	if ( is_array( $corpsheet ) )
 		return $corpsheet['corporationName'];
 }
@@ -409,6 +430,9 @@ function evecorp_get_corp_name( $corporation_ID )
 function evecorp_get_corp_url( $corporation_ID )
 {
 	$corpsheet = evecorp_get_corpsheet( $corporation_ID );
+	if ( is_wp_error( $corpsheet ) )
+		return $corpsheet;
+
 	if ( is_array( $corpsheet ) )
 		return $corpsheet['url'];
 }
@@ -627,4 +651,115 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 	/* Convert API result object to a PHP array variable */
 	$journal = $result->entries->toArray();
 	return $journal;
+}
+
+function evecorp_get_alliance_info( $alliance_ID )
+{
+	/* Get list of all alliances */
+
+	/* Prepare the arguments */
+	$arguments		 = array(
+		'version' => '1'
+	);
+	$result			 = evecorp_api( 'eve', 'AllianceList', $arguments );
+	if ( is_wp_error( $result ) )
+		return $result;
+	$alliance_list	 = $result->alliances->toArray();
+
+	/* Search the list for the requested alliance */
+	foreach ( $alliance_list as $value ) {
+		if ( $alliance_ID === $value['allianceID'] ) {
+			$alliance_info = $value;
+			break;
+		}
+	}
+	if ( !isset( $alliance_info ) )
+		return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'Not alliance with ID ' . $alliance_ID . ' found!' );
+
+	/* Get details of the found alliance */
+	return $alliance_info;
+}
+
+/**
+ * Get statistics from zKillbard
+ *
+ * @todo cache the results
+ * @todo error handling
+ * @todo wait a few seconds bewtween requests
+ * @todo join multiple queries in one request
+ *
+ * @param string $type Character, Corporation, Alliance or Faction.
+ * @param string $ID The ID of the entity to get stats for.
+ * @return array The results
+ */
+function evecorp_killz_stats( $type, $ID )
+{
+
+	/* Cache identifier */
+	$prefix		 = '_KillZ_';
+	$uid		 = "$type|$ID";
+	$cache_ID	 = $prefix . md5( $uid );
+
+	/* Check cache first */
+	$json = get_transient( $cache_ID );
+
+	/* Did the cache return anything? */
+	if ( false === $json ) {
+
+		/* the URL */
+		$url = 'https://zkillboard.com/api/stats/' . $type . '/' . $ID . '/';
+
+		/* HTTP request options */
+		// sslverify?
+		$args = array(
+			'user-agent' => EVECORP . ' ' . EVECORP_VERSION,
+		);
+
+		/* How long since our last request? */
+		$last_request	 = get_transient( '_KillZ_last_request' );
+		$time_diff		 = time() - $last_request;
+//		echo "Seconds since last request:";
+//		var_dump( $time_diff );
+		if ( $time_diff < 2 )
+			sleep( 2 );
+
+		/* Store a timestamp of our last request */
+		set_transient( '_KillZ_last_request', time(), 10 );
+
+		/* Make the HTTP request */
+		$result = wp_remote_get( $url, $args );
+		if ( is_wp_error( $result ) || $result['response']['code'] <> 200 ) {
+			var_dump( $result );
+			die( __FILE__ . ':' . __LINE__ );
+			return $result;
+		}
+
+		/* Work on the HTTP response */
+		$json = $result['body'];
+
+		/* Save result to cache */
+
+		/* Save our servers timezone setting */
+		$tz = date_default_timezone_get();
+
+		/* Set the timezone to UTC */
+		date_default_timezone_set( "UTC" );
+
+		/* The time in the HTTP expires header as UNIX timestamp */
+		$cache_timeout	 = (int) strtotime( $result['headers']['expires'] );
+		$time			 = time();
+
+		/* Restore our servers timezone setting back to previous value */
+		date_default_timezone_set( $tz );
+
+		/* Calculate the caching-time in seconds */
+		$expiration = max( 1, $cache_timeout - $time );
+
+		/* Save json result in cache */
+		set_transient( $cache_ID, $json, $expiration );
+	}
+
+	/* Parse result */
+	$array = json_decode( $json, true );
+	return $array;
 }

@@ -12,6 +12,79 @@
  *
  */
 
+/*Tooltip and Pointer CSS*/
+.ui-tooltip {
+	padding: 8px;
+	position: absolute;
+	z-index: 9999;
+	max-width: 700px;
+	min-width: 250px;
+	-webkit-box-shadow: 0 0 5px #aaa;
+	box-shadow: 0 0 5px #aaa;
+	background: inherit;
+}
+
+.ui-tooltip img {
+	float: left;
+	margin: 3px;
+}
+
+.ui-tooltip span, .ui-tooltip p {
+	font-size: smaller;
+	line-height: 1.4;
+}
+
+body .ui-tooltip {
+	border-width: 2px;
+}
+
+.ui-tooltip .ui-tooltip-pointer,.ui-tooltip .ui-tooltip-pointer-inner {
+	position: absolute;
+	width:0;
+	height:0;
+	background: none;
+}
+
+/*top*/
+.ui-tooltip-arrow-tr .ui-tooltip-pointer,.ui-tooltip-arrow-tc .ui-tooltip-pointer,.ui-tooltip-arrow-tl .ui-tooltip-pointer { top:-14px; border-top:0; border-bottom-width:14px; }
+.ui-tooltip-arrow-tr .ui-tooltip-pointer { border-left:18px dotted transparent; border-right:0; right:10px; }
+.ui-tooltip-arrow-tc .ui-tooltip-pointer { border-left:10px dotted transparent; border-right:10px dotted transparent; left:50%; margin-left:-10px; }
+.ui-tooltip-arrow-tl .ui-tooltip-pointer { border-left:0; border-right:18px dotted transparent; left:10px; }
+.ui-tooltip-arrow-tr .ui-tooltip-pointer-inner,.ui-tooltip-arrow-tc .ui-tooltip-pointer-inner,.ui-tooltip-arrow-tl .ui-tooltip-pointer-inner { border-bottom:10px solid #fff; bottom:-14px; }
+.ui-tooltip-arrow-tr .ui-tooltip-pointer-inner { border-left:12px dotted transparent; border-right:0; right:2px; }
+.ui-tooltip-arrow-tc .ui-tooltip-pointer-inner { border-left:8px dotted transparent; border-right:8px dotted transparent; left:-8px; }
+.ui-tooltip-arrow-tl .ui-tooltip-pointer-inner { border-left:0; border-right:12px dotted transparent; left:2px; }
+
+/*right*/
+.ui-tooltip-arrow-rb .ui-tooltip-pointer,.ui-tooltip-arrow-rc .ui-tooltip-pointer,.ui-tooltip-arrow-rt .ui-tooltip-pointer { right:-14px; border-right:0; border-left-width:14px; }
+.ui-tooltip-arrow-rb .ui-tooltip-pointer { border-bottom:0; border-top:18px dotted transparent; bottom:10px; }
+.ui-tooltip-arrow-rc .ui-tooltip-pointer { border-bottom:10px dotted transparent; border-top:10px dotted transparent; bottom:50%; margin-bottom:-10px; }
+.ui-tooltip-arrow-rt .ui-tooltip-pointer { border-bottom:18px dotted transparent; border-top:0; top:10px; }
+.ui-tooltip-arrow-rb .ui-tooltip-pointer-inner,.ui-tooltip-arrow-rc .ui-tooltip-pointer-inner,.ui-tooltip-arrow-rt .ui-tooltip-pointer-inner { border-left:10px solid #fff; left:-14px; }
+.ui-tooltip-arrow-rb .ui-tooltip-pointer-inner { border-bottom:0; border-top:12px dotted transparent; bottom:2px; }
+.ui-tooltip-arrow-rc .ui-tooltip-pointer-inner { border-bottom:8px dotted transparent; border-top:8px dotted transparent; bottom:-8px; }
+.ui-tooltip-arrow-rt .ui-tooltip-pointer-inner { border-bottom:12px dotted transparent; border-top:0; top:2px; }
+
+/*bottom*/
+.ui-tooltip-arrow-br .ui-tooltip-pointer,.ui-tooltip-arrow-bc .ui-tooltip-pointer,.ui-tooltip-arrow-bl .ui-tooltip-pointer { bottom:-14px; border-bottom:0; border-top-width:14px; }
+.ui-tooltip-arrow-br .ui-tooltip-pointer { border-left:18px dotted transparent; border-right:0; right:10px; }
+.ui-tooltip-arrow-bc .ui-tooltip-pointer { border-left:10px dotted transparent; border-right:10px dotted transparent; left:50%; margin-left:-10px; }
+.ui-tooltip-arrow-bl .ui-tooltip-pointer { border-left:0; border-right:18px dotted transparent; left:10px; }
+.ui-tooltip-arrow-br .ui-tooltip-pointer-inner,.ui-tooltip-arrow-bc .ui-tooltip-pointer-inner,.ui-tooltip-arrow-bl .ui-tooltip-pointer-inner { border-top:10px solid #fff; top:-14px; }
+.ui-tooltip-arrow-br .ui-tooltip-pointer-inner { border-left:12px dotted transparent; border-right:0; right:2px; }
+.ui-tooltip-arrow-bc .ui-tooltip-pointer-inner { border-left:8px dotted transparent; border-right:8px dotted transparent; left:-8px; }
+.ui-tooltip-arrow-bl .ui-tooltip-pointer-inner { border-left:0; border-right:12px dotted transparent; left:2px; }
+
+/*left*/
+.ui-tooltip-arrow-lb .ui-tooltip-pointer,.ui-tooltip-arrow-lc .ui-tooltip-pointer,.ui-tooltip-arrow-lt .ui-tooltip-pointer { left:-14px; border-left:0; border-right-width:14px; }
+.ui-tooltip-arrow-lb .ui-tooltip-pointer { border-bottom:0; border-top:18px dotted transparent; bottom:10px; }
+.ui-tooltip-arrow-lc .ui-tooltip-pointer { border-bottom:10px dotted transparent; border-top:10px dotted transparent; bottom:50%; margin-bottom:-10px; }
+.ui-tooltip-arrow-lt .ui-tooltip-pointer { border-bottom:18px dotted transparent; border-top:0; top:10px; }
+.ui-tooltip-arrow-lb .ui-tooltip-pointer-inner,.ui-tooltip-arrow-lc .ui-tooltip-pointer-inner,.ui-tooltip-arrow-lt .ui-tooltip-pointer-inner { border-right:10px solid #fff; right:-14px; }
+.ui-tooltip-arrow-lb .ui-tooltip-pointer-inner { border-bottom:0; border-top:12px dotted transparent; bottom:2px; }
+.ui-tooltip-arrow-lc .ui-tooltip-pointer-inner { border-bottom:8px dotted transparent; border-top:8px dotted transparent; bottom:-8px; }
+.ui-tooltip-arrow-lt .ui-tooltip-pointer-inner { border-bottom:12px dotted transparent; border-top:0; top:2px; }
+
 .context-menu-list {
     margin:0;
     padding:0;
