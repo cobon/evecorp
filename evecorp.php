@@ -380,15 +380,19 @@ function evecorp_corp( $corp_name )
 		return '<a title="' . $killz->get_error_message() . '">' . $corp_name . '</a>';
 
 
-	$html = '<a href="https://gate.eveonline.com/Corporation/' . $corp_name . '"' .
-			' class="' . esc_attr( $classes ) . '"' .
-			' id="' . esc_attr( $corp_ID ) . '"' .
-			' name="' . esc_attr( $corp_name ) . '"' .
-			//allianceName
-			' member_count="' . esc_attr( number_format( $corp_sheet['memberCount'] ) ) . '"' .
-			' kills="' . esc_attr( number_format( $killz['totals']['countDestroyed'] ) ) . '"' .
-			' losses="' . esc_attr( number_format( $killz['totals']['countLost'] ) ) . '"' .
-			' title="Corporation Information">' . $corp_name . '</a>';
+	$html = '<a href="https://gate.eveonline.com/Corporation/' . $corp_name . '"';
+	$html .= ' class="' . esc_attr( $classes ) . '"';
+	$html .= ' id="' . esc_attr( $corp_ID ) . '"';
+	$html .= ' name="' . esc_attr( $corp_name . ' [' . $corp_sheet['ticker'] . ']' ) . '"';
+
+	/* Member of an Alliance? */
+	if ( isset( $corp_sheet['allianceName'] ) ) {
+		$html .= ' alliance="' . esc_attr( $corp_sheet['allianceName'] ) . '"';
+	}
+	$html .= ' member_count="' . esc_attr( number_format( $corp_sheet['memberCount'] ) ) . '"';
+	$html .= ' kills="' . esc_attr( number_format( $killz['totals']['countDestroyed'] ) ) . '"';
+	$html .= ' losses="' . esc_attr( number_format( $killz['totals']['countLost'] ) ) . '"';
+	$html .= ' title="Corporation Information">' . $corp_name . '</a>';
 	return $html;
 }
 
@@ -431,8 +435,6 @@ function evecorp_alliance( $alliance_name )
 	if ( is_wp_error( $alliance_info ) )
 		return '<a title="' . $alliance_info->get_error_message() . '">' . $alliance_name . '</a>';
 
-	//var_dump( $alliance_info );
-
 	/* Calculate the age */
 	$age = evecorp_human_time_diff( strtotime( $alliance_info['startDate'], time() ) );
 
@@ -441,12 +443,11 @@ function evecorp_alliance( $alliance_name )
 	if ( is_wp_error( $killz ) )
 		return '<a title="' . $killz->get_error_message() . '">' . $alliance_name . '</a>';
 
-//	die();
-
 	$html = '<a href="https://gate.eveonline.com/Alliance/' . $alliance_name .
-			'" class="' . esc_attr( $classes )  . '"' .
-			' id="' . esc_attr( $alliance_ID )  . '"' .
+			'" class="' . esc_attr( $classes ) . '"' .
+			' id="' . esc_attr( $alliance_ID ) . '"' .
 			' name="' . esc_attr( $alliance_name ) . '"' .
+			' corps_count="' . esc_attr( number_format( sizeof($alliance_info['memberCorporations']) ) ) . '"' .
 			' member_count="' . esc_attr( number_format( $alliance_info['memberCount'] ) ) . '"' .
 			' age="' . esc_attr( $age ) . '"' .
 			' kills="' . esc_attr( number_format( $killz['totals']['countDestroyed'] ) ) . '"' .

@@ -659,7 +659,7 @@ function evecorp_get_alliance_info( $alliance_ID )
 
 	/* Prepare the arguments */
 	$arguments		 = array(
-		'version' => '1'
+		'version' => '2'
 	);
 	$result			 = evecorp_api( 'eve', 'AllianceList', $arguments );
 	if ( is_wp_error( $result ) )
@@ -674,7 +674,7 @@ function evecorp_get_alliance_info( $alliance_ID )
 		}
 	}
 	if ( !isset( $alliance_info ) )
-		return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'Not alliance with ID ' . $alliance_ID . ' found!' );
+		return new WP_Error( 'PhealAPIException', 'Eve Online API error: ' . 'No alliance with ID ' . $alliance_ID . ' found!' );
 
 	/* Get details of the found alliance */
 	return $alliance_info;

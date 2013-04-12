@@ -18,7 +18,6 @@
 	position: absolute;
 	z-index: 9999;
 	max-width: 700px;
-	min-width: 250px;
 	-webkit-box-shadow: 0 0 5px #aaa;
 	box-shadow: 0 0 5px #aaa;
 	background: inherit;
@@ -26,12 +25,15 @@
 
 .ui-tooltip img {
 	float: left;
-	margin: 3px;
+	margin: 5px;
 }
 
-.ui-tooltip span, .ui-tooltip p {
+.ui-tooltip p {
 	font-size: smaller;
 	line-height: 1.4;
+	margin-bottom: 0;
+	white-space: nowrap;
+	display: inline-block;
 }
 
 body .ui-tooltip {
@@ -102,10 +104,10 @@ body .ui-tooltip {
 	color: lightgray;
 
     -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-       -moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-        -ms-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-         -o-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	-ms-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	-o-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 
     font-family: "EveSans Neue", "Arial", "Liberation Sans", Helvetica, sans-serif;
     font-size: 11px;
@@ -117,9 +119,9 @@ body .ui-tooltip {
 	color: inherit;
     position: relative;
     -webkit-user-select: none;
-       -moz-user-select: -moz-none;
-        -ms-user-select: none;
-            user-select: none;
+	-moz-user-select: -moz-none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .context-menu-separator {
@@ -130,9 +132,9 @@ body .ui-tooltip {
 .context-menu-item > label > input,
 .context-menu-item > label > textarea {
     -webkit-user-select: text;
-       -moz-user-select: text;
-        -ms-user-select: text;
-            user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
 }
 
 .context-menu-item.hover {
@@ -165,7 +167,7 @@ body .ui-tooltip {
     In case you want to use sprites for icons (which I would suggest you do) have a look at
     http://css-tricks.com/13224-pseudo-spriting/ to get an idea of how to implement
     .context-menu-item.icon:before {}
- */
+*/
 /*
 .context-menu-item.icon { min-height: 18px; background-repeat: no-repeat; background-position: 4px 2px; }
 .context-menu-item.icon-edit { background-image: url(images/page_white_edit.png); }
@@ -197,10 +199,10 @@ body .ui-tooltip {
     width: 100%;
 
     -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-        -ms-box-sizing: border-box;
-         -o-box-sizing: border-box;
-            box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 .context-menu-input > label > textarea {

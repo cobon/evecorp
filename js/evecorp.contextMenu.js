@@ -23,7 +23,8 @@ jQuery(function() {
 					losses = jQuery(this).attr("losses") + ' losses<br />';
 					security_status = 'Security-Status: ' + jQuery(this).attr("security-status");
 					return portrait + '<p>' + name + age + kills + losses + security_status + '</p>';
-				}
+				},
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Corporation tooltip */
@@ -32,11 +33,17 @@ jQuery(function() {
 				function() {
 					logo = "<img src='http://image.eveonline.com/Corporation/" + jQuery(this).attr("id") + "_64.png' class='avatar avatar-64 photo' height='64' width='64'>";
 					name = '<strong>' + jQuery(this).attr("name") + '</strong><br />';
+					if (jQuery(this).attr("alliance")) {
+						alliance = jQuery(this).attr("alliance") + '<br />';
+					} else {
+						alliance = '<br />';
+					}
 					member_count = jQuery(this).attr("member_count") + ' Members<br />';
 					kills = jQuery(this).attr("kills") + ' kills, ';
 					losses = jQuery(this).attr("losses") + ' losses';
-					return logo + '<p>' + name + member_count + kills + losses + '</p>';
-				}
+					return logo + '<p>' + name + alliance + member_count + kills + losses + '</p>';
+				},
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Alliance tooltip */
@@ -45,32 +52,38 @@ jQuery(function() {
 				function() {
 					logo = "<img src='http://image.eveonline.com/Alliance/" + jQuery(this).attr("id") + "_64.png' class='avatar avatar-64 photo' height='64' width='64'>";
 					name = '<strong>' + jQuery(this).attr("name") + '</strong><br />';
-					age = jQuery(this).attr("age") + ' old<br />';
+//					age = jQuery(this).attr("age") + ' old<br />';
+					corps_count = jQuery(this).attr("corps_count") + ' Corporations<br />';
 					member_count = jQuery(this).attr("member_count") + ' Members<br />';
 					kills = jQuery(this).attr("kills") + ' kills, ';
 					losses = jQuery(this).attr("losses") + ' losses';
-					return logo + '<p>' + name + age + member_count + kills + losses + '</p>';
-				}
+					return logo + '<p>' + name + corps_count + member_count + kills + losses + '</p>';
+				},
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Station tooltip */
 	jQuery('a[class|="evecorp-station"]').tooltip({
-		content: "This is a Space Station!"
+		content: "This is a Space Station!",
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Solar System tooltip */
 	jQuery('a[class|="evecorp-solarsystem"]').tooltip({
-		content: "This is a Solar System!"
+		content: "This is a Solar System!",
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Constellation tooltip */
 	jQuery('a[class|="evecorp-constellation"]').tooltip({
-		content: "This is a Constellation!"
+		content: "This is a Constellation!",
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/* Region tooltip */
 	jQuery('a[class|="evecorp-region"]').tooltip({
-		content: "This is a Region!"
+		content: "This is a Region!",
+		position: {my: "right bottom", at: "center top-10"}
 	});
 
 	/**
