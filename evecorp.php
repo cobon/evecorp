@@ -213,9 +213,8 @@ function evecorp_menu_scripts()
  * 	[eve char="Mitome Cobon-Han"] <br>
  * 	[eve corp="Federation Interstellar Resources"] <br>
  *  [eve alliance="Legionum Tenebrae"] <br>
- * 	[eve system="Misneden"] <br>
+ * 	[eve solarsystems="Misneden"] <br>
  * 	[eve item="Tritanium"] <br>
- *  [eve id=123456789]
  *
  * @param type $shortcode
  * @return string html code for output.
@@ -435,9 +434,6 @@ function evecorp_alliance( $alliance_name )
 	if ( is_wp_error( $alliance_info ) )
 		return '<a title="' . $alliance_info->get_error_message() . '">' . $alliance_name . '</a>';
 
-	/* Calculate the age */
-	$age = evecorp_human_time_diff( strtotime( $alliance_info['startDate'], time() ) );
-
 	/* Get kills and losses for this alliance */
 	$killz = evecorp_killz_stats( 'alliance', $alliance_ID );
 	if ( is_wp_error( $killz ) )
@@ -447,9 +443,8 @@ function evecorp_alliance( $alliance_name )
 			'" class="' . esc_attr( $classes ) . '"' .
 			' id="' . esc_attr( $alliance_ID ) . '"' .
 			' name="' . esc_attr( $alliance_name ) . '"' .
-			' corps_count="' . esc_attr( number_format( sizeof($alliance_info['memberCorporations']) ) ) . '"' .
+			' corps_count="' . esc_attr( number_format( sizeof( $alliance_info['memberCorporations'] ) ) ) . '"' .
 			' member_count="' . esc_attr( number_format( $alliance_info['memberCount'] ) ) . '"' .
-			' age="' . esc_attr( $age ) . '"' .
 			' kills="' . esc_attr( number_format( $killz['totals']['countDestroyed'] ) ) . '"' .
 			' losses="' . esc_attr( number_format( $killz['totals']['countLost'] ) ) . '"' .
 			' title="Alliance Information">' . $alliance_name . '</a>';
@@ -513,15 +508,24 @@ function evecorp_solarsystem( $solarsystem_name )
 		if ( evecorp_is_trusted() )
 			$classes .=' trusted';
 	}
-	$id		 = evecorp_get_id( $solarsystem_name );
-	if ( is_wp_error( $id ) )
-		return '<a title="' . $id->get_error_message() . '"/>' . $solarsystem_name . '</a>';
-	$html	 = '<a href="http://wiki.eveonline.com/en/wiki/' . $solarsystem_name .
-			'_%28System%29' .
-			'" class="' . esc_attr( $classes ) .
-			'" id="' . esc_attr( $id ) .
-			'" name="' . esc_attr( $solarsystem_name ) .
-			'" title="Solar System Information">' . $solarsystem_name . '</a>';
+
+	/* Get the ID of this solar system */
+	$solar_system_ID = evecorp_get_id( $solarsystem_name );
+	if ( is_wp_error( $solar_system_ID ) )
+		return '<a title="' . $solar_system_ID->get_error_message() . '"/>' . $solarsystem_name . '</a>';
+
+	/* Get statistics */
+	$stats = evecorp_get_solar_system_stats( $solar_system_ID );
+
+	$html = '<a href="http://wiki.eveonline.com/en/wiki/' . $solarsystem_name . '_(System)';
+	$html .= '" class="' . esc_attr( $classes );
+	$html .= '" id="' . esc_attr( $solar_system_ID );
+	$html .= '" name="' . esc_attr( $solarsystem_name );
+	$html .= '" jumps="' . esc_attr( number_format( $stats['jumps'] ) );
+	$html .= '" shipKills="' . esc_attr( number_format( $stats['shipKills'] ) );
+	$html .= '" factionKills="' . esc_attr( number_format( $stats['factionKills'] ) );
+	$html .= '" podKills="' . esc_attr( number_format( $stats['podKills'] ) );
+	$html .= '" title="Solar System Information">' . $solarsystem_name . '</a>';
 	return $html;
 }
 

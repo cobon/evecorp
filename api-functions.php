@@ -655,12 +655,13 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 
 function evecorp_get_alliance_info( $alliance_ID )
 {
-	/* Get list of all alliances */
 
 	/* Prepare the arguments */
-	$arguments		 = array(
+	$arguments = array(
 		'version' => '2'
 	);
+
+	/* Get list of all alliances */
 	$result			 = evecorp_api( 'eve', 'AllianceList', $arguments );
 	if ( is_wp_error( $result ) )
 		return $result;
@@ -678,6 +679,49 @@ function evecorp_get_alliance_info( $alliance_ID )
 
 	/* Get details of the found alliance */
 	return $alliance_info;
+}
+
+function evecorp_get_solar_system_stats( $solar_system_ID )
+{
+
+	/* Set defaults, as API returns only the ones with jumps/kills */
+	$stats = array(
+		'jumps'			 => 0,
+		'shipKills'		 => 0,
+		'factionKills'	 => 0,
+		'podKills'		 => 0,
+	);
+
+	/* Get list of jumps in all solar systems */
+	$jumps_result = evecorp_api( 'map', 'Jumps' );
+	if ( is_wp_error( $jumps_result ) )
+		return $jumps_result;
+	$all_jumps = $jumps_result->solarSystems->toArray();
+
+	/* Are there jumps in our system? */
+	foreach ( $all_jumps as $value ) {
+		if ( $solar_system_ID === $value['solarSystemID'] ) {
+			$stats['jumps'] = $value['shipJumps'];
+			continue;
+		}
+	}
+
+	/* Get list of jumps in all solar systems */
+	$kills_result = evecorp_api( 'map', 'Kills' );
+	if ( is_wp_error( $kills_result ) )
+		return $kills_result;
+	$all_kills = $kills_result->solarSystems->toArray();
+
+	/* Are there kills in our system? */
+	foreach ( $all_kills as $value ) {
+		if ( $solar_system_ID === $value['solarSystemID'] ) {
+			$stats['shipKills'] = $value['shipKills'];
+			$stats['factionKills'] = $value['factionKills'];
+			$stats['podKills'] = $value['podKills'];
+			continue;
+		}
+	}
+	return ( $stats );
 }
 
 /**

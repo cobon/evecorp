@@ -70,7 +70,16 @@ jQuery(function() {
 
 	/* Solar System tooltip */
 	jQuery('a[class|="evecorp-solarsystem"]').tooltip({
-		content: "This is a Solar System!",
+		content:
+				function() {
+//					logo = "<img src='http://image.eveonline.com/Corporation/" + jQuery(this).attr("id") + "_64.png' class='avatar avatar-64 photo' height='64' width='64'>";
+					name = '<strong>' + jQuery(this).attr("name") + '</strong> in the last hour:<br />';
+					jumps = jQuery(this).attr("jumps") + ' Jumps<br />';
+					shipKills = jQuery(this).attr("shipKills") + ' Ships and ';
+					podKills = jQuery(this).attr("podKills") + ' Pods killed<br />';
+					factionKills = jQuery(this).attr("factionKills") + ' NPC Ships killed';
+					return '<p>' + name + jumps + shipKills + podKills + factionKills + '</p>';
+				},
 		position: {my: "right bottom", at: "center top-10"}
 	});
 
