@@ -17,6 +17,9 @@ if ( !function_exists( 'add_action' ) )
  *
  * @todo Test if we can connect with Eve Online API servers.
  * @todo Check if required/recommended plugins are installed.
+ *
+ * @global type $wp_version
+ * @global type $evecorp_options
  */
 function evecorp_activate()
 {
@@ -70,6 +73,7 @@ function evecorp_deactivate()
  * 	www.example.com/members/
  * 	www.example.com/members/John_Doe/
  *
+ * @global type $wp_rewrite
  */
 function evecorp_add_rewrite_rules()
 {
@@ -285,6 +289,11 @@ function evecorp_user_TZ_form( $profileuser )
 	<?php
 }
 
+/**
+ * Save the users timezone in his profile.
+ *
+ * @param int $user_ID The WordPress ID number of the user.
+ */
 function evecorp_set_user_TZ( $user_ID )
 {
 	$timezone_string = sanitize_option( 'timezone_string', $_POST['timezone_string'] );
@@ -310,7 +319,7 @@ function evecorp_set_user_TZ( $user_ID )
 /**
  * Output HTML form for adding API key ID and vcode.
  *
- * @param WP_User $profileuser
+ * @param WP_User $profileuser The WO user object
  */
 function evecorp_userkeys_form( $profileuser )
 {
@@ -344,7 +353,7 @@ function evecorp_userkeys_form( $profileuser )
 /**
  * Add a Eve Online API key ID to current users meta data.
  *
- * @param string $user_id ID number of WordPress user.
+ * @param int $user_id ID number of WordPress user.
  */
 function evecorp_altkey_add( $user_ID )
 {

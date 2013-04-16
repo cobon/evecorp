@@ -304,6 +304,12 @@ function evecorp_avatar_size( $requested_size )
 	return '1024';
 }
 
+/**
+ * Return array of all known alternative characters of a character.
+ *
+ * @param string $character_name the name of the character.
+ * @return array Array containing the found alts, if any.
+ */
 function evecorp_get_alts( $character_name )
 {
 	$alts = array( );
@@ -345,6 +351,12 @@ function evecorp_get_alts( $character_name )
 	return $alts;
 }
 
+/**
+ * Split a camelcase string in properly spaced words.
+ *
+ * @param string $camelcase_str
+ * @return string
+ */
 function camelcase_split( $camelcase_str )
 {
 	$regex	 = '/# Match position between camelCase "words".
@@ -449,6 +461,12 @@ function evecorp_toolbar_links( $wp_admin_bar )
 	$wp_admin_bar->add_node( $API_keys );
 }
 
+/**
+ * We need to add/override get_current_screen() outside admin-pages for the
+ * WP_TableClass to work correctly, as its original design is for admin-pages
+ * only.
+ *
+ */
 if ( !is_admin() ) {
 	if ( !function_exists( 'get_current_screen' ) ) {
 
@@ -460,6 +478,13 @@ if ( !is_admin() ) {
 	}
 }
 
+/**
+ * Add our auto-generated members-list and member-pages to the parseable
+ * WP query vars array.
+ *
+ * @param array $query_vars
+ * @return array
+ */
 function evecorp_query_vars( $query_vars )
 {
 	$query_vars[]	 = 'members_list';
@@ -467,11 +492,19 @@ function evecorp_query_vars( $query_vars )
 	return $query_vars;
 }
 
+/**
+ * Check if current request is for our auto-generated members-list or a
+ * member-page. Process request with corresponding template and bail out of
+ * further request processing afterwards if that is the case.
+ *
+ * @param class $wp The WP request object.
+ */
 function evecorp_parse_request( &$wp )
 {
 	/* Do we have a request for a individual members page? */
 	if ( array_key_exists( 'member', $wp->query_vars ) ) {
 		$template		 = 'member.php';
+
 		/* Look for the template in the active theme. */
 		$template_file	 = locate_template( $template );
 		if ( !$template_file ) {
@@ -495,6 +528,12 @@ function evecorp_parse_request( &$wp )
 	}
 }
 
+/**
+ * Add classes to the HTML body of our page.
+ *
+ * @param array $classes
+ * @return array
+ */
 function evecorp_singular_body( $classes )
 {
 //	print '<pre>';
@@ -511,8 +550,6 @@ function evecorp_singular_body( $classes )
  *
  * The difference is returned in a human readable format such as "1 hour",
  * "5 mins", "2 days".
- *
- * @since 1.5.0
  *
  * @param int $from Unix timestamp from which the difference begins.
  * @param int $to Optional. Unix timestamp to end the time difference. Default becomes time() if not set.

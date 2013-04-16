@@ -188,7 +188,7 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 	/* This API key ID has not been seen before */
 	$validation_code = evecorp_userkey_add( $user->ID, $key_ID, $keyinfo );
 	return new WP_Error( 'new_validation', 'Welcome ' . $user_login . '.<br /> As you never used this
-						API key before, we need to verify your identity. <br />
+						API key with us before, we need to verify your identity. <br />
 						Please send 0.10 ISK to ' .
 			evecorp_corp( evecorp_get_option( 'corpkey_corporation_name' ) ) .
 			' and write the following in the reason field:<br />

@@ -361,7 +361,7 @@ function evecorp_get_ID_type( $ID )
 	if ( $ID >= 99000000 && $ID <= 100000000 )
 		return 'Alliance';
 
-	/* All pre Inv64 owners are on the range of 100'000'000 to 2'100'000'000 */
+	/* All pre-Inv64 owners are on the range of 100'000'000 to 2'100'000'000 */
 	if ( $ID >= 100000000 && $ID <= 2100000000 ) {
 
 		/* IDs in this range are not to be trusted and require check */
@@ -411,8 +411,8 @@ function evecorp_get_corpsheet( $corporation_ID )
 }
 
 /**
- * Returns a corporation name looked up by its ID from Eve Online API
- * Doesn't need API key authorization
+ * Returns a corporation name looked up by its ID from Eve Online API.
+ * Doesn't need API key authorization.
  *
  * @param string $corporationID. ID number of the corporation to lookup.
  * @return string. Name of the corporation
@@ -427,6 +427,13 @@ function evecorp_get_corp_name( $corporation_ID )
 		return $corpsheet['corporationName'];
 }
 
+/**
+ * Returns the URL of a corporation website by its ID from Eve Online API
+ * Doesn't need API key authorization.
+ *
+ * @param string $corporation_ID
+ * @return string The URL
+ */
 function evecorp_get_corp_url( $corporation_ID )
 {
 	$corpsheet = evecorp_get_corpsheet( $corporation_ID );
@@ -586,7 +593,6 @@ function evecorp_is_CEO( $character_ID, $corporation_ID = '' )
  * "Corporation Members/Member Security" API.
  *
  * @param string $characterID. ID number of the character.
- * @param array $corpKey. Corporation API key authorization credentials.
  * @return boolean true if character is director, false if not.
  */
 function evecorp_is_director( $character_ID )
@@ -653,6 +659,13 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 	return $journal;
 }
 
+/**
+ * Get information about a alliance from Eve Online API.
+ # Doesn't need API key authorization.
+ *
+ * @param string $alliance_ID
+ * @return array|\WP_Error Array on success WP_Error object on failure.
+ */
 function evecorp_get_alliance_info( $alliance_ID )
 {
 
@@ -681,6 +694,13 @@ function evecorp_get_alliance_info( $alliance_ID )
 	return $alliance_info;
 }
 
+/**
+ * Get number of jumps and kills in a solar system from Eve Online API.
+ # Doesn't need API key authorization.
+ *
+ * @param type $solar_system_ID
+ * @return type
+ */
 function evecorp_get_solar_system_stats( $solar_system_ID )
 {
 
@@ -727,9 +747,8 @@ function evecorp_get_solar_system_stats( $solar_system_ID )
 /**
  * Get statistics from zKillbard
  *
- * @todo cache the results
  * @todo error handling
- * @todo wait a few seconds bewtween requests
+ * @todo correct request limit (max. 10 requests in 60sec)
  * @todo join multiple queries in one request
  *
  * @param string $type Character, Corporation, Alliance or Faction.

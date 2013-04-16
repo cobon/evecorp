@@ -216,7 +216,7 @@ function evecorp_menu_scripts()
  * 	[eve solarsystems="Misneden"] <br>
  * 	[eve item="Tritanium"] <br>
  *
- * @param type $shortcode
+ * @param string $shortcode
  * @return string html code for output.
  */
 function evecorp_shortcode( $shortcode )
@@ -271,7 +271,6 @@ function evecorp_shortcode( $shortcode )
  * @todo Themes should be able to supply a custom context menu CSS.
  *
  * @param string $name The name of the character to be linked.
- *
  * @return string HTML code to display on page.
  */
 function evecorp_char( $char_name )
@@ -600,7 +599,7 @@ function evecorp_region( $region_name )
 }
 
 /**
- * Output a list of corporation members as HTML table.
+ * Output HTML to render a table of corporation members.
  *
  */
 function evecorp_the_members()
@@ -623,6 +622,11 @@ function evecorp_the_members()
 	<?php
 }
 
+/**
+ * Output HTML to render corporation member profile.
+ *
+ * @global type $wp
+ */
 function evecorp_the_member()
 {
 	global $wp;

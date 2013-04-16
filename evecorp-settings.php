@@ -48,6 +48,7 @@ function evecorp_admin_init()
 /**
  * Output description for the Eve Online Corporate API Key Section
  *
+ * @global array $evecorp_IGB_data
  */
 function corpkey_section_html()
 {
@@ -184,6 +185,11 @@ function evecorp_apikey_expiry()
 	echo PHP_EOL;
 }
 
+/**
+ * Compare the current WP site url with the one published Eve Online corporation.
+ *
+ * @global array $evecorp_options
+ */
 function evecorp_apikey_url()
 {
 	global $evecorp_options;
@@ -195,6 +201,10 @@ function evecorp_apikey_url()
 	}
 }
 
+/**
+ * Output HTML for a clickable button to remove API key in a HTML form.
+ *
+ */
 function evecorp_apikey_clear_button()
 {
 	$other_attributes = array(
@@ -342,6 +352,8 @@ function evecorp_add_settings_menu()
 
 /**
  * Create the admin page for Eve Online settings
+ *
+ * @global array $evecorp_options
  */
 function evecorp_settings_page()
 {
