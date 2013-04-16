@@ -271,7 +271,7 @@ function evecorp_get_membership( $character_ID )
  */
 function evecorp_get_ID( $name )
 {
-	// Prepare the arguments
+// Prepare the arguments
 	$arguments = array(
 		'names' => $name
 	);
@@ -661,7 +661,7 @@ function evecorp_corp_journal( $account_key = '1000', $from_ID = '', $row_count 
 
 /**
  * Get information about a alliance from Eve Online API.
- # Doesn't need API key authorization.
+  # Doesn't need API key authorization.
  *
  * @param string $alliance_ID
  * @return array|\WP_Error Array on success WP_Error object on failure.
@@ -696,7 +696,7 @@ function evecorp_get_alliance_info( $alliance_ID )
 
 /**
  * Get number of jumps and kills in a solar system from Eve Online API.
- # Doesn't need API key authorization.
+  # Doesn't need API key authorization.
  *
  * @param type $solar_system_ID
  * @return type
@@ -713,10 +713,10 @@ function evecorp_get_solar_system_stats( $solar_system_ID )
 	);
 
 	/* Get list of jumps in all solar systems */
-	$jumps_result = evecorp_api( 'map', 'Jumps' );
+	$jumps_result	 = evecorp_api( 'map', 'Jumps' );
 	if ( is_wp_error( $jumps_result ) )
 		return $jumps_result;
-	$all_jumps = $jumps_result->solarSystems->toArray();
+	$all_jumps		 = $jumps_result->solarSystems->toArray();
 
 	/* Are there jumps in our system? */
 	foreach ( $all_jumps as $value ) {
@@ -727,17 +727,17 @@ function evecorp_get_solar_system_stats( $solar_system_ID )
 	}
 
 	/* Get list of jumps in all solar systems */
-	$kills_result = evecorp_api( 'map', 'Kills' );
+	$kills_result	 = evecorp_api( 'map', 'Kills' );
 	if ( is_wp_error( $kills_result ) )
 		return $kills_result;
-	$all_kills = $kills_result->solarSystems->toArray();
+	$all_kills		 = $kills_result->solarSystems->toArray();
 
 	/* Are there kills in our system? */
 	foreach ( $all_kills as $value ) {
 		if ( $solar_system_ID === $value['solarSystemID'] ) {
-			$stats['shipKills'] = $value['shipKills'];
-			$stats['factionKills'] = $value['factionKills'];
-			$stats['podKills'] = $value['podKills'];
+			$stats['shipKills']		 = $value['shipKills'];
+			$stats['factionKills']	 = $value['factionKills'];
+			$stats['podKills']		 = $value['podKills'];
 			continue;
 		}
 	}
@@ -773,21 +773,39 @@ function evecorp_killz_stats( $type, $ID )
 		$url = 'https://zkillboard.com/api/stats/' . $type . '/' . $ID . '/';
 
 		/* HTTP request options */
-		// sslverify?
+		/* @todo sslverify? */
 		$args = array(
 			'user-agent' => EVECORP . ' ' . EVECORP_VERSION,
 		);
 
-		/* How long since our last request? */
-		$last_request	 = get_transient( '_KillZ_last_request' );
-		$time_diff		 = time() - $last_request;
-//		echo "Seconds since last request:";
-//		var_dump( $time_diff );
-		if ( $time_diff < 2 )
-			sleep( 2 );
+		/* Check for previous requests */
+		$zkb_timeframe_start = get_transient( '_KillZ_timeframe_start' );
+		if ( $zkb_timeframe_start ) {
 
-		/* Store a timestamp of our last request */
-		set_transient( '_KillZ_last_request', time(), 10 );
+			/* Are we currently in the anti-scraping timeframe */
+			if ( ( time() - $zkb_timeframe_start ) < ZKB_REQUEST_TIMEFRAME ) {
+
+				/* How many requests have we made in this timeframe? */
+				$zkb_requests_counter = get_transient( '_KillZ_request_counter' );
+
+				/* Have we exhausted our max. number of requests? */
+				if ( $zkb_requests_counter > ZKB_MAX_REQUESTS ) {
+
+					/* Yes we have, abort. */
+					return new WP_Error( 429, 'HTTP Error 429 Too Many Requests', $url );
+				}
+			}
+		} else {
+
+			/* There are no records of previously made requests */
+			set_transient( '_KillZ_timeframe_start', time(), ZKB_REQUEST_TIMEFRAME );
+			$zkb_requests_counter = 0;
+		}
+
+		/* Increase request counter and store */
+		$zkb_requests_counter++;
+		set_transient( '_KillZ_request_counter', $zkb_requests_counter, ZKB_REQUEST_TIMEFRAME );
+
 
 		/* Make the HTTP request */
 		$result = wp_remote_get( $url, $args );

@@ -61,6 +61,16 @@ function evecorp_init_options()
 			$value = constant( 'EVECORP_' . strtoupper( $key ) );
 	}
 	unset( $value ); // break the reference with the last element;
+
+	/**
+	 * zKillboard.com Requeest limits
+	 * https://github.com/EVE-KILL/zKillboard/blob/master/view/api.php#L105
+	 */
+	/* Timeframe in seconds in which requests are counted */
+	define( 'ZKB_REQUEST_TIMEFRAME', 60 );
+
+	/* Max. number of possible requests in the given timeframe */
+	define( 'ZKB_MAX_REQUESTS', 10 );
 }
 
 /**
@@ -167,7 +177,7 @@ function evecorp_get_portrait( $character_ID, $size, $alt = '' )
 		$protocol = 'http://';
 	}
 	if ( empty( $alt ) ) {
-		$alt		 = 'Portrait of a Pilot';
+		$alt = 'Portrait of a Pilot';
 	}
 	$host		 = 'image.eveonline.com';
 	$server_path = 'Character';
@@ -312,9 +322,9 @@ function evecorp_avatar_size( $requested_size )
  */
 function evecorp_get_alts( $character_name )
 {
-	$alts = array( );
+	$alts	 = array( );
 	/* Is the character a registred WP user? */
-	$user = get_user_by( 'login', sanitize_user( $character_name ) );
+	$user	 = get_user_by( 'login', sanitize_user( $character_name ) );
 	if ( $user ) {
 
 		/* Are there any Eve Online API key stored with this user? */
@@ -337,9 +347,9 @@ function evecorp_get_alts( $character_name )
 					if ( $site_corp_name != $alt_corp_name ) {
 
 						/* @todo Update stored userkey with new corporation. */
-						$userkey['corporationName']	 = $alt_corp_name;
+						$userkey['corporationName'] = $alt_corp_name;
 					}
-					$alts[]						 = array(
+					$alts[] = array(
 						'character_name'	 => $userkey['characterName'],
 						'character_ID'		 => $userkey['characterID'],
 						'corporation_name'	 => $userkey['corporationName']
@@ -363,7 +373,7 @@ function camelcase_split( $camelcase_str )
     (?<=[a-z])  # Position is after a lowercase,
     (?=[A-Z])   # and before an uppercase letter.
     /x';
-	$str	= '';
+	$str	 = '';
 	$array	 = preg_split( $regex, $camelcase_str );
 	$count	 = count( $array );
 	for ( $i = 0; $i < $count; ++$i ) {
@@ -412,41 +422,41 @@ function evecorp_icon( $icon )
  */
 function evecorp_toolbar_links( $wp_admin_bar )
 {
-	$eve = array(
-		'id'		 => 'eve',
-		'title'		 => 'Eve Universe',
+	$eve			 = array(
+		'id'	 => 'eve',
+		'title'	 => 'Eve Universe',
 	);
-	$eve_gate	 = array(
-		'id'		 => 'eve_gate',
-		'title'		 => 'Eve Gate',
-		'href'		 => 'https://gate.eveonline.com/Home',
-		'parent'	 => 'eve'
+	$eve_gate		 = array(
+		'id'	 => 'eve_gate',
+		'title'	 => 'Eve Gate',
+		'href'	 => 'https://gate.eveonline.com/Home',
+		'parent' => 'eve'
 	);
-	$eve_forums	 = array(
-		'id'			 => 'eve_forums',
-		'title'			 => 'Eve Forums',
-		'href'			 => 'https://forums.eveonline.com/',
-		'parent'		 => 'eve'
+	$eve_forums		 = array(
+		'id'	 => 'eve_forums',
+		'title'	 => 'Eve Forums',
+		'href'	 => 'https://forums.eveonline.com/',
+		'parent' => 'eve'
 	);
 	$eve_community	 = array(
-		'id'		 => 'eve_community',
-		'title'		 => 'Eve Community',
-		'href'		 => 'http://community.eveonline.com/',
-		'parent'	 => 'eve'
+		'id'	 => 'eve_community',
+		'title'	 => 'Eve Community',
+		'href'	 => 'http://community.eveonline.com/',
+		'parent' => 'eve'
 	);
-	$evelopedia	 = array(
-		'id'		 => 'evelopedia',
-		'title'		 => 'Evelopedia',
-		'href'		 => 'http://wiki.eveonline.com/',
-		'parent'	 => 'eve'
+	$evelopedia		 = array(
+		'id'	 => 'evelopedia',
+		'title'	 => 'Evelopedia',
+		'href'	 => 'http://wiki.eveonline.com/',
+		'parent' => 'eve'
 	);
-	$petitions	 = array(
-		'id'		 => 'petitions',
-		'title'		 => 'Petitions',
-		'href'		 => 'https://support.eveonline.com/Pages/Petitions/MyPetitions.aspx',
-		'parent'	 => 'eve'
+	$petitions		 = array(
+		'id'	 => 'petitions',
+		'title'	 => 'Petitions',
+		'href'	 => 'https://support.eveonline.com/Pages/Petitions/MyPetitions.aspx',
+		'parent' => 'eve'
 	);
-	$API_keys	 = array(
+	$API_keys		 = array(
 		'id'	 => 'API_keys',
 		'title'	 => 'API Keys',
 		'href'	 => 'https://support.eveonline.com/api',
@@ -503,10 +513,10 @@ function evecorp_parse_request( &$wp )
 {
 	/* Do we have a request for a individual members page? */
 	if ( array_key_exists( 'member', $wp->query_vars ) ) {
-		$template		 = 'member.php';
+		$template = 'member.php';
 
 		/* Look for the template in the active theme. */
-		$template_file	 = locate_template( $template );
+		$template_file = locate_template( $template );
 		if ( !$template_file ) {
 			$template_file = EVECORP_PLUGIN_DIR . $template;
 		}
