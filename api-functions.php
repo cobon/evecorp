@@ -753,10 +753,15 @@ function evecorp_get_solar_system_stats( $solar_system_ID )
  *
  * @param string $type Character, Corporation, Alliance or Faction.
  * @param string $ID The ID of the entity to get stats for.
- * @return array The results
+ * @return array|WP_Error The results or WP_Error object on error
  */
 function evecorp_killz_stats( $type, $ID )
 {
+
+	/* Check for valid API request type */
+	if ( !($type === 'character' || $type === 'corporation' || $type === 'alliance' )) {
+		return new WP_Error( 404, 'Illegal type ID', $type );
+	}
 
 	/* Cache identifier */
 	$prefix		 = '_KillZ_';
@@ -770,7 +775,7 @@ function evecorp_killz_stats( $type, $ID )
 	if ( false === $json ) {
 
 		/* the URL */
-		$url = 'https://zkillboard.com/api/stats/' . $type . '/' . $ID . '/';
+		$url = 'https://zkillboard.com/api/stats/' . $type . 'ID/' . $ID . '/';
 
 		/* HTTP request options */
 		/* @todo sslverify? */
@@ -794,6 +799,9 @@ function evecorp_killz_stats( $type, $ID )
 					/* Yes we have, abort. */
 					return new WP_Error( 429, 'HTTP Error 429 Too Many Requests', $url );
 				}
+			} else {
+
+				/* Last request was too long ago */
 			}
 		} else {
 
@@ -810,8 +818,14 @@ function evecorp_killz_stats( $type, $ID )
 		/* Make the HTTP request */
 		$result = wp_remote_get( $url, $args );
 		if ( is_wp_error( $result ) || $result['response']['code'] <> 200 ) {
-			var_dump( $result );
-			die( __FILE__ . ':' . __LINE__ );
+//			echo '<pre>';
+//			var_dump( $url );
+//			echo '\r\n';
+//			var_dump( $args );
+//			echo '\r\n';
+//			var_dump( $result );
+//			echo '</pre>';
+//			die( __FILE__ . ':' . __LINE__ );
 			return $result;
 		}
 
