@@ -273,6 +273,8 @@ function evecorp_solarsystem( $solarsystem_name )
 
 	/* Get statistics */
 	$stats = evecorp_get_solar_system_stats( $solar_system_ID );
+	if ( is_wp_error( $stats ) )
+		return '<a title="' . $stats->get_error_message() . '"/>' . $solarsystem_name . '</a>';
 
 	$html = '<a href="http://wiki.eveonline.com/en/wiki/' . $solarsystem_name . '_(System)';
 	$html .= '" class="' . esc_attr( $classes );
@@ -355,28 +357,3 @@ function evecorp_region( $region_name )
 			'" title="Region Information">' . $region_name . '</a>';
 	return $html;
 }
-
-/**
- * Output HTML to render a table of corporation members.
- *
- */
-function evecorp_the_members()
-{
-	require_once EVECORP_PLUGIN_DIR . '/classes/class-members-table.php';
-
-	/* Create an instance of the Members_Table class */
-	$Members_Table = new evecorp_Members_Table();
-
-	/* Fetch, prepare, sort, and filter our data */
-	$Members_Table->prepare_items();
-
-	/* Display */
-	?>
-	<!-- Begin members list table -->
-	<!--<div class="entry-content">-->
-	<?php $Members_Table->display() ?>
-	<!--</div>-->
-	<!-- End members list table -->
-	<?php
-}
-?>

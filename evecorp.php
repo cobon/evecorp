@@ -67,6 +67,7 @@ define( 'EVECORP_PLUGIN_URL', plugin_dir_url( EVECORP_PLUGIN_FILE ) );
 /* Load global libraries */
 require_once EVECORP_PLUGIN_DIR . 'functions.php';
 require_once EVECORP_PLUGIN_DIR . 'api-functions.php';
+require_once EVECORP_PLUGIN_DIR . 'shortcode-functions.php';
 
 /* Initialize plugin options */
 add_action( 'init', 'evecorp_init_options' );
@@ -218,9 +219,6 @@ function evecorp_shortcode( $shortcode )
 	foreach ( $sc as $key => $value ) {
 		if ( '' <> $value ) {
 
-			/* Load shortcode functions library */
-			require_once EVECORP_PLUGIN_DIR . 'shortcode-functions.php';
-
 			switch ( $key ) {
 				case 'char':
 					$html	 = evecorp_char( $value );
@@ -251,6 +249,30 @@ function evecorp_shortcode( $shortcode )
 	if ( !isset( $html ) )
 		$html = '[shortcode error]';
 	return $html;
+}
+
+/**
+ * Output HTML to render a table of corporation members.
+ *
+ */
+function evecorp_the_members()
+{
+	require_once EVECORP_PLUGIN_DIR . '/classes/class-members-table.php';
+
+	/* Create an instance of the Members_Table class */
+	$Members_Table = new evecorp_Members_Table();
+
+	/* Fetch, prepare, sort, and filter our data */
+	$Members_Table->prepare_items();
+
+	/* Display */
+	?>
+	<!-- Begin members list table -->
+	<!--<div class="entry-content">-->
+	<?php $Members_Table->display() ?>
+	<!--</div>-->
+	<!-- End members list table -->
+	<?php
 }
 
 /**
