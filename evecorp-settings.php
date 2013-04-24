@@ -126,9 +126,9 @@ function evecorp_corpkey_access()
 {
 	global $evecorp_options;
 
-	$key = array(
-		'key_ID'		 => $evecorp_options['corpkey_ID'],
-		'vcode'			 => $evecorp_options['corpkey_vcode'],
+	$key			 = array(
+		'key_ID' => $evecorp_options['corpkey_ID'],
+		'vcode'	 => $evecorp_options['corpkey_vcode'],
 	);
 	$access_tests	 = array(
 		'WalletJournal',
@@ -141,6 +141,7 @@ function evecorp_corpkey_access()
 		echo $api_name . ' ';
 		$result = evecorp_is_valid_key( $key, $evecorp_options['corpkey_type'], 'corp', $api_name, $evecorp_options['corpkey_access_mask'] );
 		if ( is_wp_error( $result ) ) {
+			echo ' ('. $result->get_error_message().') ';
 			echo evecorp_icon( 'no' );
 		} else {
 			echo evecorp_icon( 'yes' );
@@ -194,10 +195,15 @@ function evecorp_apikey_url()
 {
 	global $evecorp_options;
 	$corp_url = evecorp_get_corp_url( $evecorp_options['corpkey_corporation_id'] );
-	if ( site_url() == untrailingslashit( $corp_url ) ) {
-		echo 'This website address (' . site_url() . ') matches the coporation URL (' . $corp_url . ').' . evecorp_icon( 'yes' );
+	if ( is_wp_error( $corp_url ) ) {
+		echo $corp_url->get_error_message();
 	} else {
-		echo 'This website address (' . site_url() . ') does not match the coporation URL (' . $corp_url . ').' . evecorp_icon( 'no' );
+
+		if ( site_url() == untrailingslashit( $corp_url ) ) {
+			echo 'This website address (' . site_url() . ') matches the coporation URL (' . $corp_url . ').' . evecorp_icon( 'yes' );
+		} else {
+			echo 'This website address (' . site_url() . ') does not match the coporation URL (' . $corp_url . ').' . evecorp_icon( 'no' );
+		}
 	}
 }
 
@@ -267,7 +273,7 @@ function evecorp_validate_settings( $input )
 				return $evecorp_options;
 			}
 		}
-		$key								 = array(
+		$key = array(
 			'key_ID' => $evecorp_options['corpkey_ID'],
 			'vcode'	 => $evecorp_options['corpkey_vcode']
 		);
@@ -300,14 +306,14 @@ function evecorp_validate_settings( $input )
 	}
 
 	/* Check if key and vcode are usable for our requests */
-	$access_tests = array(
+	$access_tests	 = array(
 		'WalletJournal',
 		'Titles',
 		'MemberTracking',
 		'MemberSecurity',
 		'CorporationSheet'
 	);
-	$access_errors = 0;
+	$access_errors	 = 0;
 	foreach ( $access_tests as $api_name ) {
 		$result = evecorp_is_valid_key( $key, $evecorp_options['corpkey_type'], 'corp', $api_name, $evecorp_options['corpkey_access_mask'] );
 		if ( is_wp_error( $result ) ) {
