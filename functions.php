@@ -71,6 +71,17 @@ function evecorp_init_options()
 
 	/* Max. number of possible requests in the given timeframe */
 	define( 'ZKB_MAX_REQUESTS', 10 );
+
+	/* Other constans */
+
+	/* Define a common prefix we use for WP roles added by the plugins */
+	define( 'EVECORP_WP_ROLE_PREFIX', 'evecorp');
+
+	/* Prefix for WP titles derived from Eve Online corporation roles */
+	define( 'EVECORP_EVE_ROLE_PREFIX', EVECORP_WP_ROLE_PREFIX . 'Role_');
+
+	/* Prefix for WP roles derived from Eve Online corporation titles */
+	define( 'EVECORP_EVE_TITLE_PREFIX', EVECORP_WP_ROLE_PREFIX . 'Title_');
 }
 
 /**

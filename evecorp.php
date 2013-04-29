@@ -93,8 +93,9 @@ if ( is_admin() ) {
 	 *
 	 */
 	/* Load admin libraries */
-	require_once EVECORP_PLUGIN_DIR . 'admin-functions.php';
 	require_once EVECORP_PLUGIN_DIR . 'evecorp-settings.php';
+	require_once EVECORP_PLUGIN_DIR . 'admin-functions.php';
+	require_once EVECORP_PLUGIN_DIR . 'acl-functions.php';
 
 	/* Load online help text */
 	include_once EVECORP_PLUGIN_DIR . 'userprofile-help.php';
@@ -145,6 +146,12 @@ if ( is_admin() ) {
 	/* Add rewrite rules for our auto-generated Eve Online pages (members, et al) */
 	add_action( 'generate_rewrite_rules', 'evecorp_add_rewrite_rules' );
 
+	/* Add the access control list meta box to the post/page edit screen */
+	add_action( 'admin_menu', 'evecorp_acl_meta' );
+
+	/* Saves the access control list to a custom field. */
+//	add_action( 'save_post', 'evecorp_acl_save', 1, 2 );
+
 	/* Add buttons to the tinyMCE editor for Eve Online shortcodes */
 	add_action( 'init', 'evecorp_init_mce' );
 
@@ -183,7 +190,7 @@ if ( is_admin() ) {
 	 */
 	remove_all_filters( 'authenticate' );
 	add_filter( 'authenticate', 'evecorp_auth_admin', 1, 3 );
-	add_filter( 'authenticate', 'evecorp_authenticate_user', 20, 3 );
+	add_filter( 'authenticate', 'evecorp_user_login', 20, 3 );
 	add_filter( 'authenticate', 'wp_authenticate_cookie', 30, 3 );
 	add_filter( 'login_form_defaults', 'evecorp_login_form_labels' );
 }

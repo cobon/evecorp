@@ -54,6 +54,9 @@ function evecorp_activate()
 
 	/* Recreate rewrite rules */
 	flush_rewrite_rules();
+
+	/* Add our Eve Online specific roles to WordPress roles */
+	evecorp_add_roles();
 }
 
 /**
@@ -64,6 +67,131 @@ function evecorp_deactivate()
 {
 	/* Remove our rewrite rules */
 	evecorp_remove_rewrite_rules();
+
+	/* Remove out Eve Online specific WordPress roles */
+	evecorp_remove_roles();
+}
+
+/**
+ * Add Eve Online specific roles to WordPress roles
+ *
+ * See https://github.com/cobon/evecorp/wiki/Access-Rights-and-Capabilities
+ *
+ */
+function evecorp_add_roles()
+{
+	$eve_roles = array(
+		'Director'						 => 'Director',
+		'Accountant'					 => 'Accountant',
+		'Auditor'						 => 'Auditor',
+		'ChatManager'					 => 'Communications Officer',
+		'EquipmentConfig'				 => 'Config Equipment',
+		'StarbaseConfig'				 => 'Starbase Equipment',
+		'ContractManager'				 => 'Contract Manager',
+		'Diplomat'						 => 'Diplomat',
+		'FittingManager'				 => 'Fitting Manager',
+		'JuniorAccountant'				 => 'Junior Accountant',
+		'PersonnelManager'				 => 'Personnel Manager',
+		'InfrastructureTacticalOfficer'	 => 'Starbase Defense Operator',
+		'StarbaseCaretaker'				 => 'Starbase Fuel Technician',
+		'FactoryManager'				 => 'Factory Manager',
+		'CanRentFactorySlot'			 => 'Rent Factory Slot',
+		'CanRentOffice'					 => 'Rent Office',
+		'CanRentResearchSlot'			 => 'Rent Research Slot',
+		'SecurityOfficer'				 => 'Security Officer',
+		'StationManager'				 => 'Station Manager',
+		'Trader'						 => 'Trader',
+	);
+	foreach ( $eve_roles as $role => $display_name ) {
+		switch ( $role ) {
+			case 'Director':
+
+				/* Gets all capabilities of the WordPress Administrator role  */
+				$wp_role = get_role( 'administrator' );
+				$caps	 = $wp_role->capabilities;
+
+				/* Add this role to WordPress */
+				$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name, $caps );
+
+				/* Add capability to edit our content ACL */
+				$new_role->add_cap( 'evecorp_ACL', true );
+				break;
+
+			case 'ChatManager':
+
+				/* Gets all capabilities of a WordPress Editor */
+				$wp_role = get_role( 'editor' );
+				$caps	 = $wp_role->capabilities;
+
+				/* Add this role to WordPress */
+				$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name, $caps );
+
+				/* Add capability to edit our content ACL */
+				$new_role->add_cap( 'evecorp_ACL', true );
+				break;
+
+			case 'Diplomat':
+
+				/* Gets all capabilities of a WordPress Author */
+				$wp_role = get_role( 'author' );
+				$caps	 = $wp_role->capabilities;
+
+				/* Add this role to WordPress */
+				$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name, $caps );
+
+				/* Add capability to edit our content ACL */
+				$new_role->add_cap( 'evecorp_ACL', true );
+				break;
+
+			case 'SecurityOfficer':
+
+				/* Add this role to WordPress */
+				$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name, $caps );
+
+				/* Add capability to edit our content ACL */
+				$new_role->add_cap( 'evecorp_ACL', true );
+				break;
+
+			case 'PersonnelManager':
+
+				/* Add this role to WordPress */
+				$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name, $caps );
+
+				/* Add capability to list and edit WordPress user profiles */
+				$new_role->add_cap( 'list_users', true );
+				$new_role->add_cap( 'edit_users', true );
+				break;
+
+			default:
+
+				/* All others have no predefined capabilities */
+				//$new_role = add_role( EVECORP_EVE_ROLE_PREFIX . $role, $display_name );
+				break;
+		}
+	}
+}
+
+/**
+ * Remove Eve Online specific WordPress roles.
+ *
+ * @global type $wp_user_roles
+ */
+function evecorp_remove_roles()
+{
+	global $wp_roles;
+	$prefix = EVECORP_WP_ROLE_PREFIX;
+
+	/* Get all roles from WP options */
+	$wp_roles_list = $wp_roles->get_names();
+	foreach ( $wp_roles_list as $role_key => $role_display_name ) {
+
+		/* Check if its one of our roles */
+		if ( $prefix === substr( $role_key, 0, strlen( $prefix ) ) ) {
+
+			/* Remove role from WordPress system */
+			remove_role( $role_key );
+		}
+	}
 }
 
 /**

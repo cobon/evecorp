@@ -42,21 +42,7 @@ function evecorp_auth_admin( $user, $login, $password )
 	}
 }
 
-/**
- * Authenticate the user using Eve Online API.
- *
- * If this is the first time we've seen this user (based on the character name),
- * a new account will be created.
- *
- * If this is the first time we've seen this API Key (bssed on the key ID), a
- * new validation code will be created.
- *
- * Known users will have their profile data updated based on the Eve Online
- * data present.
- *
- * @return mixed WP_User object or WP_Error on failure to authenticate.
- */
-function evecorp_authenticate_user( $user, $key_ID, $vcode )
+function evecorp_user_login( $user, $key_ID, $vcode )
 {
 	/* If a previous called authentication was valid, just pass it along. */
 	if ( is_a( $user, 'WP_User' ) ) {
@@ -87,6 +73,32 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 		return $error;
 	}
 
+	/* Authenticate the user using Eve Online API */
+	$user = evecorp_authenticate_user( $user, $key_ID, $vcode );
+	if ( is_wp_error( $user ) )
+		return $user;
+
+	/* Assign WP roles and capabilities from Eve Online roles and titles */
+	evecorp_authorize_user( $user );
+	return $user;
+}
+
+/**
+ * Authenticate the user using Eve Online API.
+ *
+ * If this is the first time we've seen this user (based on the character name),
+ * a new account will be created.
+ *
+ * If this is the first time we've seen this API Key (bssed on the key ID), a
+ * new validation code will be created.
+ *
+ * Known users will have their profile data updated based on the Eve Online
+ * data present.
+ *
+ * @return mixed WP_User object or WP_Error on failure to authenticate.
+ */
+function evecorp_authenticate_user( $user, $key_ID, $vcode )
+{
 	/* Test the submitted credentials */
 	$key	 = array(
 		'key_ID' => $key_ID,
@@ -142,6 +154,8 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 
 				/* Has it been validated? */
 				if ( 'Yes' === $value['validated'] )
+
+				/* We return a successful login */
 					return $user;
 
 				/* Get validation code hash for this key */
@@ -161,9 +175,6 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
 
 					/* Update existing account */
 					evecorp_update_user( $user->ID, $keyinfo['characters'][0]['characterID'] );
-
-					/* User is authenticated, now authorize. */
-					evecorp_authorize_user( $user, $keyinfo );
 
 					/* We return the successful login */
 					return $user;
@@ -203,63 +214,53 @@ function evecorp_authenticate_user( $user, $key_ID, $vcode )
  *
  * @param WP_User object $user
  */
-function evecorp_authorize_user( $user, $keyinfo )
+function evecorp_authorize_user( $user )
 {
-	global $wp_roles;
+	/* Update this site WP roles with defined corporation titles */
+	evecorp_update_title_roles();
 
-	$character_ID = $keyinfo['characters'][0]['characterID'];
+	$character_info	 = get_user_meta( $user->ID, 'evecorp_character_info', true );
+	$character_ID	 = $character_info['characterID'];
 
-	/* Get roles and titles trough API */
-	$api_roles	 = evecorp_get_roles( $character_ID );
-	$api_titles	 = evecorp_get_titles( $character_ID );
+	/* Get roles for this character from Eve Online API */
+	$eve_roles = evecorp_get_char_roles( $character_ID );
+	if ( is_wp_error( $eve_roles ) )
+		return $eve_roles;
 
-	/* Get roles and titles from WP user meta */
-	$meta_roles	 = get_user_meta( $user->ID, 'evecorp_roles' );
-	$meta_titles = get_user_meta( $user->ID, 'evecorp_titles' );
+	/* Get titles for this character from Eve Online API */
+	$eve_titles = evecorp_get_char_titles( $character_ID );
+	if ( is_wp_error( $eve_titles ) )
+		return $eve_titles;
 
-	/* Have there been changes in the Eve Online roles? */
-	if ( $api_roles <> $meta_roles ) {
+	/* Remove all previously assigned roles from this user */
+	$user->set_role( '' );
 
-		/* Remove all capabilites */
-		$user->remove_all_caps();
+	/* Remove all previously assigned capabilites from this user */
+	$user->remove_all_caps();
 
-		/**
-		 * Re-assign the "New User Default Role"
-		 * This removes all previous assigned roles
-		 */
-		$user->set_role( get_option( 'default_role' ) );
+	/* Are there any Roles or Titles in Eve Online for this character? */
+	if ( $eve_roles > 0 || $eve_titles > 0 ) {
 
-		/* Re-assign WP roles by Eve Online Roles */
-		if ( in_array( 'rolePersonnelManager', $api_roles ) ) {
-			$user->add_cap( 'list_users' );
-			$user->add_cap( 'edit_users' );
-		}
-		if ( in_array( 'roleDiplomat', $api_roles ) )
-			$user->add_role( 'author' );
-		if ( in_array( 'roleChatManager', $api_roles ) )
-			$user->add_role( 'editor' );
-		if ( in_array( 'roleDirector', $api_roles ) )
-			$user->set_role( 'administrator' );
-
-		/* Update user profile metadata with the new Eve Online roles */
-		update_user_meta( $user->ID, 'evecorp_roles', $api_roles );
-	}
-
-	/* Have there been changes in the Eve Online titles? */
-	if ( $api_titles <> $meta_titles ) {
-
-		/* Get all roles from WP options */
-		$wp_roles_list = $wp_roles->get_names();
-		foreach ( $wp_roles_list as $role => $role_desc ) {
-
-			/* Are there a Eve Online titles with names of WordPress roles? */
-			if ( in_array( $role_desc, $api_titles ) )
-				$user->add_cap( $role );
+		/* Assign corresponding WP roles for each of his Eve Online roles */
+		foreach ( $eve_roles as $eve_role ) {
+			$wp_role = EVECORP_EVE_ROLE_PREFIX . substr( $eve_role, 4 );
+			$user->add_role( $wp_role );
 		}
 
-		/* Update user profile metadata with the new Eve Online titles */
-		//if ( !empty( $api_titles ) )
-		update_user_meta( $user->ID, 'evecorp_titles', $api_titles );
+		/* Assign corresponding WP roles for each of his Eve Online titles */
+		foreach ( $eve_titles as $eve_title ) {
+			$wp_role = EVECORP_EVE_TITLE_PREFIX . $eve_title;
+			$user->add_role( $wp_role );
+		}
+	} else {
+
+		/* User has no Roles or Titles in Eve Online */
+		$default_role = get_option( 'default_role' );
+		if ( !current_user_can( $default_role ) ) {
+
+			/* Assign the "New User Default Role" */
+			$user->set_role( $default_role );
+		}
 	}
 }
 
@@ -417,4 +418,75 @@ function evecorp_userkey_validate( $user_login, $validation_hash )
 		}
 	}
 	return false;
+}
+
+/**
+ * Update roles in WordPress site options with defined corporation titles.
+ *
+ * Eve Online roles are fixed and defined on plug-in activation.
+ *
+ * Eve Online titles are player defined sets of roles and are therefore
+ * redefined of every login.
+ *
+ */
+function evecorp_update_title_roles()
+{
+	global $wp_roles;
+
+	/* Get all WordPress roles from site options */
+	$wp_roles_list = $wp_roles->get_names();
+
+	/* Remove all our WordPress roles defined from Eve Online titles */
+	foreach ( $wp_roles_list as $wp_role => $wp_role_display_name ) {
+
+		/* Check if its one of our title-derived roles */
+		if ( EVECORP_EVE_TITLE_PREFIX === substr( $wp_role, strlen( EVECORP_EVE_TITLE_PREFIX ) ) ) {
+
+			/* Remove this role from WordPress system */
+			remove_role( $wp_role );
+		}
+	}
+
+	/* Get all defined titles of our corporation */
+	$corp_titles = evecorp_get_corp_titles();
+
+	foreach ( $corp_titles as $corp_title ) {
+		//var_dump( $corp_title );
+
+		/* Does this Eve Online title have Eve Online Roles assigned? */
+		if ( sizeof( $corp_title['roles'] ) > 0 ) {
+
+			/* Init a list of WordPress capabilities */
+			$title_capabilities = array( );
+
+			/* Iterate trough those roles */
+			foreach ( $corp_title['roles'] as $eve_role_of_title ) {
+
+				/* Construct the WordPress Role ID from this Eve Online Role */
+				$wp_role_ID = EVECORP_EVE_ROLE_PREFIX . substr( $eve_role_of_title['roleName'], 4 );
+
+				/* Get the corresponding WordPress role object */
+				$wp_role = get_role( $wp_role_ID );
+				if ( !is_null( $wp_role ) ) {
+
+					/* Add the capabilties of that WP role */
+					array_push( $title_capabilities, $wp_role->capabilities );
+				} else {
+
+					/* Somehow no WP role found */
+					print_r( 'no WP roles for ' . $wp_role_ID . ' found!' );
+				}
+
+				/* Did we find any capabilities? */
+				if ( count( $title_capabilities ) > 0 ) {
+
+					/* Construct a WordPress role ID for this title */
+					$wp_role_ID = EVECORP_EVE_TITLE_PREFIX . $corp_title['titleID'];
+
+					/* Add new WP role with all the collected capabilities */
+					add_role( $wp_role_ID, $corp_title['titleName'], $title_capabilities );
+				}
+			}
+		}
+	}
 }
