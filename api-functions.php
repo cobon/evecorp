@@ -96,7 +96,7 @@ function evecorp_api( $scope, $API, $arguments = '', $key = '', $key_type = '', 
 	} catch ( PhealException $e ) {
 
 		/* Other Error (network/server connection, etc.) */
-		return new WP_Error( 'PhealException', 'Eve Online connection error: ' . $e->getMessage(), $e->code );
+		return new WP_Error( 'PhealException', 'Eve Online connection error: ' . $e->getMessage() );
 	}
 
 	/* Return the result as object of class WP_Pheal */
@@ -495,6 +495,7 @@ function evecorp_get_members()
 
 /**
  * Returns an array with all members and there roles and titles.
+ *
  * Needs a corporation key with access granted to the
  * "Corporation Members/Member Security" API.
  *
@@ -524,10 +525,13 @@ function evecorp_member_security()
 /**
  * Returns an array with all roles of the specified character.
  *
+ * Needs a corporation key with access granted to the
+ * "Corporation Members/Member Security" API.
+ *
  * @param string $character_ID
  * @return \WP_Error|array Roles on success, WP_Error object on failure.
  */
-function evecorp_get_roles( $character_ID )
+function evecorp_get_char_roles( $character_ID )
 {
 	$roles	 = array( );
 	$members = evecorp_member_security();
@@ -546,10 +550,13 @@ function evecorp_get_roles( $character_ID )
 /**
  * Returns an array with all titles of the specified character.
  *
+ * Needs a corporation key with access granted to the
+ * "Corporation Members/Member Security" API.
+ *
  * @param string $character_ID
  * @return \WP_Error|array Titles on success, WP_Error object on failure.
  */
-function evecorp_get_titles( $character_ID )
+function evecorp_get_char_titles( $character_ID )
 {
 	$titles	 = array( );
 	$members = evecorp_member_security();
@@ -562,6 +569,32 @@ function evecorp_get_titles( $character_ID )
 			}
 		}
 	}
+	return $titles;
+}
+
+/**
+ * Returns an array with all the defined titles of the corporation.
+ * Needs a corporation key with access granted to the
+ * "Corporation Members/Titles" API
+ *
+ * @param type $corporation_ID
+ * @return \WP_Error|array Titles on success, WP_Error object on failure.
+ */
+function evecorp_get_corp_titles()
+{
+	$key		 = array(
+		'key_ID' => evecorp_get_option( 'corpkey_ID' ),
+		'vcode'	 => evecorp_get_option( 'corpkey_vcode' ),
+	);
+	$key_type	 = evecorp_get_option( 'corpkey_type' );
+	$access_mask = evecorp_get_option( 'corpkey_access_mask' );
+
+	$result = evecorp_api( 'corp', 'titles', array( ), $key, $key_type, $access_mask );
+	if ( is_wp_error( $result ) )
+		return false;
+
+	/* Convert API result object to a PHP array variable */
+	$titles = $result->titles->toArray();
 	return $titles;
 }
 
@@ -759,7 +792,7 @@ function evecorp_killz_stats( $type, $ID )
 {
 
 	/* Check for valid API request type */
-	if ( !($type === 'character' || $type === 'corporation' || $type === 'alliance' )) {
+	if ( !($type === 'character' || $type === 'corporation' || $type === 'alliance' ) ) {
 		return new WP_Error( 404, 'Illegal type ID', $type );
 	}
 
@@ -817,16 +850,15 @@ function evecorp_killz_stats( $type, $ID )
 
 		/* Make the HTTP request */
 		$result = wp_remote_get( $url, $args );
-		if ( is_wp_error( $result ) || $result['response']['code'] <> 200 ) {
-//			echo '<pre>';
-//			var_dump( $url );
-//			echo '\r\n';
-//			var_dump( $args );
-//			echo '\r\n';
-//			var_dump( $result );
-//			echo '</pre>';
-//			die( __FILE__ . ':' . __LINE__ );
+
+		if ( is_wp_error( $result ) )
 			return $result;
+
+		if ( $result['response']['code'] <> 200 ) {
+			if ( WP_DEBUG ) {
+				var_dump( $result );
+			}
+			return new WP_Error( $result['response']['code'], $result['response']['meessage'], $url );
 		}
 
 		/* Work on the HTTP response */
