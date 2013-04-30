@@ -858,7 +858,7 @@ function evecorp_killz_stats( $type, $ID )
 			if ( WP_DEBUG ) {
 				var_dump( $result );
 			}
-			return new WP_Error( $result['response']['code'], $result['response']['meessage'], $url );
+			return new WP_Error( $result['response']['code'], $result['response']['message'], $url );
 		}
 
 		/* Work on the HTTP response */
